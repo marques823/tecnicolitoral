@@ -478,6 +478,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: boolean
       }
+      user_is_super_admin: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       custom_field_type:

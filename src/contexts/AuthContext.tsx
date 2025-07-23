@@ -7,7 +7,7 @@ interface Profile {
   id: string;
   user_id: string;
   company_id: string;
-  role: 'master' | 'technician' | 'client';
+  role: 'master' | 'technician' | 'client' | 'super_admin';
   name: string;
   active: boolean;
 }

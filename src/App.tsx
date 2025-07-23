@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import CustomFields from "./pages/CustomFields";
 import TechnicalNotes from "./pages/TechnicalNotes";
 import PlanSelection from "./pages/PlanSelection";
+import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/custom-fields" element={<CustomFields />} />
             <Route path="/technical-notes" element={<TechnicalNotes />} />
+            <Route path="/super-admin" element={<SuperAdmin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

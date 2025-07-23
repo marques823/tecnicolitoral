@@ -17,7 +17,8 @@ import {
   Tags,
   Crown,
   Sliders,
-  FileText
+  FileText,
+  Shield
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -449,7 +450,17 @@ const Dashboard = () => {
                       </Button>
                     </>
                   )}
-                  <Button 
+                  {profile.role === 'super_admin' && (
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline"
+                      onClick={() => navigate('/super-admin')}
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Super Admin
+                    </Button>
+                  )}
+                  <Button
                     className="w-full justify-start" 
                     variant="outline"
                     onClick={() => navigate('/settings')}
