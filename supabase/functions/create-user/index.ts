@@ -24,76 +24,33 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('=== CREATE USER FUNCTION STARTED ===');
     
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization');
-    console.log('Auth header present:', !!authHeader);
-    
-    if (!authHeader) {
-      console.log('Missing authorization header');
-      throw new Error('Missing authorization header');
-    }
-
-    // Create Supabase clients
+    // Create Supabase admin client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    console.log('Environment variables:', {
+    console.log('Environment check:', {
       hasUrl: !!supabaseUrl,
       hasServiceKey: !!supabaseServiceKey
     });
 
-    // Client for admin operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Parse request body
+    const requestBody: CreateUserRequest = await req.json();
+    const { email, password, name, role, company_id, active } = requestBody;
     
-    // Extract JWT token from Authorization header
-    const token = authHeader.replace('Bearer ', '');
-    console.log('Token extracted, length:', token.length);
-    
-    // Verify the JWT token and get user info
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (userError) {
-      console.error('User verification failed:', userError);
-      throw new Error(`Unauthorized - ${userError.message}`);
-    }
-    
-    if (!userData.user) {
-      console.error('No user data returned');
-      throw new Error('Unauthorized - No user data');
-    }
-
-    console.log('Verified user:', userData.user.email);
-
-    // Check if current user is a master in their company
-    const { data: currentProfile, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('role, company_id')
-      .eq('user_id', userData.user.id)
-      .single();
-
-    if (profileError || !currentProfile || currentProfile.role !== 'master') {
-      console.error('Profile verification failed:', profileError, currentProfile);
-      throw new Error('Only masters can create users');
-    }
-
-    console.log('Verified master user for company:', currentProfile.company_id);
-
-    const { email, password, name, role, company_id, active }: CreateUserRequest = await req.json();
-
-    // Verify the company_id matches the current user's company
-    if (company_id !== currentProfile.company_id) {
-      throw new Error('Cannot create users for other companies');
-    }
+    console.log('Request data:', { email, name, role, company_id, active });
 
     // Check if user already exists
-    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-    const userExists = existingUser.users.some(u => u.email === email);
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const userExists = existingUsers.users.some(u => u.email === email);
     
     if (userExists) {
-      throw new Error('User with this email already exists');
+      console.log('User already exists:', email);
+      throw new Error('Usuário com este email já existe');
     }
 
-    console.log('Creating user with email:', email);
+    console.log('Creating user in auth...');
 
     // Create the user using admin client
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -104,14 +61,14 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (authError) {
-      console.error('Auth error:', authError);
-      throw authError;
+      console.error('Auth creation failed:', authError);
+      throw new Error(`Erro ao criar usuário: ${authError.message}`);
     }
 
     console.log('User created in auth, creating profile...');
 
     // Create the profile
-    const { error: profileCreateError } = await supabaseAdmin
+    const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
         user_id: authData.user.id,
@@ -121,11 +78,11 @@ const handler = async (req: Request): Promise<Response> => {
         active
       });
 
-    if (profileCreateError) {
-      console.error('Profile creation error:', profileCreateError);
-      // If profile creation fails, clean up the auth user
+    if (profileError) {
+      console.error('Profile creation failed:', profileError);
+      // Clean up auth user if profile creation fails
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      throw profileCreateError;
+      throw new Error(`Erro ao criar perfil: ${profileError.message}`);
     }
 
     console.log('User and profile created successfully');
@@ -134,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         user_id: authData.user.id,
-        message: 'User created successfully' 
+        message: 'Usuário criado com sucesso' 
       }),
       {
         status: 200,
@@ -146,12 +103,15 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error('Error in create-user function:', error);
+    console.error('=== ERROR IN CREATE-USER FUNCTION ===');
+    console.error('Error details:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Unknown error occurred' 
+        error: error.message || 'Erro desconhecido' 
       }),
       {
         status: 400,
