@@ -44,7 +44,7 @@ interface TicketFormProps {
 }
 
 const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) => {
-  const { profile, company } = useAuth();
+  const { user, profile, company } = useAuth();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(false);
@@ -142,7 +142,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         company_id: company?.id,
         ...(isEditing && canChangeStatus && { status: formData.status }),
         ...(canAssignTickets && formData.assigned_to !== 'unassigned' && { assigned_to: formData.assigned_to }),
-        ...(!isEditing && { created_by: profile?.user_id })
+        ...(!isEditing && { created_by: user?.id })
       };
 
       let error;
