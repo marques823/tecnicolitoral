@@ -13,7 +13,8 @@ import {
   BarChart3, 
   Plus,
   LogOut,
-  User
+  User,
+  Tags
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -218,6 +219,14 @@ const Dashboard = () => {
                       >
                         <Users className="mr-2 h-4 w-4" />
                         Gerenciar Usuários
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/categories')}
+                      >
+                        <Tags className="mr-2 h-4 w-4" />
+                        Gerenciar Categorias
                       </Button>
                       <Button className="w-full justify-start" variant="outline">
                         <Settings className="mr-2 h-4 w-4" />
