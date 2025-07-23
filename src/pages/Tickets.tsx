@@ -199,18 +199,20 @@ const Tickets = () => {
       {/* Header */}
       <header className="bg-card border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 gap-4">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 gap-4 py-4 sm:py-0">
+            <div className="flex items-center space-x-4 min-w-0 flex-1">
               <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
                 <ArrowLeft className="w-4 h-4" />
               </Button>
-              <h1 className="text-xl font-bold">Chamados</h1>
-              <span className="text-sm text-muted-foreground">
-                {filteredTickets.length} de {tickets.length} chamados
-              </span>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl font-bold">Chamados</h1>
+                <span className="text-sm text-muted-foreground">
+                  {filteredTickets.length} de {tickets.length} chamados
+                </span>
+              </div>
             </div>
             
-            <Button onClick={handleCreateTicket}>
+            <Button onClick={handleCreateTicket} className="shrink-0">
               <Plus className="w-4 h-4 mr-2" />
               Novo Chamado
             </Button>
