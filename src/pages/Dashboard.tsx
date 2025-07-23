@@ -14,7 +14,8 @@ import {
   Plus,
   LogOut,
   User,
-  Tags
+  Tags,
+  Crown
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -411,12 +412,24 @@ const Dashboard = () => {
                         <Tags className="mr-2 h-4 w-4" />
                         Gerenciar Categorias
                       </Button>
-                      <Button className="w-full justify-start" variant="outline">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Configurações
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/plans')}
+                      >
+                        <Crown className="mr-2 h-4 w-4" />
+                        Planos
                       </Button>
                     </>
                   )}
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => navigate('/settings')}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Configurações
+                  </Button>
                 </CardContent>
               </Card>
 
