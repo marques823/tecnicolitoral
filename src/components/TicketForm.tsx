@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -37,6 +38,17 @@ interface Profile {
   user_id: string;
 }
 
+interface CustomField {
+  id: string;
+  name: string;
+  label: string;
+  field_type: 'text' | 'textarea' | 'select' | 'number' | 'date' | 'boolean';
+  options?: string[];
+  required: boolean;
+  active: boolean;
+  sort_order: number;
+}
+
 interface TicketFormProps {
   ticket?: Ticket | null;
   onSuccess: () => void;
@@ -50,6 +62,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [technicians, setTechnicians] = useState<Profile[]>([]);
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     title: ticket?.title || '',
     description: ticket?.description || '',
@@ -66,13 +80,17 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   useEffect(() => {
     const loadData = async () => {
       await loadCategories();
+      await loadCustomFields();
       if (canAssignTickets) {
         await loadTechnicians();
+      }
+      if (isEditing && ticket) {
+        await loadCustomFieldValues();
       }
     };
     
     loadData();
-  }, [canAssignTickets]);
+  }, [canAssignTickets, isEditing, ticket]);
 
   const loadCategories = async () => {
     try {
@@ -112,6 +130,190 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     }
   };
 
+  const loadCustomFields = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .eq('company_id', company?.id)
+        .eq('active', true)
+        .order('sort_order');
+
+      if (error) throw error;
+      
+      const fieldsWithParsedOptions = data?.map(field => ({
+        ...field,
+        options: field.options ? field.options as string[] : undefined
+      })) || [];
+      
+      setCustomFields(fieldsWithParsedOptions);
+    } catch (error) {
+      console.error('Error loading custom fields:', error);
+    }
+  };
+
+  const loadCustomFieldValues = async () => {
+    if (!ticket?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('custom_field_values')
+        .select('custom_field_id, value')
+        .eq('ticket_id', ticket.id);
+
+      if (error) throw error;
+
+      const values: Record<string, string> = {};
+      data?.forEach(item => {
+        values[item.custom_field_id] = item.value || '';
+      });
+
+      setCustomFieldValues(values);
+    } catch (error) {
+      console.error('Error loading custom field values:', error);
+    }
+  };
+
+  const handleCustomFieldChange = (fieldId: string, value: string) => {
+    setCustomFieldValues(prev => ({
+      ...prev,
+      [fieldId]: value
+    }));
+  };
+
+  const validateCustomFields = () => {
+    for (const field of customFields) {
+      if (field.required && !customFieldValues[field.id]?.trim()) {
+        toast({
+          title: 'Erro',
+          description: `O campo "${field.label}" é obrigatório`,
+          variant: 'destructive'
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const saveCustomFieldValues = async (ticketId: string) => {
+    if (customFields.length === 0) return;
+
+    try {
+      // Primeiro, remover valores existentes para campos que não estão mais sendo usados
+      if (isEditing) {
+        const { error: deleteError } = await supabase
+          .from('custom_field_values')
+          .delete()
+          .eq('ticket_id', ticketId);
+
+        if (deleteError) throw deleteError;
+      }
+
+      // Inserir novos valores
+      const valuesToInsert = Object.entries(customFieldValues)
+        .filter(([_, value]) => value.trim() !== '')
+        .map(([fieldId, value]) => ({
+          ticket_id: ticketId,
+          custom_field_id: fieldId,
+          value: value.trim()
+        }));
+
+      if (valuesToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('custom_field_values')
+          .insert(valuesToInsert);
+
+        if (insertError) throw insertError;
+      }
+    } catch (error) {
+      console.error('Error saving custom field values:', error);
+      throw error;
+    }
+  };
+
+  const renderCustomField = (field: CustomField) => {
+    const value = customFieldValues[field.id] || '';
+    
+    switch (field.field_type) {
+      case 'text':
+        return (
+          <Input
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+            placeholder={`Digite ${field.label.toLowerCase()}`}
+            required={field.required}
+          />
+        );
+      
+      case 'textarea':
+        return (
+          <Textarea
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+            placeholder={`Digite ${field.label.toLowerCase()}`}
+            required={field.required}
+            rows={3}
+          />
+        );
+      
+      case 'select':
+        return (
+          <Select
+            value={value}
+            onValueChange={(selectedValue) => handleCustomFieldChange(field.id, selectedValue)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      case 'number':
+        return (
+          <Input
+            type="number"
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+            placeholder={`Digite ${field.label.toLowerCase()}`}
+            required={field.required}
+          />
+        );
+      
+      case 'date':
+        return (
+          <Input
+            type="date"
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+            required={field.required}
+          />
+        );
+      
+      case 'boolean':
+        return (
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={value === 'true'}
+              onCheckedChange={(checked) => handleCustomFieldChange(field.id, checked.toString())}
+            />
+            <span className="text-sm">
+              {value === 'true' ? 'Sim' : 'Não'}
+            </span>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -121,6 +323,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         description: 'Preencha todos os campos obrigatórios',
         variant: 'destructive'
       });
+      return;
+    }
+
+    // Validar campos personalizados
+    if (!validateCustomFields()) {
       return;
     }
 
@@ -138,21 +345,32 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         ...(!isEditing && { created_by: user?.id })
       };
 
+      let ticketId: string;
       let error;
+
       if (isEditing) {
         const { error: updateError } = await supabase
           .from('tickets')
           .update(ticketData)
-          .eq('id', ticket.id);
+          .eq('id', ticket!.id);
         error = updateError;
+        ticketId = ticket!.id;
       } else {
-        const { error: insertError } = await supabase
+        const { data, error: insertError } = await supabase
           .from('tickets')
-          .insert([ticketData]);
+          .insert([ticketData])
+          .select('id')
+          .single();
         error = insertError;
+        ticketId = data?.id;
       }
 
       if (error) throw error;
+
+      // Salvar valores dos campos personalizados
+      if (ticketId) {
+        await saveCustomFieldValues(ticketId);
+      }
 
       toast({
         title: 'Sucesso',
@@ -291,6 +509,26 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                 </SelectContent>
               </Select>
             </div>
+          )}
+
+          {/* Campos Personalizados */}
+          {customFields.length > 0 && (
+            <>
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium mb-3">Campos Personalizados</h3>
+                <div className="space-y-4">
+                  {customFields.map((field) => (
+                    <div key={field.id} className="space-y-2">
+                      <Label htmlFor={field.name}>
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                      </Label>
+                      {renderCustomField(field)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
 
           <div className="flex justify-end space-x-3 pt-4">

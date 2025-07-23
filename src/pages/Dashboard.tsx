@@ -15,7 +15,8 @@ import {
   LogOut,
   User,
   Tags,
-  Crown
+  Crown,
+  Sliders
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -419,6 +420,14 @@ const Dashboard = () => {
                       >
                         <Crown className="mr-2 h-4 w-4" />
                         Planos
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/custom-fields')}
+                      >
+                        <Sliders className="mr-2 h-4 w-4" />
+                        Campos Personalizados
                       </Button>
                     </>
                   )}

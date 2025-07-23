@@ -87,6 +87,98 @@ export type Database = {
           },
         ]
       }
+      custom_field_values: {
+        Row: {
+          created_at: string
+          custom_field_id: string
+          id: string
+          ticket_id: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          custom_field_id: string
+          id?: string
+          ticket_id: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          custom_field_id?: string
+          id?: string
+          ticket_id?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_field_values_custom_field_id_fkey"
+            columns: ["custom_field_id"]
+            isOneToOne: false
+            referencedRelation: "custom_fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_field_values_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_fields: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          field_type: Database["public"]["Enums"]["custom_field_type"]
+          id: string
+          label: string
+          name: string
+          options: Json | null
+          required: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          field_type: Database["public"]["Enums"]["custom_field_type"]
+          id?: string
+          label: string
+          name: string
+          options?: Json | null
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          field_type?: Database["public"]["Enums"]["custom_field_type"]
+          id?: string
+          label?: string
+          name?: string
+          options?: Json | null
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_fields_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       n8n_chat_histories: {
         Row: {
           id: number
@@ -299,6 +391,13 @@ export type Database = {
       }
     }
     Enums: {
+      custom_field_type:
+        | "text"
+        | "textarea"
+        | "select"
+        | "number"
+        | "date"
+        | "boolean"
       plan_type: "basic" | "premium" | "enterprise"
       ticket_priority: "low" | "medium" | "high"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
@@ -430,6 +529,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      custom_field_type: [
+        "text",
+        "textarea",
+        "select",
+        "number",
+        "date",
+        "boolean",
+      ],
       plan_type: ["basic", "premium", "enterprise"],
       ticket_priority: ["low", "medium", "high"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
