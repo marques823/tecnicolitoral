@@ -18,10 +18,10 @@ interface Ticket {
   id: string;
   title: string;
   description: string;
-  priority: TicketPriority;
-  status: TicketStatus;
+  priority: TicketPriority | null;
+  status: TicketStatus | null;
   created_by: string;
-  assigned_to?: string;
+  assigned_to?: string | null;
   category_id: string;
 }
 
@@ -73,8 +73,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         setFormData({
           title: ticket.title,
           description: ticket.description,
-          priority: ticket.priority,
-          status: ticket.status,
+          priority: ticket.priority || 'medium',
+          status: ticket.status || 'open',
           category_id: ticket.category_id,
           assigned_to: ticket.assigned_to || 'unassigned'
         });
