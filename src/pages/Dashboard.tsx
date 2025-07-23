@@ -16,7 +16,8 @@ import {
   User,
   Tags,
   Crown,
-  Sliders
+  Sliders,
+  FileText
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -428,6 +429,14 @@ const Dashboard = () => {
                       >
                         <Sliders className="mr-2 h-4 w-4" />
                         Campos Personalizados
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/technical-notes')}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Notas Técnicas
                       </Button>
                     </>
                   )}

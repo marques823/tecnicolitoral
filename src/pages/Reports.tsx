@@ -6,7 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Calendar, TrendingUp, Users, Clock, BarChart3 } from 'lucide-react';
+import { Calendar, TrendingUp, Users, Clock, BarChart3, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { exportReportToPDF } from '@/utils/pdfExport';
 
 interface TicketStats {
   total: number;
@@ -52,6 +54,28 @@ export default function Reports() {
   const [period, setPeriod] = useState('30'); // days
   const [loading, setLoading] = useState(true);
   const { profile } = useAuth();
+
+  const handleExportPDF = () => {
+    const reportData = {
+      period: period === '7' ? 'Últimos 7 dias' : 
+              period === '30' ? 'Últimos 30 dias' : 
+              period === '90' ? 'Últimos 90 dias' : 'Último ano',
+      totalTickets: ticketStats.total,
+      openTickets: ticketStats.open,
+      inProgressTickets: ticketStats.in_progress,
+      resolvedTickets: ticketStats.resolved,
+      closedTickets: ticketStats.closed,
+    };
+
+    const additionalData = {
+      categoryStats,
+      priorityStats,
+      monthlyStats,
+      userStats
+    };
+
+    exportReportToPDF(reportData, additionalData);
+  };
 
   const canViewReports = profile?.role === 'master' || profile?.role === 'technician';
 
@@ -251,19 +275,30 @@ export default function Reports() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Relatórios</h1>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Últimos 7 dias</SelectItem>
-            <SelectItem value="30">Últimos 30 dias</SelectItem>
-            <SelectItem value="90">Últimos 3 meses</SelectItem>
-            <SelectItem value="365">Último ano</SelectItem>
-            <SelectItem value="all">Todo período</SelectItem>
-          </SelectContent>
-        </Select>
+        <div>
+          <h1 className="text-3xl font-bold">Relatórios</h1>
+          <p className="text-muted-foreground">
+            Análise detalhada dos chamados e desempenho
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleExportPDF} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Exportar PDF
+          </Button>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 3 meses</SelectItem>
+              <SelectItem value="365">Último ano</SelectItem>
+              <SelectItem value="all">Todo período</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Cards de Estatísticas */}

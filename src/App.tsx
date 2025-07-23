@@ -14,6 +14,7 @@ import Reports from "./pages/Reports";
 import Plans from "./pages/Plans";
 import Settings from "./pages/Settings";
 import CustomFields from "./pages/CustomFields";
+import TechnicalNotes from "./pages/TechnicalNotes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/plans" element={<Plans />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/custom-fields" element={<CustomFields />} />
+            <Route path="/technical-notes" element={<TechnicalNotes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

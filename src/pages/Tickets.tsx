@@ -15,10 +15,19 @@ import {
   Filter,
   Clock,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Download,
+  History,
+  Share2,
+  MoreVertical
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TicketForm from '@/components/TicketForm';
+import TicketHistory from '@/components/TicketHistory';
+import TicketShare from '@/components/TicketShare';
+import { exportTicketToPDF } from '@/utils/pdfExport';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type TicketPriority = Database["public"]["Enums"]["ticket_priority"];
 type TicketStatus = Database["public"]["Enums"]["ticket_status"];
@@ -53,6 +62,8 @@ const Tickets = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyTicket, setHistoryTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -107,6 +118,17 @@ const Tickets = () => {
     setShowTicketForm(false);
     setEditingTicket(null);
     loadTickets();
+  };
+
+  const handleShowHistory = (ticket: Ticket, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHistoryTicket(ticket);
+    setShowHistory(true);
+  };
+
+  const handleExportPDF = (ticket: Ticket, e: React.MouseEvent) => {
+    e.stopPropagation();
+    exportTicketToPDF(ticket);
   };
 
   const filteredTickets = tickets.filter(ticket => {
@@ -295,6 +317,28 @@ const Tickets = () => {
                       </CardDescription>
                     </div>
                     <div className="flex flex-col items-end space-y-2 ml-4">
+                      <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={(e) => handleExportPDF(ticket, e)}>
+                              <Download className="h-4 w-4 mr-2" />
+                              Exportar PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => handleShowHistory(ticket, e)}>
+                              <History className="h-4 w-4 mr-2" />
+                              Ver Histórico
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                              <TicketShare ticketId={ticket.id} />
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                       {getStatusBadge(ticket.status || 'open')}
                       {getPriorityBadge(ticket.priority || 'medium')}
                     </div>
@@ -330,6 +374,19 @@ const Tickets = () => {
           onCancel={() => setShowTicketForm(false)}
         />
       )}
+
+      {/* History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Histórico do Ticket</DialogTitle>
+            <DialogDescription>
+              {historyTicket?.title}
+            </DialogDescription>
+          </DialogHeader>
+          {historyTicket && <TicketHistory ticketId={historyTicket.id} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
