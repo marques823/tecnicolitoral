@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +24,7 @@ export default function Plans() {
   const [currentPlan, setCurrentPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; plan: Plan | null }>({
     open: false,
     plan: null
@@ -133,11 +136,19 @@ export default function Plans() {
     }
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number, annual: boolean = false) => {
+    const finalPrice = annual ? price * 12 * 0.8 : price; // 20% de desconto no anual
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(price);
+    }).format(finalPrice);
+  };
+
+  const getAnnualSavings = (price: number) => {
+    const monthlyCost = price * 12;
+    const annualCost = price * 12 * 0.8;
+    const savings = monthlyCost - annualCost;
+    return formatPrice(savings);
   };
 
   if (!canManagePlans) {
@@ -165,6 +176,26 @@ export default function Plans() {
         <p className="text-muted-foreground">
           Gerencie o plano da sua empresa
         </p>
+        
+        {/* Toggle Anual/Mensal */}
+        <div className="flex items-center justify-center space-x-4 pt-6">
+          <Label htmlFor="billing-toggle" className={!isAnnual ? 'text-foreground' : 'text-muted-foreground'}>
+            Mensal
+          </Label>
+          <Switch
+            id="billing-toggle"
+            checked={isAnnual}
+            onCheckedChange={setIsAnnual}
+          />
+          <Label htmlFor="billing-toggle" className={isAnnual ? 'text-foreground' : 'text-muted-foreground'}>
+            Anual
+          </Label>
+          {isAnnual && (
+            <Badge variant="secondary" className="ml-2">
+              20% de desconto
+            </Badge>
+          )}
+        </div>
       </div>
 
       {currentPlan && (
@@ -198,10 +229,17 @@ export default function Plans() {
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium">Preço Mensal</p>
+                <p className="text-sm font-medium">Preço {isAnnual ? 'Anual' : 'Mensal'}</p>
                 <p className="text-2xl font-bold">
-                  {formatPrice(currentPlan.monthly_price)}
+                  {formatPrice(currentPlan.monthly_price, isAnnual)}
+                  {isAnnual && <span className="text-sm font-normal text-muted-foreground">/ano</span>}
+                  {!isAnnual && <span className="text-sm font-normal text-muted-foreground">/mês</span>}
                 </p>
+                {isAnnual && (
+                  <p className="text-sm text-green-600">
+                    Economia de {getAnnualSavings(currentPlan.monthly_price)} por ano
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -235,9 +273,24 @@ export default function Plans() {
                     {getPlanIcon(plan.type)}
                   </div>
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <div className="text-3xl font-bold text-primary">
-                    {formatPrice(plan.monthly_price)}
-                    <span className="text-sm font-normal text-muted-foreground">/mês</span>
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-primary">
+                      {formatPrice(plan.monthly_price, isAnnual)}
+                      <span className="text-sm font-normal text-muted-foreground">
+                        /{isAnnual ? 'ano' : 'mês'}
+                      </span>
+                    </div>
+                    
+                    {isAnnual && (
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground line-through">
+                          {formatPrice(plan.monthly_price * 12)} por ano
+                        </p>
+                        <p className="text-sm text-green-600 font-medium">
+                          Economia de {getAnnualSavings(plan.monthly_price)} por ano
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardHeader>
                 
@@ -305,8 +358,13 @@ export default function Plans() {
                   <p>{confirmDialog.plan.max_users}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Preço Mensal</p>
-                  <p>{formatPrice(confirmDialog.plan.monthly_price)}</p>
+                  <p className="text-sm font-medium">Preço {isAnnual ? 'Anual' : 'Mensal'}</p>
+                  <p>{formatPrice(confirmDialog.plan.monthly_price, isAnnual)}</p>
+                  {isAnnual && (
+                    <p className="text-xs text-green-600">
+                      Economia anual: {getAnnualSavings(confirmDialog.plan.monthly_price)}
+                    </p>
+                  )}
                 </div>
               </div>
               

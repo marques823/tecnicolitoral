@@ -19,7 +19,9 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      // Se o usuário já tem perfil e empresa, vai para dashboard
+      // Senão, vai para seleção de planos
+      navigate('/plan-selection');
     }
   }, [user, navigate]);
 

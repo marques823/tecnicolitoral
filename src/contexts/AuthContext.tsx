@@ -134,9 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/plan-selection`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -153,10 +153,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: error.message,
           variant: "destructive",
         });
-      } else {
+      } else if (data.user && !data.session) {
         toast({
           title: "Cadastro realizado",
           description: "Verifique seu email para confirmar a conta",
+        });
+      } else if (data.session) {
+        // Usuário logado automaticamente (confirmação de email desabilitada)
+        toast({
+          title: "Cadastro realizado com sucesso!",
+          description: "Bem-vindo ao TicketFlow",
         });
       }
 

@@ -15,6 +15,7 @@ import Plans from "./pages/Plans";
 import Settings from "./pages/Settings";
 import CustomFields from "./pages/CustomFields";
 import TechnicalNotes from "./pages/TechnicalNotes";
+import PlanSelection from "./pages/PlanSelection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/plan-selection" element={<PlanSelection />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/tickets" element={<Tickets />} />
