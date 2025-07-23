@@ -36,12 +36,6 @@ interface Ticket {
   resolved_at?: string | null;
   company_id: string;
   updated_at: string;
-  profiles?: {
-    name: string;
-  } | null;
-  assigned_profiles?: {
-    name: string;
-  } | null;
   categories?: {
     name: string;
   } | null;
@@ -104,6 +98,7 @@ const Tickets = () => {
   };
 
   const handleEditTicket = (ticket: Ticket) => {
+    console.log('handleEditTicket - ticket clicked:', ticket);
     setEditingTicket(ticket);
     setShowTicketForm(true);
   };

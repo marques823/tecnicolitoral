@@ -70,14 +70,17 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     }
 
     if (ticket) {
+        console.log('TicketForm - ticket received:', ticket);
         setFormData({
-          title: ticket.title,
-          description: ticket.description,
+          title: ticket.title || '',
+          description: ticket.description || '',
           priority: ticket.priority || 'medium',
           status: ticket.status || 'open',
-          category_id: ticket.category_id,
+          category_id: ticket.category_id || '',
           assigned_to: ticket.assigned_to || 'unassigned'
         });
+    } else {
+        console.log('TicketForm - no ticket, creating new');
     }
   }, [ticket, canAssignTickets]);
 
@@ -180,8 +183,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   };
 
   return (
-    <Dialog open onOpenChange={() => onCancel()}>
-      <DialogContent className="max-w-md">
+    <Dialog open={true} onOpenChange={() => onCancel()}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Editar Chamado' : 'Novo Chamado'}
