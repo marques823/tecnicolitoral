@@ -53,7 +53,7 @@ export default function Reports() {
   const [userStats, setUserStats] = useState<UserStats[]>([]);
   const [period, setPeriod] = useState('30'); // days
   const [loading, setLoading] = useState(true);
-  const { profile } = useAuth();
+  const { profile, company } = useAuth();
 
   const handleExportPDF = () => {
     const reportData = {
@@ -74,7 +74,8 @@ export default function Reports() {
       userStats
     };
 
-    exportReportToPDF(reportData, additionalData);
+    const companyData = company ? { name: company.name } : undefined;
+    exportReportToPDF(reportData, companyData, additionalData);
   };
 
   const canViewReports = profile?.role === 'master' || profile?.role === 'technician';

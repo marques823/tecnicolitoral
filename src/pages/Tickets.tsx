@@ -128,7 +128,8 @@ const Tickets = () => {
 
   const handleExportPDF = (ticket: Ticket, e: React.MouseEvent) => {
     e.stopPropagation();
-    exportTicketToPDF(ticket);
+    const companyData = company ? { name: company.name } : undefined;
+    exportTicketToPDF(ticket, companyData);
   };
 
   const filteredTickets = tickets.filter(ticket => {
