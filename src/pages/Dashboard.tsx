@@ -205,7 +205,11 @@ const Dashboard = () => {
                     Ver Chamados
                   </Button>
                   {(profile.role === 'master' || profile.role === 'technician') && (
-                    <Button className="w-full justify-start" variant="outline">
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline"
+                      onClick={() => navigate('/reports')}
+                    >
                       <BarChart3 className="mr-2 h-4 w-4" />
                       Relatórios
                     </Button>
