@@ -51,6 +51,24 @@ const Auth = () => {
           <p className="text-muted-foreground">Sistema de chamados multiempresa</p>
         </div>
 
+        {/* Credenciais de Teste */}
+        <Card className="bg-muted/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">🧪 Credenciais de Teste</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div>
+              <p className="font-medium">Super Admin:</p>
+              <p>Email: admin@ticketflow.com</p>
+              <p>Senha: T84dy866n@</p>
+            </div>
+            <div>
+              <p className="font-medium text-green-600">✅ Para testar configurações</p>
+              <p className="text-xs text-muted-foreground">Use o Super Admin para acessar todas as funcionalidades</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Features Cards */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <Card className="text-center p-3">
