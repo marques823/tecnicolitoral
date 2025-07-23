@@ -79,8 +79,6 @@ const Tickets = () => {
         .from('tickets')
         .select(`
           *,
-          profiles:created_by (name),
-          assigned_profiles:assigned_to (name),
           categories (name)
         `)
         .eq('company_id', company?.id)
@@ -310,10 +308,10 @@ const Tickets = () => {
                 <CardContent className="pt-0">
                   <div className="flex flex-wrap items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center space-x-4">
-                      <span>Criado por: {ticket.profiles?.name}</span>
-                      {ticket.assigned_profiles && (
-                        <span>Atribuído a: {ticket.assigned_profiles.name}</span>
-                      )}
+                       <span>Criado por: Usuário</span>
+                       {ticket.assigned_to && (
+                         <span>Atribuído</span>
+                       )}
                       {ticket.categories && (
                         <span>Categoria: {ticket.categories.name}</span>
                       )}
