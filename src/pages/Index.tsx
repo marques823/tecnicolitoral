@@ -37,26 +37,26 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-2xl mb-8">
-            <Ticket className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-primary rounded-2xl mb-6 sm:mb-8">
+            <Ticket className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
           
-          <h1 className="text-4xl sm:text-6xl font-bold mb-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
             Sistema de Chamados
             <span className="block text-primary">Multiempresa</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
             Gerencie tickets, usuários e empresas em uma plataforma completa. 
             Controle de acesso por níveis, relatórios avançados e campos personalizados.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
             <Button 
               size="lg" 
-              className="text-lg px-8 py-6"
+              className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
               onClick={() => navigate('/auth')}
             >
               Começar Agora
@@ -64,24 +64,24 @@ const Index = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="text-lg px-8 py-6"
+              className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
             >
               Saiba Mais
             </Button>
           </div>
 
           {/* Trust Indicators */}
-          <div className="flex items-center justify-center space-x-8 text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-muted-foreground text-sm sm:text-base">
             <div className="flex items-center space-x-2">
-              <Shield className="w-5 h-5" />
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Seguro</span>
             </div>
             <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5" />
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Multiusuário</span>
             </div>
             <div className="flex items-center space-x-2">
-              <BarChart3 className="w-5 h-5" />
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Relatórios</span>
             </div>
           </div>
@@ -89,11 +89,11 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Funcionalidades Principais</h2>
-            <p className="text-xl text-muted-foreground">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Funcionalidades Principais</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground px-4">
               Tudo que você precisa para gerenciar chamados eficientemente
             </p>
           </div>
@@ -258,26 +258,26 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <Card>
-            <CardHeader className="pb-8">
-              <CardTitle className="text-3xl font-bold mb-4">
+            <CardHeader className="pb-6 sm:pb-8">
+              <CardTitle className="text-2xl sm:text-3xl font-bold mb-4">
                 Pronto para começar?
               </CardTitle>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-base sm:text-lg px-4">
                 Crie sua conta agora e comece a gerenciar chamados de forma profissional
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button 
                 size="lg" 
-                className="text-lg px-8 py-6"
+                className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
                 onClick={() => navigate('/auth')}
               >
                 Começar Gratuitamente
               </Button>
-              <p className="text-sm text-muted-foreground mt-4">
+              <p className="text-sm text-muted-foreground mt-4 px-4">
                 Teste grátis • Sem cartão de crédito • Suporte incluído
               </p>
             </CardContent>

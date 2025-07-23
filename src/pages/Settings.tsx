@@ -66,7 +66,7 @@ export default function Settings() {
   const { toast } = useToast();
   const { profile, company, user } = useAuth();
 
-  const canManageCompany = profile?.role === 'master';
+  const canManageCompany = profile?.role === 'master' || profile?.role === 'super_admin';
 
   useEffect(() => {
     loadSettings();
@@ -256,13 +256,14 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground">
-          Gerencie as configurações da empresa e do seu perfil
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-4 sm:p-6 space-y-6 max-w-4xl">
+        <div className="text-center sm:text-left">
+          <h1 className="text-2xl sm:text-3xl font-bold">Configurações</h1>
+          <p className="text-muted-foreground mt-1">
+            Gerencie as configurações da empresa e do seu perfil
+          </p>
+        </div>
 
       {/* Configurações da Empresa */}
       {canManageCompany && (
@@ -274,7 +275,7 @@ export default function Settings() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="company-name">Nome da Empresa</Label>
                 <Input
@@ -308,9 +309,9 @@ export default function Settings() {
                 <Label className="text-base font-semibold">Logotipo da Empresa</Label>
               </div>
               
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
                 {companySettings.logo_url && (
-                  <div className="w-16 h-16 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                  <div className="w-16 h-16 border rounded-lg overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
                     <img 
                       src={companySettings.logo_url} 
                       alt="Logo da empresa" 
@@ -319,12 +320,13 @@ export default function Settings() {
                   </div>
                 )}
                 
-                <div className="flex-1 space-y-2">
+                <div className="flex-1 space-y-2 w-full">
                   <Button
                     type="button"
                     variant="outline"
                     disabled={uploadingLogo}
                     onClick={() => fileInputRef.current?.click()}
+                    className="w-full sm:w-auto"
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     {uploadingLogo ? 'Enviando...' : 'Selecionar Logotipo'}
@@ -352,7 +354,7 @@ export default function Settings() {
                 <Label className="text-base font-semibold">Personalização</Label>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="primary-color">Cor Primária</Label>
                   <div className="flex items-center space-x-2">
@@ -435,9 +437,9 @@ export default function Settings() {
               </div>
             )}
 
-            <Button onClick={saveCompanySettings} disabled={saving}>
+            <Button onClick={saveCompanySettings} disabled={saving} className="w-full sm:w-auto">
               <Save className="w-4 h-4 mr-2" />
-              Salvar Configurações da Empresa
+              {saving ? 'Salvando...' : 'Salvar Configurações da Empresa'}
             </Button>
           </CardContent>
         </Card>
@@ -452,7 +454,7 @@ export default function Settings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="profile-name">Nome</Label>
               <Input
@@ -605,6 +607,7 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
