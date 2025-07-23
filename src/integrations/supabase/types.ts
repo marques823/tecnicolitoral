@@ -303,7 +303,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_company_id: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
+      user_has_master_role: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       plan_type: "basic" | "premium" | "enterprise"
