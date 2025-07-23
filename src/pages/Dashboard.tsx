@@ -187,11 +187,19 @@ const Dashboard = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => navigate('/tickets')}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     Novo Chamado
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => navigate('/tickets')}
+                  >
                     <Ticket className="mr-2 h-4 w-4" />
                     Ver Chamados
                   </Button>
