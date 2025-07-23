@@ -65,22 +65,28 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('TicketForm - Starting loadData, categories before load:', categories.length);
       await loadCategories();
+      console.log('TicketForm - Categories loaded:', categories.length);
+      
       if (canAssignTickets) {
         await loadTechnicians();
+        console.log('TicketForm - Technicians loaded:', technicians.length);
       }
       
       // Só preenche o formulário depois que categorias são carregadas
       if (ticket) {
-        console.log('TicketForm - ticket received:', ticket);
-        setFormData({
+        console.log('TicketForm - About to set form data for ticket:', ticket);
+        const newFormData = {
           title: ticket.title || '',
           description: ticket.description || '',
           priority: ticket.priority || 'medium',
           status: ticket.status || 'open',
           category_id: ticket.category_id || '',
           assigned_to: ticket.assigned_to || 'unassigned'
-        });
+        };
+        console.log('TicketForm - Setting form data to:', newFormData);
+        setFormData(newFormData);
       } else {
         console.log('TicketForm - no ticket, creating new');
       }
@@ -88,6 +94,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     
     loadData();
   }, [ticket, canAssignTickets]);
+
+  // Log para verificar mudanças no formData
+  useEffect(() => {
+    console.log('TicketForm - formData changed:', formData);
+  }, [formData]);
 
   const loadCategories = async () => {
     try {
