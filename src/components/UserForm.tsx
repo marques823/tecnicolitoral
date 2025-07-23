@@ -71,35 +71,29 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
           description: "As informações do usuário foram atualizadas com sucesso.",
         });
       } else {
-        // Criar novo usuário
+        // Criar novo usuário via edge function
         if (!formData.email || !formData.password) {
           throw new Error('Email e senha são obrigatórios para novos usuários');
         }
 
-        // Primeiro, criar o usuário na autenticação
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-          email: formData.email,
-          password: formData.password,
-          email_confirm: true
-        });
-
-        if (authError) throw authError;
-
-        // Depois, criar o perfil
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: authData.user.id,
-            company_id: companyId,
+        const { data, error } = await supabase.functions.invoke('create-user', {
+          body: {
+            email: formData.email,
+            password: formData.password,
             name: formData.name,
             role: formData.role,
+            company_id: companyId,
             active: formData.active
-          });
+          }
+        });
 
-        if (profileError) {
-          // Se falhou ao criar o perfil, tentar limpar o usuário criado
-          await supabase.auth.admin.deleteUser(authData.user.id);
-          throw profileError;
+        if (error) {
+          console.error('Edge function error:', error);
+          throw new Error(error.message || 'Erro ao criar usuário');
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || 'Erro ao criar usuário');
         }
 
         toast({
