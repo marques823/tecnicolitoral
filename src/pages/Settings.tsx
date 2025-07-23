@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,12 +16,20 @@ import {
   Bell, 
   Shield,
   Save,
-  AlertTriangle
+  AlertTriangle,
+  Upload,
+  Image,
+  Palette,
+  Eye
 } from 'lucide-react';
 
 interface CompanySettings {
   name: string;
   active: boolean;
+  logo_url: string;
+  primary_color: string;
+  secondary_color: string;
+  custom_css: string;
 }
 
 interface ProfileSettings {
@@ -37,7 +45,11 @@ interface NotificationSettings {
 export default function Settings() {
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     name: '',
-    active: true
+    active: true,
+    logo_url: '',
+    primary_color: '#2563eb',
+    secondary_color: '#64748b',
+    custom_css: ''
   });
   const [profileSettings, setProfileSettings] = useState<ProfileSettings>({
     name: ''
@@ -49,6 +61,8 @@ export default function Settings() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { profile, company, user } = useAuth();
 
@@ -65,7 +79,11 @@ export default function Settings() {
       if (company) {
         setCompanySettings({
           name: company.name || '',
-          active: company.active ?? true
+          active: company.active ?? true,
+          logo_url: (company as any).logo_url || '',
+          primary_color: (company as any).primary_color || '#2563eb',
+          secondary_color: (company as any).secondary_color || '#64748b',
+          custom_css: (company as any).custom_css || ''
         });
       }
 
@@ -94,6 +112,62 @@ export default function Settings() {
     }
   };
 
+  const uploadLogo = async (file: File) => {
+    if (!company?.id || !canManageCompany) return;
+
+    setUploadingLogo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${company.id}/logo.${fileExt}`;
+
+      // Upload do arquivo
+      const { error: uploadError } = await supabase.storage
+        .from('company-logos')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL público
+      const { data } = supabase.storage
+        .from('company-logos')
+        .getPublicUrl(fileName);
+
+      const logoUrl = data.publicUrl;
+
+      // Atualizar configurações locais
+      setCompanySettings(prev => ({ ...prev, logo_url: logoUrl }));
+
+      toast({
+        title: "Sucesso",
+        description: "Logotipo enviado com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao fazer upload do logotipo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer upload do logotipo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "Erro",
+          description: "O arquivo deve ter no máximo 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      uploadLogo(file);
+    }
+  };
+
   const saveCompanySettings = async () => {
     if (!company?.id || !canManageCompany) return;
 
@@ -103,7 +177,11 @@ export default function Settings() {
         .from('companies')
         .update({
           name: companySettings.name,
-          active: companySettings.active
+          active: companySettings.active,
+          logo_url: companySettings.logo_url,
+          primary_color: companySettings.primary_color,
+          secondary_color: companySettings.secondary_color,
+          custom_css: companySettings.custom_css
         })
         .eq('id', company.id);
 
@@ -185,7 +263,7 @@ export default function Settings() {
               <CardTitle>Configurações da Empresa</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="company-name">Nome da Empresa</Label>
@@ -209,6 +287,132 @@ export default function Settings() {
                     {companySettings.active ? 'Ativa' : 'Inativa'}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Seção de Logotipo */}
+            <Separator />
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Image className="w-4 h-4" />
+                <Label className="text-base font-semibold">Logotipo da Empresa</Label>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                {companySettings.logo_url && (
+                  <div className="w-16 h-16 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                    <img 
+                      src={companySettings.logo_url} 
+                      alt="Logo da empresa" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+                
+                <div className="flex-1 space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={uploadingLogo}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {uploadingLogo ? 'Enviando...' : 'Selecionar Logotipo'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    PNG, JPG ou GIF (máx. 5MB)
+                  </p>
+                </div>
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+
+            {/* Seção de Personalização */}
+            <Separator />
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Palette className="w-4 h-4" />
+                <Label className="text-base font-semibold">Personalização</Label>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="primary-color">Cor Primária</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="primary-color"
+                      type="color"
+                      value={companySettings.primary_color}
+                      onChange={(e) => setCompanySettings(prev => ({ ...prev, primary_color: e.target.value }))}
+                      className="w-12 h-10 p-1 rounded"
+                    />
+                    <Input
+                      value={companySettings.primary_color}
+                      onChange={(e) => setCompanySettings(prev => ({ ...prev, primary_color: e.target.value }))}
+                      placeholder="#2563eb"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="secondary-color">Cor Secundária</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="secondary-color"
+                      type="color"
+                      value={companySettings.secondary_color}
+                      onChange={(e) => setCompanySettings(prev => ({ ...prev, secondary_color: e.target.value }))}
+                      className="w-12 h-10 p-1 rounded"
+                    />
+                    <Input
+                      value={companySettings.secondary_color}
+                      onChange={(e) => setCompanySettings(prev => ({ ...prev, secondary_color: e.target.value }))}
+                      placeholder="#64748b"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="custom-css">CSS Personalizado</Label>
+                <Textarea
+                  id="custom-css"
+                  value={companySettings.custom_css}
+                  onChange={(e) => setCompanySettings(prev => ({ ...prev, custom_css: e.target.value }))}
+                  placeholder="/* CSS personalizado para sua empresa */
+:root {
+  --primary: 220 75% 55%;
+  --secondary: 215 20% 55%;
+}"
+                  rows={4}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  CSS personalizado será aplicado globalmente no sistema
+                </p>
+              </div>
+              
+              {/* Preview das cores */}
+              <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                <Eye className="w-4 h-4" />
+                <span className="text-sm font-medium">Preview:</span>
+                <div 
+                  className="w-6 h-6 rounded border"
+                  style={{ backgroundColor: companySettings.primary_color }}
+                />
+                <div 
+                  className="w-6 h-6 rounded border"
+                  style={{ backgroundColor: companySettings.secondary_color }}
+                />
               </div>
             </div>
 

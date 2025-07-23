@@ -56,25 +56,37 @@ export type Database = {
         Row: {
           active: boolean | null
           created_at: string
+          custom_css: string | null
           id: string
+          logo_url: string | null
           name: string
           plan_id: string
+          primary_color: string | null
+          secondary_color: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean | null
           created_at?: string
+          custom_css?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           plan_id: string
+          primary_color?: string | null
+          secondary_color?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean | null
           created_at?: string
+          custom_css?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           plan_id?: string
+          primary_color?: string | null
+          secondary_color?: string | null
           updated_at?: string
         }
         Relationships: [
