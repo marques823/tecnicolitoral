@@ -31,32 +31,36 @@ const handler = async (req: Request): Promise<Response> => {
     // Create Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
     // Client for admin operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Client for user verification
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Verify the current user is authenticated and is a master
-    const { data: currentUser, error: userError } = await supabase.auth.getUser();
-    if (userError || !currentUser.user) {
-      throw new Error('Unauthorized');
+    // Extract JWT token from Authorization header
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify the JWT token and get user info
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError || !userData.user) {
+      console.error('User verification failed:', userError);
+      throw new Error('Unauthorized - Invalid token');
     }
 
+    console.log('Verified user:', userData.user.email);
+
     // Check if current user is a master in their company
-    const { data: currentProfile, error: profileError } = await supabase
+    const { data: currentProfile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role, company_id')
-      .eq('user_id', currentUser.user.id)
+      .eq('user_id', userData.user.id)
       .single();
 
     if (profileError || !currentProfile || currentProfile.role !== 'master') {
+      console.error('Profile verification failed:', profileError, currentProfile);
       throw new Error('Only masters can create users');
     }
+
+    console.log('Verified master user for company:', currentProfile.company_id);
 
     const { email, password, name, role, company_id, active }: CreateUserRequest = await req.json();
 
