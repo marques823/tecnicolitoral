@@ -38,11 +38,11 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-xl shadow-glow mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-xl mb-4">
             <Ticket className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold">TicketFlow</h1>
@@ -65,7 +65,7 @@ const Auth = () => {
           </Card>
         </div>
 
-        <Card className="shadow-card">
+        <Card>
           <CardHeader>
             <CardTitle>Acesse sua conta</CardTitle>
             <CardDescription>

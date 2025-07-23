@@ -64,14 +64,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <Ticket className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-xl font-bold">TicketFlow</h1>
@@ -116,7 +116,7 @@ const Dashboard = () => {
           <>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card className="shadow-card">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Chamados Abertos
@@ -131,7 +131,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-card">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Em Andamento
@@ -146,7 +146,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-card">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Resolvidos Hoje
@@ -161,7 +161,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-card">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Usuários Ativos
@@ -179,7 +179,7 @@ const Dashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <Card className="shadow-card">
+              <Card>
                 <CardHeader>
                   <CardTitle>Ações Rápidas</CardTitle>
                   <CardDescription>
@@ -216,7 +216,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-card">
+              <Card>
                 <CardHeader>
                   <CardTitle>Últimos Chamados</CardTitle>
                   <CardDescription>

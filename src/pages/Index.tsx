@@ -35,11 +35,11 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-2xl shadow-glow mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-2xl mb-8">
             <Ticket className="w-10 h-10 text-white" />
           </div>
           
@@ -99,7 +99,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <Building2 className="w-12 h-12 text-primary mb-4" />
                 <CardTitle>Multiempresa</CardTitle>
@@ -125,7 +125,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <Users className="w-12 h-12 text-primary mb-4" />
                 <CardTitle>Gestão de Usuários</CardTitle>
@@ -151,7 +151,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <Ticket className="w-12 h-12 text-primary mb-4" />
                 <CardTitle>Sistema de Chamados</CardTitle>
@@ -177,7 +177,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <Settings className="w-12 h-12 text-primary mb-4" />
                 <CardTitle>Campos Personalizados</CardTitle>
@@ -202,7 +202,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <BarChart3 className="w-12 h-12 text-primary mb-4" />
                 <CardTitle>Relatórios Avançados</CardTitle>
@@ -228,7 +228,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card">
+            <Card>
               <CardHeader>
                 <Shield className="w-12 h-12 text-primary mb-4" />
                 <CardTitle>Segurança Avançada</CardTitle>
@@ -260,7 +260,7 @@ const Index = () => {
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <Card className="shadow-elegant bg-gradient-card border-0">
+          <Card>
             <CardHeader className="pb-8">
               <CardTitle className="text-3xl font-bold mb-4">
                 Pronto para começar?
@@ -272,7 +272,6 @@ const Index = () => {
             <CardContent>
               <Button 
                 size="lg" 
-                variant="gradient" 
                 className="text-lg px-8 py-6"
                 onClick={() => navigate('/auth')}
               >
