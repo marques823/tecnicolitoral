@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          id: string
+          name: string
+          plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          name: string
+          plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          name?: string
+          plan_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       n8n_chat_histories: {
         Row: {
           id: number
@@ -32,6 +105,199 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          created_at: string
+          has_custom_fields: boolean | null
+          id: string
+          max_users: number
+          monthly_price: number | null
+          name: string
+          type: Database["public"]["Enums"]["plan_type"]
+        }
+        Insert: {
+          created_at?: string
+          has_custom_fields?: boolean | null
+          id?: string
+          max_users: number
+          monthly_price?: number | null
+          name: string
+          type: Database["public"]["Enums"]["plan_type"]
+        }
+        Update: {
+          created_at?: string
+          has_custom_fields?: boolean | null
+          id?: string
+          max_users?: number
+          monthly_price?: number | null
+          name?: string
+          type?: Database["public"]["Enums"]["plan_type"]
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string
+          id?: string
+          name: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_history: {
+        Row: {
+          action: string
+          created_at: string
+          description: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_history_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          assigned_to: string | null
+          category_id: string
+          company_id: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"] | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category_id: string
+          company_id: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"] | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"] | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -40,7 +306,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      plan_type: "basic" | "premium" | "enterprise"
+      ticket_priority: "low" | "medium" | "high"
+      ticket_status: "open" | "in_progress" | "resolved" | "closed"
+      user_role: "master" | "technician" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -167,6 +436,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      plan_type: ["basic", "premium", "enterprise"],
+      ticket_priority: ["low", "medium", "high"],
+      ticket_status: ["open", "in_progress", "resolved", "closed"],
+      user_role: ["master", "technician", "client"],
+    },
   },
 } as const
