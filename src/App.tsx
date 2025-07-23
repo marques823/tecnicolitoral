@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import Header from "@/components/Header";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -29,24 +30,29 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/plan-selection" element={<PlanSelection />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/users" element={<UserManagement />} />
-            <Route path="/tickets" element={<Tickets />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/plans" element={<Plans />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/custom-fields" element={<CustomFields />} />
-            <Route path="/technical-notes" element={<TechnicalNotes />} />
-            <Route path="/super-admin" element={<SuperAdmin />} />
-            <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/plan-selection" element={<PlanSelection />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/users" element={<UserManagement />} />
+                <Route path="/tickets" element={<Tickets />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/plans" element={<Plans />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/custom-fields" element={<CustomFields />} />
+                <Route path="/technical-notes" element={<TechnicalNotes />} />
+                <Route path="/super-admin" element={<SuperAdmin />} />
+                <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

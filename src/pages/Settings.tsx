@@ -73,6 +73,7 @@ export default function Settings() {
   }, [company, profile]);
 
   const loadSettings = async () => {
+    console.log('🔄 Carregando configurações...', { company, profile, user });
     setLoading(true);
     try {
       // Carregar configurações da empresa
@@ -169,7 +170,16 @@ export default function Settings() {
   };
 
   const saveCompanySettings = async () => {
-    if (!company?.id || !canManageCompany) return;
+    console.log('💾 Tentando salvar configurações da empresa...', { 
+      companyId: company?.id, 
+      canManage: canManageCompany, 
+      settings: companySettings 
+    });
+    
+    if (!company?.id || !canManageCompany) {
+      console.log('❌ Não é possível salvar - sem permissão ou empresa');
+      return;
+    }
 
     setSaving(true);
     try {
