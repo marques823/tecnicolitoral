@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,15 +17,178 @@ import {
   Tags
 } from 'lucide-react';
 
+interface DashboardStats {
+  totalTickets: number;
+  openTickets: number;
+  inProgressTickets: number;
+  resolvedToday: number;
+  activeUsers: number;
+  maxUsers: number;
+}
+
+interface RecentTicket {
+  id: string;
+  title: string;
+  status: string;
+  created_by_name: string;
+  created_at: string;
+}
+
 const Dashboard = () => {
   const { user, profile, company, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalTickets: 0,
+    openTickets: 0,
+    inProgressTickets: 0,
+    resolvedToday: 0,
+    activeUsers: 0,
+    maxUsers: 0
+  });
+  const [recentTickets, setRecentTickets] = useState<RecentTicket[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (user && profile && company) {
+      loadDashboardData();
+    }
+  }, [user, profile, company]);
+
+  const loadDashboardData = async () => {
+    if (!profile?.company_id) return;
+    
+    setLoadingData(true);
+    try {
+      await Promise.all([
+        loadTicketStats(),
+        loadUserStats(),
+        loadRecentTickets()
+      ]);
+    } catch (error) {
+      console.error('Erro ao carregar dados da dashboard:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const loadTicketStats = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    // Total de tickets baseado no role do usuário
+    let ticketsQuery = supabase.from('tickets').select('status, resolved_at');
+
+    if (profile?.role === 'client') {
+      // Cliente só vê seus próprios tickets
+      ticketsQuery = ticketsQuery.eq('created_by', user?.id);
+    } else if (profile?.role === 'technician') {
+      // Técnico vê tickets atribuídos a ele e tickets não atribuídos
+      ticketsQuery = ticketsQuery.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
+    }
+    // Master vê todos os tickets da empresa (já filtrado por RLS)
+
+    const { data: tickets } = await ticketsQuery;
+
+    const totalTickets = tickets?.length || 0;
+    const openTickets = tickets?.filter(t => t.status === 'open').length || 0;
+    const inProgressTickets = tickets?.filter(t => t.status === 'in_progress').length || 0;
+    
+    // Tickets resolvidos hoje
+    const resolvedToday = tickets?.filter(t => 
+      t.status === 'resolved' && 
+      t.resolved_at && 
+      t.resolved_at.startsWith(today)
+    ).length || 0;
+
+    setStats(prev => ({
+      ...prev,
+      totalTickets,
+      openTickets,
+      inProgressTickets,
+      resolvedToday
+    }));
+  };
+
+  const loadUserStats = async () => {
+    if (profile?.role !== 'master') return;
+
+    const [{ data: activeUsers }, { data: plans }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id')
+        .eq('company_id', profile.company_id)
+        .eq('active', true),
+      supabase
+        .from('companies')
+        .select('plans(max_users)')
+        .eq('id', profile.company_id)
+        .single()
+    ]);
+
+    setStats(prev => ({
+      ...prev,
+      activeUsers: activeUsers?.length || 0,
+      maxUsers: (plans as any)?.plans?.max_users || 0
+    }));
+  };
+
+  const loadRecentTickets = async () => {
+    let query = supabase
+      .from('tickets')
+      .select(`
+        id,
+        title,
+        status,
+        created_at,
+        profiles!tickets_created_by_fkey (name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (profile?.role === 'client') {
+      query = query.eq('created_by', user?.id);
+    } else if (profile?.role === 'technician') {
+      query = query.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
+    }
+
+    const { data } = await query;
+
+    const formattedTickets = data?.map(ticket => ({
+      id: ticket.id,
+      title: ticket.title,
+      status: ticket.status,
+      created_by_name: (ticket.profiles as any)?.name || 'Usuário desconhecido',
+      created_at: ticket.created_at
+    })) || [];
+
+    setRecentTickets(formattedTickets);
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels = {
+      open: 'Aberto',
+      in_progress: 'Em andamento',
+      resolved: 'Resolvido',
+      closed: 'Fechado'
+    };
+    return labels[status as keyof typeof labels] || status;
+  };
+
+  const getStatusVariant = (status: string) => {
+    const variants = {
+      open: 'destructive',
+      in_progress: 'default',
+      resolved: 'secondary',
+      closed: 'outline'
+    } as const;
+    return variants[status as keyof typeof variants] || 'outline';
+  };
 
   if (loading) {
     return (
@@ -120,14 +283,33 @@ const Dashboard = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Chamados Abertos
+                    {profile.role === 'client' ? 'Meus Chamados' : 'Total de Chamados'}
                   </CardTitle>
                   <Ticket className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">12</div>
+                  <div className="text-2xl font-bold">
+                    {loadingData ? '...' : stats.totalTickets}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +2 desde ontem
+                    {profile.role === 'client' ? 'Total criados' : 'Todos os tickets'}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Abertos
+                  </CardTitle>
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingData ? '...' : stats.openTickets}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Aguardando atendimento
                   </p>
                 </CardContent>
               </Card>
@@ -137,12 +319,14 @@ const Dashboard = () => {
                   <CardTitle className="text-sm font-medium">
                     Em Andamento
                   </CardTitle>
-                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">5</div>
+                  <div className="text-2xl font-bold">
+                    {loadingData ? '...' : stats.inProgressTickets}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    -1 desde ontem
+                    Sendo processados
                   </p>
                 </CardContent>
               </Card>
@@ -150,29 +334,24 @@ const Dashboard = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Resolvidos Hoje
+                    {profile.role === 'master' ? 'Usuários Ativos' : 'Resolvidos Hoje'}
                   </CardTitle>
-                  <Ticket className="h-4 w-4 text-muted-foreground" />
+                  {profile.role === 'master' ? 
+                    <Users className="h-4 w-4 text-muted-foreground" /> :
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  }
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">8</div>
+                  <div className="text-2xl font-bold">
+                    {loadingData ? '...' : 
+                      profile.role === 'master' ? stats.activeUsers : stats.resolvedToday
+                    }
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +4 desde ontem
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Usuários Ativos
-                  </CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">3</div>
-                  <p className="text-xs text-muted-foreground">
-                    de 10 disponíveis
+                    {profile.role === 'master' 
+                      ? `de ${stats.maxUsers} disponíveis`
+                      : 'Finalizados hoje'
+                    }
                   </p>
                 </CardContent>
               </Card>
@@ -243,41 +422,53 @@ const Dashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Últimos Chamados</CardTitle>
+                  <CardTitle>
+                    {profile.role === 'client' ? 'Meus Últimos Chamados' : 'Últimos Chamados'}
+                  </CardTitle>
                   <CardDescription>
-                    Acompanhe os chamados mais recentes
+                    {profile.role === 'client' 
+                      ? 'Seus chamados mais recentes'
+                      : 'Acompanhe os chamados mais recentes'
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Problema na impressora</p>
-                        <p className="text-sm text-muted-foreground">
-                          Criado por João Silva
-                        </p>
-                      </div>
-                      <Badge variant="outline">Aberto</Badge>
+                  {loadingData ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="flex items-center justify-between p-3 border rounded-lg animate-pulse">
+                          <div className="space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-32"></div>
+                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                          </div>
+                          <div className="h-6 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Sistema lento</p>
-                        <p className="text-sm text-muted-foreground">
-                          Criado por Maria Santos
-                        </p>
-                      </div>
-                      <Badge variant="secondary">Em andamento</Badge>
+                  ) : recentTickets.length === 0 ? (
+                    <p className="text-center py-4 text-muted-foreground">
+                      Nenhum chamado encontrado
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {recentTickets.map((ticket) => (
+                        <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                          <div>
+                            <p className="font-medium">{ticket.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Criado por {ticket.created_by_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                          <Badge variant={getStatusVariant(ticket.status)}>
+                            {getStatusLabel(ticket.status)}
+                          </Badge>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Email não funciona</p>
-                        <p className="text-sm text-muted-foreground">
-                          Criado por Pedro Costa
-                        </p>
-                      </div>
-                      <Badge variant="default">Resolvido</Badge>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
