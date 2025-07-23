@@ -142,33 +142,42 @@ const Dashboard = () => {
   };
 
   const loadRecentTickets = async () => {
-    let query = supabase
+    // Primeiro buscar os tickets
+    let ticketQuery = supabase
       .from('tickets')
-      .select(`
-        id,
-        title,
-        status,
-        created_at,
-        profiles!tickets_created_by_fkey (name)
-      `)
+      .select('id, title, status, created_at, created_by')
       .order('created_at', { ascending: false })
       .limit(5);
 
     if (profile?.role === 'client') {
-      query = query.eq('created_by', user?.id);
+      ticketQuery = ticketQuery.eq('created_by', user?.id);
     } else if (profile?.role === 'technician') {
-      query = query.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
+      ticketQuery = ticketQuery.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
     }
 
-    const { data } = await query;
+    const { data: tickets } = await ticketQuery;
 
-    const formattedTickets = data?.map(ticket => ({
+    if (!tickets || tickets.length === 0) {
+      setRecentTickets([]);
+      return;
+    }
+
+    // Buscar nomes dos usuários que criaram os tickets
+    const userIds = [...new Set(tickets.map(t => t.created_by))];
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, name')
+      .in('user_id', userIds);
+
+    const profileMap = new Map(profiles?.map(p => [p.user_id, p.name]) || []);
+
+    const formattedTickets = tickets.map(ticket => ({
       id: ticket.id,
       title: ticket.title,
       status: ticket.status,
-      created_by_name: (ticket.profiles as any)?.name || 'Usuário desconhecido',
+      created_by_name: profileMap.get(ticket.created_by) || 'Usuário desconhecido',
       created_at: ticket.created_at
-    })) || [];
+    }));
 
     setRecentTickets(formattedTickets);
   };
