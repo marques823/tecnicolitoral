@@ -56,7 +56,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     priority: 'medium' as TicketPriority,
     status: 'open' as TicketStatus,
     category_id: '',
-    assigned_to: ''
+    assigned_to: 'unassigned'
   });
 
   const isEditing = !!ticket;
@@ -70,14 +70,14 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     }
 
     if (ticket) {
-      setFormData({
-        title: ticket.title,
-        description: ticket.description,
-        priority: ticket.priority,
-        status: ticket.status,
-        category_id: ticket.category_id,
-        assigned_to: ticket.assigned_to || ''
-      });
+        setFormData({
+          title: ticket.title,
+          description: ticket.description,
+          priority: ticket.priority,
+          status: ticket.status,
+          category_id: ticket.category_id,
+          assigned_to: ticket.assigned_to || 'unassigned'
+        });
     }
   }, [ticket, canAssignTickets]);
 
@@ -141,7 +141,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         category_id: formData.category_id,
         company_id: company?.id,
         ...(isEditing && canChangeStatus && { status: formData.status }),
-        ...(canAssignTickets && formData.assigned_to && { assigned_to: formData.assigned_to }),
+        ...(canAssignTickets && formData.assigned_to !== 'unassigned' && { assigned_to: formData.assigned_to }),
         ...(!isEditing && { created_by: profile?.user_id })
       };
 
@@ -286,7 +286,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                   <SelectValue placeholder="Selecione um técnico" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Não atribuído</SelectItem>
+                  <SelectItem value="unassigned">Não atribuído</SelectItem>
                   {technicians.map((tech) => (
                     <SelectItem key={tech.user_id} value={tech.user_id}>
                       {tech.name} ({tech.role === 'master' ? 'Master' : 'Técnico'})
