@@ -51,28 +51,6 @@ const Auth = () => {
           <p className="text-muted-foreground">Sistema de chamados multiempresa</p>
         </div>
 
-        {/* Credenciais de Teste */}
-        <Card className="bg-muted/50 border-orange-200 dark:border-orange-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-orange-700 dark:text-orange-300">🧪 Credenciais de Teste</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="bg-background rounded-md p-3 border">
-              <p className="font-medium text-primary mb-1">Super Admin:</p>
-              <div className="space-y-1 font-mono text-xs">
-                <p>📧 admin@ticketflow.com</p>
-                <p>🔐 admin123</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-green-600 text-lg">✅</span>
-              <div>
-                <p className="font-medium text-green-600 dark:text-green-400">Para testar configurações</p>
-                <p className="text-xs text-muted-foreground">Use o Super Admin para acessar todas as funcionalidades</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Features Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">

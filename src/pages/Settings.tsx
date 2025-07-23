@@ -76,16 +76,26 @@ export default function Settings() {
     console.log('🔄 Carregando configurações...', { company, profile, user });
     setLoading(true);
     try {
-      // Carregar configurações da empresa
-      if (company) {
-        setCompanySettings({
-          name: company.name || '',
-          active: company.active ?? true,
-          logo_url: (company as any).logo_url || '',
-          primary_color: (company as any).primary_color || '#2563eb',
-          secondary_color: (company as any).secondary_color || '#64748b',
-          custom_css: (company as any).custom_css || ''
-        });
+      // Carregar configurações da empresa diretamente do banco
+      if (company?.id) {
+        const { data: companyData, error } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', company.id)
+          .single();
+
+        if (error) {
+          console.error('Erro ao carregar empresa:', error);
+        } else if (companyData) {
+          setCompanySettings({
+            name: companyData.name || '',
+            active: companyData.active ?? true,
+            logo_url: companyData.logo_url || '',
+            primary_color: companyData.primary_color || '#2563eb',
+            secondary_color: companyData.secondary_color || '#64748b',
+            custom_css: companyData.custom_css || ''
+          });
+        }
       }
 
       // Carregar configurações do perfil
