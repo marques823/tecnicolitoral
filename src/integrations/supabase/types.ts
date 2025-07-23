@@ -490,7 +490,7 @@ export type Database = {
       plan_type: "basic" | "premium" | "enterprise"
       ticket_priority: "low" | "medium" | "high"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
-      user_role: "master" | "technician" | "client"
+      user_role: "master" | "technician" | "client" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -629,7 +629,7 @@ export const Constants = {
       plan_type: ["basic", "premium", "enterprise"],
       ticket_priority: ["low", "medium", "high"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
-      user_role: ["master", "technician", "client"],
+      user_role: ["master", "technician", "client", "super_admin"],
     },
   },
 } as const
