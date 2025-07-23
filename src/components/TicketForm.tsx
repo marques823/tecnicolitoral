@@ -64,12 +64,14 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const canChangeStatus = profile?.role === 'master' || profile?.role === 'technician';
 
   useEffect(() => {
-    loadCategories();
-    if (canAssignTickets) {
-      loadTechnicians();
-    }
-
-    if (ticket) {
+    const loadData = async () => {
+      await loadCategories();
+      if (canAssignTickets) {
+        await loadTechnicians();
+      }
+      
+      // Só preenche o formulário depois que categorias são carregadas
+      if (ticket) {
         console.log('TicketForm - ticket received:', ticket);
         setFormData({
           title: ticket.title || '',
@@ -79,9 +81,12 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           category_id: ticket.category_id || '',
           assigned_to: ticket.assigned_to || 'unassigned'
         });
-    } else {
+      } else {
         console.log('TicketForm - no ticket, creating new');
-    }
+      }
+    };
+    
+    loadData();
   }, [ticket, canAssignTickets]);
 
   const loadCategories = async () => {
