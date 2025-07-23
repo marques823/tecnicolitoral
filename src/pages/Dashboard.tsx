@@ -203,7 +203,11 @@ const Dashboard = () => {
                   )}
                   {profile.role === 'master' && (
                     <>
-                      <Button className="w-full justify-start" variant="outline">
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/users')}
+                      >
                         <Users className="mr-2 h-4 w-4" />
                         Gerenciar Usuários
                       </Button>
