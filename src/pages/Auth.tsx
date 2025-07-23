@@ -41,7 +41,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 mx-auto">
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-xl mb-4">
@@ -52,36 +52,41 @@ const Auth = () => {
         </div>
 
         {/* Credenciais de Teste */}
-        <Card className="bg-muted/50">
+        <Card className="bg-muted/50 border-orange-200 dark:border-orange-800">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">🧪 Credenciais de Teste</CardTitle>
+            <CardTitle className="text-sm text-orange-700 dark:text-orange-300">🧪 Credenciais de Teste</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div>
-              <p className="font-medium">Super Admin:</p>
-              <p>Email: admin@ticketflow.com</p>
-              <p>Senha: T84dy866n@</p>
+          <CardContent className="space-y-3 text-sm">
+            <div className="bg-background rounded-md p-3 border">
+              <p className="font-medium text-primary mb-1">Super Admin:</p>
+              <div className="space-y-1 font-mono text-xs">
+                <p>📧 admin@ticketflow.com</p>
+                <p>🔐 admin123</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-green-600">✅ Para testar configurações</p>
-              <p className="text-xs text-muted-foreground">Use o Super Admin para acessar todas as funcionalidades</p>
+            <div className="flex items-start gap-2">
+              <span className="text-green-600 text-lg">✅</span>
+              <div>
+                <p className="font-medium text-green-600 dark:text-green-400">Para testar configurações</p>
+                <p className="text-xs text-muted-foreground">Use o Super Admin para acessar todas as funcionalidades</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Features Cards */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <Card className="text-center p-3">
-            <Building2 className="w-6 h-6 mx-auto mb-2 text-primary" />
-            <p className="text-xs font-medium">Multiempresa</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <Card className="text-center p-4 hover:shadow-md transition-shadow">
+            <Building2 className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <p className="text-sm font-medium">Multiempresa</p>
           </Card>
-          <Card className="text-center p-3">
-            <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
-            <p className="text-xs font-medium">Gestão de Usuários</p>
+          <Card className="text-center p-4 hover:shadow-md transition-shadow">
+            <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <p className="text-sm font-medium">Gestão de Usuários</p>
           </Card>
-          <Card className="text-center p-3">
-            <Ticket className="w-6 h-6 mx-auto mb-2 text-primary" />
-            <p className="text-xs font-medium">Controle Total</p>
+          <Card className="text-center p-4 hover:shadow-md transition-shadow">
+            <Ticket className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <p className="text-sm font-medium">Controle Total</p>
           </Card>
         </div>
 
