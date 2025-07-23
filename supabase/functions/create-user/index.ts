@@ -22,28 +22,44 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('=== CREATE USER FUNCTION STARTED ===');
+    
     // Get the authorization header
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.log('Missing authorization header');
       throw new Error('Missing authorization header');
     }
 
     // Create Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    console.log('Environment variables:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey
+    });
 
     // Client for admin operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
     // Extract JWT token from Authorization header
     const token = authHeader.replace('Bearer ', '');
+    console.log('Token extracted, length:', token.length);
     
     // Verify the JWT token and get user info
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     
-    if (userError || !userData.user) {
+    if (userError) {
       console.error('User verification failed:', userError);
-      throw new Error('Unauthorized - Invalid token');
+      throw new Error(`Unauthorized - ${userError.message}`);
+    }
+    
+    if (!userData.user) {
+      console.error('No user data returned');
+      throw new Error('Unauthorized - No user data');
     }
 
     console.log('Verified user:', userData.user.email);
