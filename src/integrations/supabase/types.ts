@@ -361,13 +361,6 @@ export type Database = {
             referencedRelation: "tickets"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ticket_history_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       ticket_shares: {
