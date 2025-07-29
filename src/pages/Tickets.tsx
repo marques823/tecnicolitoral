@@ -111,11 +111,13 @@ const Tickets = () => {
   };
 
   const handleTicketClick = (ticket: Ticket) => {
+    console.log('Ticket clicked:', ticket.title);
     setSelectedTicket(ticket);
     setShowTicketDetails(true);
   };
 
   const handleEditTicket = (ticket: Ticket) => {
+    console.log('Edit ticket:', ticket.title);
     setEditingTicket(ticket);
     setShowTicketForm(true);
     setShowTicketDetails(false);
@@ -228,7 +230,7 @@ const Tickets = () => {
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <div className="min-w-0 flex-1">
-                <h1 className="text-xl font-bold">Chamados</h1>
+                <h1 className="text-xl font-bold">📋 Chamados - Lista Compacta</h1>
                 <span className="text-sm text-muted-foreground">
                   {filteredTickets.length} de {tickets.length} chamados
                 </span>
@@ -309,7 +311,7 @@ const Tickets = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2">{/* Lista compacta */}
             {filteredTickets.map((ticket) => (
               <Card key={ticket.id} className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => handleTicketClick(ticket)}>
