@@ -64,6 +64,8 @@ const Tickets = () => {
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [historyTicket, setHistoryTicket] = useState<Ticket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [showTicketDetails, setShowTicketDetails] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -108,10 +110,15 @@ const Tickets = () => {
     setShowTicketForm(true);
   };
 
+  const handleTicketClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setShowTicketDetails(true);
+  };
+
   const handleEditTicket = (ticket: Ticket) => {
-    console.log('handleEditTicket - ticket clicked:', ticket);
     setEditingTicket(ticket);
     setShowTicketForm(true);
+    setShowTicketDetails(false);
   };
 
   const handleTicketFormSuccess = () => {
@@ -302,63 +309,31 @@ const Tickets = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {filteredTickets.map((ticket) => (
-              <Card key={ticket.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleEditTicket(ticket)}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
+              <Card key={ticket.id} className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleTicketClick(ticket)}>
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
                         {getPriorityIcon(ticket.priority || 'medium')}
-                        <CardTitle className="text-lg">{ticket.title}</CardTitle>
+                        <h3 className="font-medium text-sm truncate">{ticket.title}</h3>
                       </div>
-                      <CardDescription className="line-clamp-2">
+                      <p className="text-xs text-muted-foreground truncate mb-2">
                         {ticket.description}
-                      </CardDescription>
-                    </div>
-                    <div className="flex flex-col items-end space-y-2 ml-4">
-                      <div className="flex items-center gap-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onClick={(e) => handleExportPDF(ticket, e)}>
-                              <Download className="h-4 w-4 mr-2" />
-                              Exportar PDF
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => handleShowHistory(ticket, e)}>
-                              <History className="h-4 w-4 mr-2" />
-                              Ver Histórico
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                              <TicketShare ticketId={ticket.id} />
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      </p>
+                      <div className="flex items-center space-x-3 text-xs text-muted-foreground">
+                        <span>{new Date(ticket.created_at).toLocaleDateString('pt-BR')}</span>
+                        {ticket.categories && (
+                          <span>{ticket.categories.name}</span>
+                        )}
                       </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
                       {getStatusBadge(ticket.status || 'open')}
                       {getPriorityBadge(ticket.priority || 'medium')}
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-4">
-                       <span>Criado por: Usuário</span>
-                       {ticket.assigned_to && (
-                         <span>Atribuído</span>
-                       )}
-                      {ticket.categories && (
-                        <span>Categoria: {ticket.categories.name}</span>
-                      )}
-                    </div>
-                    <span>
-                      {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
-                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -375,6 +350,122 @@ const Tickets = () => {
           onCancel={() => setShowTicketForm(false)}
         />
       )}
+
+      {/* Ticket Details Dialog */}
+      <Dialog open={showTicketDetails} onOpenChange={setShowTicketDetails}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              {selectedTicket && getPriorityIcon(selectedTicket.priority || 'medium')}
+              <span>{selectedTicket?.title}</span>
+            </DialogTitle>
+            <div className="flex items-center space-x-2">
+              {selectedTicket && getStatusBadge(selectedTicket.status || 'open')}
+              {selectedTicket && getPriorityBadge(selectedTicket.priority || 'medium')}
+            </div>
+          </DialogHeader>
+          
+          {selectedTicket && (
+            <div className="space-y-6">
+              {/* Ticket Info */}
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Descrição</h4>
+                  <p className="text-sm">{selectedTicket.description}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-muted-foreground">Criado em:</span>
+                    <br />
+                    {new Date(selectedTicket.created_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                  
+                  <div>
+                    <span className="font-medium text-muted-foreground">Última atualização:</span>
+                    <br />
+                    {new Date(selectedTicket.updated_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                  
+                  {selectedTicket.categories && (
+                    <div>
+                      <span className="font-medium text-muted-foreground">Categoria:</span>
+                      <br />
+                      {selectedTicket.categories.name}
+                    </div>
+                  )}
+                  
+                  {selectedTicket.resolved_at && (
+                    <div>
+                      <span className="font-medium text-muted-foreground">Resolvido em:</span>
+                      <br />
+                      {new Date(selectedTicket.resolved_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2 pt-4 border-t">
+                <Button 
+                  onClick={() => handleEditTicket(selectedTicket)}
+                  size="sm"
+                >
+                  Editar Chamado
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const companyData = company ? { name: company.name } : undefined;
+                    exportTicketToPDF(selectedTicket, companyData);
+                  }}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Exportar PDF
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setHistoryTicket(selectedTicket);
+                    setShowHistory(true);
+                    setShowTicketDetails(false);
+                  }}
+                >
+                  <History className="w-4 h-4 mr-2" />
+                  Ver Histórico
+                </Button>
+                
+                <div onClick={(e) => e.stopPropagation()}>
+                  <TicketShare ticketId={selectedTicket.id} />
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* History Dialog */}
       <Dialog open={showHistory} onOpenChange={setShowHistory}>
