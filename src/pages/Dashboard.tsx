@@ -242,39 +242,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-white border-b shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-white" />
-                </div>
-                <h1 className="text-xl font-bold">TicketFlow</h1>
-              </div>
-              {company && (
-                <div className="flex items-center space-x-2 text-muted-foreground">
-                  <Building2 className="w-4 h-4" />
-                  <span className="text-sm">{company.name}</span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4" />
-                <span className="text-sm font-medium">{profile.name}</span>
-                {getRoleBadge(profile.role)}
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!company ? (
