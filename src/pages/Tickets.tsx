@@ -141,6 +141,77 @@ const Tickets = () => {
     exportTicketToPDF(ticket, companyData);
   };
 
+  const handleStatusChange = async (newStatus: TicketStatus) => {
+    if (!selectedTicket) return;
+    
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .update({ 
+          status: newStatus,
+          resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null
+        })
+        .eq('id', selectedTicket.id);
+
+      if (error) throw error;
+
+      // Atualizar ticket local
+      const updatedTicket = { 
+        ...selectedTicket, 
+        status: newStatus,
+        resolved_at: newStatus === 'resolved' ? new Date().toISOString() : null
+      };
+      setSelectedTicket(updatedTicket);
+      
+      // Recarregar lista
+      loadTickets();
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Status atualizado com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar status',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handlePriorityChange = async (newPriority: TicketPriority) => {
+    if (!selectedTicket) return;
+    
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .update({ priority: newPriority })
+        .eq('id', selectedTicket.id);
+
+      if (error) throw error;
+
+      // Atualizar ticket local
+      const updatedTicket = { ...selectedTicket, priority: newPriority };
+      setSelectedTicket(updatedTicket);
+      
+      // Recarregar lista
+      loadTickets();
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Prioridade atualizada com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar prioridade:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar prioridade',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -193,6 +264,9 @@ const Tickets = () => {
       </Badge>
     );
   };
+
+  // Verificar se o usuário pode editar tickets (masters e technicians)
+  const canEditTickets = profile?.role === 'master' || profile?.role === 'technician';
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
@@ -362,8 +436,47 @@ const Tickets = () => {
               <span>{selectedTicket?.title}</span>
             </DialogTitle>
             <div className="flex items-center space-x-2">
-              {selectedTicket && getStatusBadge(selectedTicket.status || 'open')}
-              {selectedTicket && getPriorityBadge(selectedTicket.priority || 'medium')}
+              {selectedTicket && (
+                <>
+                  {canEditTickets ? (
+                    <Select 
+                      value={selectedTicket.status || 'open'} 
+                      onValueChange={(value: TicketStatus) => handleStatusChange(value)}
+                    >
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">Aberto</SelectItem>
+                        <SelectItem value="in_progress">Em Andamento</SelectItem>
+                        <SelectItem value="resolved">Resolvido</SelectItem>
+                        <SelectItem value="closed">Fechado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    getStatusBadge(selectedTicket.status || 'open')
+                  )}
+                  
+                  {canEditTickets ? (
+                    <Select 
+                      value={selectedTicket.priority || 'medium'} 
+                      onValueChange={(value: TicketPriority) => handlePriorityChange(value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Baixa</SelectItem>
+                        <SelectItem value="medium">Média</SelectItem>
+                        <SelectItem value="high">Alta</SelectItem>
+                        <SelectItem value="urgent">Urgente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    getPriorityBadge(selectedTicket.priority || 'medium')
+                  )}
+                </>
+              )}
             </div>
           </DialogHeader>
           
@@ -427,12 +540,14 @@ const Tickets = () => {
               
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 pt-4 border-t">
-                <Button 
-                  onClick={() => handleEditTicket(selectedTicket)}
-                  size="sm"
-                >
-                  Editar Chamado
-                </Button>
+                {canEditTickets && (
+                  <Button 
+                    onClick={() => handleEditTicket(selectedTicket)}
+                    size="sm"
+                  >
+                    Editar Chamado
+                  </Button>
+                )}
                 
                 <Button 
                   variant="outline" 
