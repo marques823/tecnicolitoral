@@ -206,8 +206,8 @@ const UserManagement = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-white border-b shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="mobile-container">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center h-auto sm:h-16 py-3 sm:py-0 gap-3 sm:gap-4">
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -215,17 +215,17 @@ const UserManagement = () => {
               </Button>
               <div className="flex items-center space-x-2">
                 <Users className="w-6 h-6 text-primary" />
-                <h1 className="text-xl font-bold">Gestão de Usuários</h1>
+                <h1 className="text-lg sm:text-xl font-bold">Gestão de Usuários</h1>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               {plan && (
                 <div className="text-sm text-muted-foreground">
                   {users.filter(u => u.active).length}/{plan.max_users} usuários
                 </div>
               )}
-              <Button onClick={handleCreateUser}>
+              <Button onClick={handleCreateUser} size="sm" className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Usuário
               </Button>
@@ -235,17 +235,17 @@ const UserManagement = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mobile-container py-4 sm:py-8 max-w-full overflow-x-hidden">
         {/* Search */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
+        <Card className="mb-4 sm:mb-6">
+          <CardContent className="pt-4 sm:pt-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Buscar usuários..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-10"
               />
             </div>
           </CardContent>
@@ -275,13 +275,13 @@ const UserManagement = () => {
                 )}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {filteredUsers.map((user) => (
                   <div
                     key={user.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg gap-3 sm:gap-4"
                   >
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         user.active ? 'bg-primary' : 'bg-muted'
                       }`}>
@@ -291,17 +291,17 @@ const UserManagement = () => {
                           <UserX className="w-5 h-5 text-muted-foreground" />
                         )}
                       </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-medium">{user.name}</h3>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-start sm:items-center gap-2 mb-1">
+                          <h3 className="font-medium text-sm sm:text-base truncate">{user.name}</h3>
                           {getRoleBadge(user.role)}
                           {!user.active && (
-                            <Badge variant="outline" className="text-muted-foreground">
+                            <Badge variant="outline" className="text-muted-foreground text-xs">
                               Inativo
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
                           {user.user_email}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -310,11 +310,12 @@ const UserManagement = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-end sm:justify-start space-x-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditUser(user)}
+                        className="h-8 w-8 p-0"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -322,6 +323,7 @@ const UserManagement = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleUserStatus(user.id, user.active)}
+                        className="h-8 w-8 p-0"
                       >
                         {user.active ? (
                           <UserX className="w-4 h-4" />
