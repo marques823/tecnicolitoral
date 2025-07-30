@@ -259,75 +259,75 @@ const Dashboard = () => {
         ) : (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {profile.role === 'client' ? 'Meus Chamados' : 'Total de Chamados'}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+              <Card className="p-3 sm:p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
+                    {profile.role === 'client' ? 'Meus Chamados' : 'Total'}
                   </CardTitle>
-                  <Ticket className="h-4 w-4 text-muted-foreground" />
+                  <Ticket className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+                <CardContent className="p-0 sm:p-6 sm:pt-0">
+                  <div className="text-lg sm:text-2xl font-bold">
                     {loadingData ? '...' : stats.totalTickets}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground hidden sm:block">
                     {profile.role === 'client' ? 'Total criados' : 'Todos os tickets'}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+              <Card className="p-3 sm:p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
                     Abertos
                   </CardTitle>
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-destructive rounded-full"></div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+                <CardContent className="p-0 sm:p-6 sm:pt-0">
+                  <div className="text-lg sm:text-2xl font-bold">
                     {loadingData ? '...' : stats.openTickets}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground hidden sm:block">
                     Aguardando atendimento
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Em Andamento
+              <Card className="p-3 sm:p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
+                    Progresso
                   </CardTitle>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-warning rounded-full"></div>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+                <CardContent className="p-0 sm:p-6 sm:pt-0">
+                  <div className="text-lg sm:text-2xl font-bold">
                     {loadingData ? '...' : stats.inProgressTickets}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground hidden sm:block">
                     Sendo processados
                   </p>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {profile.role === 'master' ? 'Usuários Ativos' : 'Resolvidos Hoje'}
+              <Card className="p-3 sm:p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
+                    {profile.role === 'master' ? 'Usuários' : 'Concluídos'}
                   </CardTitle>
                   {profile.role === 'master' ? 
-                    <Users className="h-4 w-4 text-muted-foreground" /> :
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" /> :
+                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-success rounded-full"></div>
                   }
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+                <CardContent className="p-0 sm:p-6 sm:pt-0">
+                  <div className="text-lg sm:text-2xl font-bold">
                     {loadingData ? '...' : 
                       profile.role === 'master' ? stats.activeUsers : stats.resolvedToday
                     }
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground hidden sm:block">
                     {profile.role === 'master' 
                       ? `de ${stats.maxUsers} disponíveis`
                       : 'Finalizados hoje'
@@ -338,7 +338,7 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <Card>
                 <CardHeader>
                   <CardTitle>Ações Rápidas</CardTitle>
@@ -346,9 +346,9 @@ const Dashboard = () => {
                     Acesse as funcionalidades principais
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4">
                   <Button 
-                    className="w-full justify-start" 
+                    className="w-full justify-start h-10 sm:h-auto" 
                     variant="outline"
                     onClick={() => navigate('/tickets')}
                   >
@@ -356,7 +356,7 @@ const Dashboard = () => {
                     Novo Chamado
                   </Button>
                   <Button 
-                    className="w-full justify-start" 
+                    className="w-full justify-start h-10 sm:h-auto" 
                     variant="outline"
                     onClick={() => navigate('/tickets')}
                   >
@@ -365,7 +365,7 @@ const Dashboard = () => {
                   </Button>
                   {(profile.role === 'master' || profile.role === 'technician') && (
                     <Button 
-                      className="w-full justify-start" 
+                      className="w-full justify-start h-10 sm:h-auto" 
                       variant="outline"
                       onClick={() => navigate('/reports')}
                     >
@@ -376,12 +376,12 @@ const Dashboard = () => {
                   {profile.role === 'master' && (
                     <>
                       <Button 
-                        className="w-full justify-start" 
+                        className="w-full justify-start h-10 sm:h-auto" 
                         variant="outline"
                         onClick={() => navigate('/users')}
                       >
                         <Users className="mr-2 h-4 w-4" />
-                        Gerenciar Usuários
+                        Usuários
                       </Button>
                       <Button 
                         className="w-full justify-start" 
