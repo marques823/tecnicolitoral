@@ -77,28 +77,18 @@ const UserManagement = () => {
 
   const loadUsers = async () => {
     try {
-      // Buscar perfis de usuários da empresa
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('company_id', company?.id)
-        .order('created_at', { ascending: false });
+      // Usar edge function para buscar usuários com emails reais
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'get_users',
+          company_id: company?.id
+        }
+      });
 
-      if (profilesError) throw profilesError;
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
 
-      // Buscar emails dos usuários
-      const userIds = profilesData?.map(p => p.user_id) || [];
-      const usersWithEmails = [];
-
-      for (const userProfile of profilesData || []) {
-        // Para cada perfil, buscar o email do usuário na tabela auth.users via RPC ou deixar vazio
-        usersWithEmails.push({
-          ...userProfile,
-          user_email: `user${userProfile.user_id.slice(-4)}@example.com` // Placeholder para demo
-        });
-      }
-
-      setUsers(usersWithEmails);
+      setUsers(data.users);
     } catch (error: any) {
       console.error('Error loading users:', error);
       toast({

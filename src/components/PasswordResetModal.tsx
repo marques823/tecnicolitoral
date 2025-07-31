@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,14 +43,16 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
 
     setLoading(true);
     try {
-      // Aqui você pode implementar a lógica de reset de senha
-      // Por exemplo, através de uma edge function ou update direto
-      const { error } = await supabase.auth.admin.updateUserById(
-        user.user_id,
-        { password: newPassword }
-      );
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'reset_password',
+          user_id: user.user_id,
+          new_password: newPassword
+        }
+      });
 
       if (error) throw error;
+      if (!data.success) throw new Error(data.error);
 
       toast({
         title: "Senha alterada",
@@ -79,6 +81,9 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
             <Key className="w-5 h-5" />
             <span>Resetar Senha</span>
           </DialogTitle>
+          <DialogDescription>
+            Defina uma nova senha para o usuário selecionado.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

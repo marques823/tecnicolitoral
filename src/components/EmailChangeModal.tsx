@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,14 +43,16 @@ const EmailChangeModal: React.FC<EmailChangeModalProps> = ({
 
     setLoading(true);
     try {
-      // Aqui você pode implementar a lógica de troca de email
-      // Por exemplo, através de uma edge function ou update direto
-      const { error } = await supabase.auth.admin.updateUserById(
-        user.user_id,
-        { email: newEmail }
-      );
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'change_email',
+          user_id: user.user_id,
+          new_email: newEmail
+        }
+      });
 
       if (error) throw error;
+      if (!data.success) throw new Error(data.error);
 
       toast({
         title: "Email alterado",
@@ -79,6 +81,9 @@ const EmailChangeModal: React.FC<EmailChangeModalProps> = ({
             <Mail className="w-5 h-5" />
             <span>Alterar Email</span>
           </DialogTitle>
+          <DialogDescription>
+            Defina um novo email para o usuário selecionado.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
