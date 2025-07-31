@@ -13,11 +13,19 @@ import {
   Edit,
   Trash2,
   UserCheck,
-  UserX
+  UserX,
+  MoreHorizontal,
+  Mail,
+  Key
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import UserForm from '@/components/UserForm';
+import UserDetailModal from '@/components/UserDetailModal';
+import PasswordResetModal from '@/components/PasswordResetModal';
+import EmailChangeModal from '@/components/EmailChangeModal';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 
 interface UserProfile {
   id: string;
@@ -45,6 +53,12 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [showUserDetail, setShowUserDetail] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [showEmailChange, setShowEmailChange] = useState(false);
+  const [passwordResetUser, setPasswordResetUser] = useState<UserProfile | null>(null);
+  const [emailChangeUser, setEmailChangeUser] = useState<UserProfile | null>(null);
 
   // Verificar se o usuário é Master
   useEffect(() => {
@@ -169,6 +183,23 @@ const UserManagement = () => {
     loadUsers();
   };
 
+  const handleUserClick = (user: UserProfile) => {
+    setSelectedUser(user);
+    setShowUserDetail(true);
+  };
+
+  const handleResetPassword = (user: UserProfile) => {
+    setPasswordResetUser(user);
+    setShowPasswordReset(true);
+    setShowUserDetail(false);
+  };
+
+  const handleChangeEmail = (user: UserProfile) => {
+    setEmailChangeUser(user);
+    setShowEmailChange(true);
+    setShowUserDetail(false);
+  };
+
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -275,25 +306,26 @@ const UserManagement = () => {
                 )}
               </div>
             ) : (
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-2">
                 {filteredUsers.map((user) => (
                   <div
                     key={user.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg gap-3 sm:gap-4"
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => handleUserClick(user)}
                   >
-                    <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         user.active ? 'bg-primary' : 'bg-muted'
                       }`}>
                         {user.active ? (
-                          <UserCheck className="w-5 h-5 text-white" />
+                          <UserCheck className="w-4 h-4 text-white" />
                         ) : (
-                          <UserX className="w-5 h-5 text-muted-foreground" />
+                          <UserX className="w-4 h-4 text-muted-foreground" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-start sm:items-center gap-2 mb-1">
-                          <h3 className="font-medium text-sm sm:text-base truncate">{user.name}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-sm truncate">{user.name}</h3>
                           {getRoleBadge(user.role)}
                           {!user.active && (
                             <Badge variant="outline" className="text-muted-foreground text-xs">
@@ -301,37 +333,59 @@ const UserManagement = () => {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {user.user_email}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Criado em {new Date(user.created_at).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end sm:justify-start space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleUserStatus(user.id, user.active)}
-                        className="h-8 w-8 p-0"
-                      >
-                        {user.active ? (
-                          <UserX className="w-4 h-4" />
-                        ) : (
-                          <UserCheck className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditUser(user);
+                        }}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleUserStatus(user.id, user.active);
+                        }}>
+                          {user.active ? (
+                            <>
+                              <UserX className="w-4 h-4 mr-2" />
+                              Desativar
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="w-4 h-4 mr-2" />
+                              Ativar
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <Separator />
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleResetPassword(user);
+                        }}>
+                          <Key className="w-4 h-4 mr-2" />
+                          Resetar Senha
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleChangeEmail(user);
+                        }}>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Alterar Email
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 ))}
               </div>
@@ -349,6 +403,46 @@ const UserManagement = () => {
           onCancel={() => {
             setShowUserForm(false);
             setEditingUser(null);
+          }}
+        />
+      )}
+
+      {/* User Detail Modal */}
+      {showUserDetail && selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          open={showUserDetail}
+          onClose={() => {
+            setShowUserDetail(false);
+            setSelectedUser(null);
+          }}
+          onEdit={handleEditUser}
+          onToggleStatus={handleToggleUserStatus}
+          onResetPassword={handleResetPassword}
+          onChangeEmail={handleChangeEmail}
+        />
+      )}
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && passwordResetUser && (
+        <PasswordResetModal
+          user={passwordResetUser}
+          open={showPasswordReset}
+          onClose={() => {
+            setShowPasswordReset(false);
+            setPasswordResetUser(null);
+          }}
+        />
+      )}
+
+      {/* Email Change Modal */}
+      {showEmailChange && emailChangeUser && (
+        <EmailChangeModal
+          user={emailChangeUser}
+          open={showEmailChange}
+          onClose={() => {
+            setShowEmailChange(false);
+            setEmailChangeUser(null);
           }}
         />
       )}
