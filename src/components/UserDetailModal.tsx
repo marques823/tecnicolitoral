@@ -36,6 +36,7 @@ interface UserDetailModalProps {
   onToggleStatus: (userId: string, currentStatus: boolean) => void;
   onResetPassword: (user: UserProfile) => void;
   onChangeEmail: (user: UserProfile) => void;
+  onDelete: (user: UserProfile) => void;
 }
 
 const UserDetailModal: React.FC<UserDetailModalProps> = ({
@@ -45,7 +46,8 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   onEdit,
   onToggleStatus,
   onResetPassword,
-  onChangeEmail
+  onChangeEmail,
+  onDelete
 }) => {
   const getRoleBadge = (role: string) => {
     const variants = {
@@ -108,6 +110,14 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <DropdownMenuItem onClick={() => onChangeEmail(user)}>
                   <Mail className="w-4 h-4 mr-2" />
                   Alterar Email
+                </DropdownMenuItem>
+                <Separator className="my-1" />
+                <DropdownMenuItem 
+                  onClick={() => onDelete(user)}
+                  className="text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Excluir Usuário
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

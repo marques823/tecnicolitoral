@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface ManageUserRequest {
-  action: 'reset_password' | 'change_email' | 'get_users';
+  action: 'reset_password' | 'change_email' | 'get_users' | 'delete_user';
   user_id?: string;
   new_password?: string;
   new_email?: string;
@@ -40,6 +40,12 @@ const handler = async (req: Request): Promise<Response> => {
           throw new Error('User ID and new password are required');
         }
 
+        // Verificar se o usuário existe antes de tentar atualizar
+        const { data: existingUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(user_id);
+        if (getUserError || !existingUser.user) {
+          throw new Error('User not found in authentication system');
+        }
+
         const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
           user_id,
           { password: new_password }
@@ -55,6 +61,12 @@ const handler = async (req: Request): Promise<Response> => {
       case 'change_email':
         if (!user_id || !new_email) {
           throw new Error('User ID and new email are required');
+        }
+
+        // Verificar se o usuário existe antes de tentar atualizar
+        const { data: existingUserEmail, error: getUserEmailError } = await supabaseAdmin.auth.admin.getUserById(user_id);
+        if (getUserEmailError || !existingUserEmail.user) {
+          throw new Error('User not found in authentication system');
         }
 
         const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(
@@ -112,6 +124,38 @@ const handler = async (req: Request): Promise<Response> => {
 
         return new Response(
           JSON.stringify({ success: true, users: usersWithEmails }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+
+      case 'delete_user':
+        if (!user_id) {
+          throw new Error('User ID is required');
+        }
+
+        // Verificar se o usuário existe antes de tentar excluir
+        const { data: existingUserDelete, error: getUserDeleteError } = await supabaseAdmin.auth.admin.getUserById(user_id);
+        if (getUserDeleteError || !existingUserDelete.user) {
+          throw new Error('User not found in authentication system');
+        }
+
+        // Primeiro, excluir o perfil do usuário da tabela profiles
+        const { error: profileDeleteError } = await supabaseAdmin
+          .from('profiles')
+          .delete()
+          .eq('user_id', user_id);
+
+        if (profileDeleteError) {
+          console.error('Error deleting profile:', profileDeleteError);
+          // Continua mesmo se der erro no perfil
+        }
+
+        // Depois, excluir o usuário do sistema de autenticação
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
+
+        if (deleteError) throw deleteError;
+
+        return new Response(
+          JSON.stringify({ success: true, message: 'User deleted successfully' }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
 

@@ -190,6 +190,40 @@ const UserManagement = () => {
     setShowUserDetail(false);
   };
 
+  const handleDeleteUser = async (user: UserProfile) => {
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${user.name}? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'delete_user',
+          user_id: user.user_id
+        }
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      toast({
+        title: "Usuário excluído",
+        description: "O usuário foi excluído com sucesso.",
+      });
+
+      setShowUserDetail(false);
+      setSelectedUser(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro ao excluir usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.user_email?.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -374,6 +408,17 @@ const UserManagement = () => {
                           <Mail className="w-4 h-4 mr-2" />
                           Alterar Email
                         </DropdownMenuItem>
+                        <Separator />
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteUser(user);
+                          }}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Excluir Usuário
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -410,6 +455,7 @@ const UserManagement = () => {
           onToggleStatus={handleToggleUserStatus}
           onResetPassword={handleResetPassword}
           onChangeEmail={handleChangeEmail}
+          onDelete={handleDeleteUser}
         />
       )}
 
