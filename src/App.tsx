@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
+import NavigationMenu from "@/components/NavigationMenu";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -32,6 +33,7 @@ const App = () => (
         <BrowserRouter>
           <div className="min-h-screen flex flex-col">
             <Header />
+            <NavigationMenu />
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Index />} />

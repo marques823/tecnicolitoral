@@ -82,14 +82,24 @@ const Tickets = () => {
   const loadTickets = async () => {
     try {
       setLoadingTickets(true);
-      const { data, error } = await supabase
+      
+      // Filtra tickets baseado no role do usuário
+      let query = supabase
         .from('tickets')
         .select(`
           *,
           categories (name)
-        `)
-        .eq('company_id', company?.id)
-        .order('created_at', { ascending: false });
+        `);
+
+      // Para clientes, mostrar apenas os tickets que eles criaram
+      if (profile?.role === 'client') {
+        query = query.eq('created_by', user?.id);
+      } else {
+        // Para masters e technicians, mostrar todos os tickets da empresa
+        query = query.eq('company_id', company?.id);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setTickets(data as any || []);
