@@ -216,9 +216,19 @@ const UserManagement = () => {
       loadUsers();
     } catch (error: any) {
       console.error('Error deleting user:', error);
+      
+      let errorMessage = "Não foi possível excluir o usuário. Tente novamente.";
+      if (error.message && error.message.includes('User not found')) {
+        errorMessage = 'Este usuário não foi encontrado no sistema. Ele pode ter sido removido anteriormente.';
+        // Mesmo assim, recarregar a lista para remover da interface
+        loadUsers();
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erro ao excluir usuário",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }

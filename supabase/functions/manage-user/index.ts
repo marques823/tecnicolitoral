@@ -95,8 +95,10 @@ const handler = async (req: Request): Promise<Response> => {
 
         if (profilesError) throw profilesError;
 
-        // Buscar emails dos usuários
+        // Buscar emails dos usuários e limpar dados órfãos
         const usersWithEmails = [];
+        const orphanedProfiles = [];
+
         for (const profile of profiles || []) {
           try {
             const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
@@ -107,18 +109,27 @@ const handler = async (req: Request): Promise<Response> => {
                 user_email: userData.user.email
               });
             } else {
-              // Fallback se não conseguir buscar o email
-              usersWithEmails.push({
-                ...profile,
-                user_email: `user${profile.user_id.slice(-4)}@example.com`
-              });
+              // Usuário órfão - existe no profiles mas não no auth
+              console.log(`Orphaned profile found: ${profile.id}, user_id: ${profile.user_id}`);
+              orphanedProfiles.push(profile.id);
             }
           } catch (error) {
             console.error('Error fetching user email:', error);
-            usersWithEmails.push({
-              ...profile,
-              user_email: `user${profile.user_id.slice(-4)}@example.com`
-            });
+            // Adicionar à lista de órfãos para limpeza
+            orphanedProfiles.push(profile.id);
+          }
+        }
+
+        // Limpar perfis órfãos (opcional - pode ser feito em background)
+        if (orphanedProfiles.length > 0) {
+          console.log(`Cleaning up ${orphanedProfiles.length} orphaned profiles`);
+          try {
+            await supabaseAdmin
+              .from('profiles')
+              .delete()
+              .in('id', orphanedProfiles);
+          } catch (cleanupError) {
+            console.error('Error cleaning orphaned profiles:', cleanupError);
           }
         }
 

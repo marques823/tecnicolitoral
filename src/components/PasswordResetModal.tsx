@@ -63,9 +63,17 @@ const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
       onClose();
     } catch (error: any) {
       console.error('Error resetting password:', error);
+      
+      let errorMessage = "Não foi possível alterar a senha. Tente novamente.";
+      if (error.message && error.message.includes('User not found')) {
+        errorMessage = 'Este usuário não foi encontrado no sistema. Ele pode ter sido removido anteriormente.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erro ao alterar senha",
-        description: "Não foi possível alterar a senha. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

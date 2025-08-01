@@ -63,9 +63,17 @@ const EmailChangeModal: React.FC<EmailChangeModalProps> = ({
       onClose();
     } catch (error: any) {
       console.error('Error changing email:', error);
+      
+      let errorMessage = "Não foi possível alterar o email. Tente novamente.";
+      if (error.message && error.message.includes('User not found')) {
+        errorMessage = 'Este usuário não foi encontrado no sistema. Ele pode ter sido removido anteriormente.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Erro ao alterar email",
-        description: "Não foi possível alterar o email. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
