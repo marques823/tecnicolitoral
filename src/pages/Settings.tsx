@@ -105,12 +105,31 @@ export default function Settings() {
         });
       }
 
-      // Configurações de notificação são simuladas (podem ser implementadas no futuro)
-      setNotificationSettings({
-        email_on_new_ticket: false,
-        email_on_status_change: false,
-        email_on_assignment: false
-      });
+      // Carregar configurações de notificação do banco
+      if (user?.id) {
+        const { data: notificationData, error: notificationError } = await supabase
+          .from('user_notification_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (notificationError && notificationError.code !== 'PGRST116') {
+          console.error('Erro ao carregar configurações de notificação:', notificationError);
+        } else if (notificationData) {
+          setNotificationSettings({
+            email_on_new_ticket: notificationData.email_on_new_ticket,
+            email_on_status_change: notificationData.email_on_status_change,
+            email_on_assignment: notificationData.email_on_assignment
+          });
+        } else {
+          // Se não existe configuração, manter valores padrão
+          setNotificationSettings({
+            email_on_new_ticket: false,
+            email_on_status_change: false,
+            email_on_assignment: false
+          });
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
       toast({
@@ -253,12 +272,38 @@ export default function Settings() {
     }
   };
 
-  const saveNotificationSettings = () => {
-    // Implementação futura - por enquanto apenas simula o salvamento
-    toast({
-      title: "Sucesso",
-      description: "Configurações de notificação salvas",
-    });
+  const saveNotificationSettings = async () => {
+    if (!user?.id) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('user_notification_settings')
+        .upsert({
+          user_id: user.id,
+          email_on_new_ticket: notificationSettings.email_on_new_ticket,
+          email_on_status_change: notificationSettings.email_on_status_change,
+          email_on_assignment: notificationSettings.email_on_assignment
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações de notificação salvas com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar configurações de notificação:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações de notificação",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -576,9 +621,9 @@ export default function Settings() {
           </div>
 
           <div className="pt-4">
-            <Button onClick={saveNotificationSettings} variant="outline">
+            <Button onClick={saveNotificationSettings} disabled={saving} variant="outline">
               <Save className="w-4 h-4 mr-2" />
-              Salvar Preferências de Notificação
+              {saving ? 'Salvando...' : 'Salvar Preferências de Notificação'}
             </Button>
           </div>
         </CardContent>

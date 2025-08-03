@@ -33,7 +33,16 @@ const handler = async (req: Request): Promise<Response> => {
       hasServiceKey: !!supabaseServiceKey
     });
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing required environment variables');
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
     // Parse request body
     const requestBody: CreateUserRequest = await req.json();
@@ -41,13 +50,27 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('Request data:', { email, name, role, company_id, active });
 
-    // Check if user already exists
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const userExists = existingUsers.users.some(u => u.email === email);
-    
-    if (userExists) {
-      console.log('User already exists:', email);
-      throw new Error('Usuário com este email já existe');
+    // Validate required fields
+    if (!email || !password || !name || !role || !company_id) {
+      throw new Error('Todos os campos são obrigatórios');
+    }
+
+    if (password.length < 6) {
+      throw new Error('A senha deve ter pelo menos 6 caracteres');
+    }
+
+    // Check if user already exists by trying to get user by email
+    try {
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const userExists = existingUsers.users.some(u => u.email === email);
+      
+      if (userExists) {
+        console.log('User already exists:', email);
+        throw new Error('Usuário com este email já existe');
+      }
+    } catch (listError: any) {
+      console.error('Error listing users:', listError);
+      throw new Error('Erro ao verificar usuários existentes');
     }
 
     console.log('Creating user in auth...');
