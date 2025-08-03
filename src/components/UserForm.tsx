@@ -76,6 +76,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
           throw new Error('Email e senha são obrigatórios para novos usuários');
         }
 
+        console.log('Tentando criar usuário:', { 
+          email: formData.email, 
+          name: formData.name, 
+          role: formData.role,
+          company_id: companyId,
+          active: formData.active 
+        });
+
         const { data, error } = await supabase.functions.invoke('create-user', {
           body: {
             email: formData.email,
@@ -87,13 +95,24 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
           }
         });
 
+        console.log('Resposta da edge function:', { data, error });
+
         if (error) {
           console.error('Edge function error:', error);
-          throw new Error(error.message || 'Erro ao criar usuário');
+          
+          // Tentar obter mais detalhes do erro
+          let errorMessage = 'Erro ao criar usuário';
+          if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          throw new Error(errorMessage);
         }
 
-        if (!data.success) {
-          throw new Error(data.error || 'Erro ao criar usuário');
+        if (!data || !data.success) {
+          const errorMsg = data?.error || 'Erro desconhecido ao criar usuário';
+          console.error('Edge function returned error:', errorMsg);
+          throw new Error(errorMsg);
         }
 
         toast({
