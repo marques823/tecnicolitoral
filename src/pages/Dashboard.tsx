@@ -350,7 +350,7 @@ const Dashboard = () => {
                   <Button 
                     className="w-full justify-start h-10 sm:h-auto" 
                     variant="outline"
-                    onClick={() => navigate('/tickets')}
+                    onClick={() => navigate('/tickets?action=new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Novo Chamado
