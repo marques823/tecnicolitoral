@@ -97,26 +97,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Check if user already exists
     console.log('Checking for existing users...');
-    try {
-      const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-      
-      if (listError) {
-        console.error('Error listing users:', listError);
-        throw new Error('Erro ao verificar usuários existentes');
-      }
-
-      const userExists = existingUsers.users.some(u => u.email === email);
-      
-      if (userExists) {
-        console.log('User already exists:', email);
-        throw new Error('Usuário com este email já existe');
-      }
-      
-      console.log('No existing user found, proceeding with creation');
-    } catch (listError: any) {
-      console.error('Error checking existing users:', listError);
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error listing users:', listError);
       throw new Error('Erro ao verificar usuários existentes');
     }
+
+    const userExists = existingUsers.users.some(u => u.email === email);
+    
+    if (userExists) {
+      console.log('User already exists:', email);
+      throw new Error('Usuário com este email já existe');
+    }
+    
+    console.log('No existing user found, proceeding with creation');
 
     console.log('Creating user in auth...');
 
