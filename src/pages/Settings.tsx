@@ -230,6 +230,9 @@ export default function Settings() {
         title: "Sucesso",
         description: "Configurações da empresa salvas com sucesso",
       });
+
+      // Recarregar a página para aplicar as novas configurações de tema
+      window.location.reload();
     } catch (error) {
       console.error('Erro ao salvar configurações da empresa:', error);
       toast({
