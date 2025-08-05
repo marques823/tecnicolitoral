@@ -21,7 +21,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export default function Header() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, company, signOut } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -129,9 +129,23 @@ export default function Header() {
     <>
       <header className="bg-background border-b border-border px-4 py-3 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Ticket className="w-6 h-6 text-primary" />
-            <span className="font-bold text-lg">TicketFlow</span>
+          <div className="flex items-center space-x-3">
+            {company?.logo_url ? (
+              <img 
+                src={company.logo_url} 
+                alt={`${company.name} Logo`}
+                className="w-8 h-8 object-contain"
+                onError={(e) => {
+                  // Fallback para o ícone se a imagem não carregar
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <Ticket className={cn("w-6 h-6 text-primary", company?.logo_url && "hidden")} />
+            <span className="font-bold text-lg">
+              {company?.name || 'TicketFlow'}
+            </span>
           </div>
           
           {/* Desktop User Info */}

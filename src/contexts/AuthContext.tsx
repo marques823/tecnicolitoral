@@ -17,6 +17,10 @@ interface Company {
   name: string;
   plan_id: string;
   active: boolean;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  custom_css?: string;
 }
 
 interface AuthContextType {
