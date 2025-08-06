@@ -2,3 +2,9 @@ project_id = "krqhhjkdvgddaghkxwdg"
 
 [functions.create-user]
 verify_jwt = false
+
+[functions.send-notification-email]
+verify_jwt = false
+
+[functions.manage-user]
+verify_jwt = false
