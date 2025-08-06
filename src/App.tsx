@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useCompanyTheme } from "@/hooks/useCompanyTheme";
+import { useNotificationHandler } from "@/hooks/useNotificationHandler";
 import Header from "@/components/Header";
 import NavigationMenu from "@/components/NavigationMenu";
 import Index from "./pages/Index";
@@ -27,6 +28,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   useCompanyTheme();
+  useNotificationHandler();
   
   return (
     <div className="min-h-screen flex flex-col">
