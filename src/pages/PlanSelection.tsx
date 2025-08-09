@@ -65,42 +65,22 @@ export default function PlanSelection() {
 
     setCreating(true);
     try {
-      // Criar empresa
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
-        .insert({
-          name: `Empresa de ${user.user_metadata?.name || user.email}`,
+      const companyName = `Empresa de ${user.user_metadata?.name || user.email}`;
+      const { data: newCompanyId, error } = await supabase
+        .rpc('create_company_and_profile', {
+          company_name: companyName,
           plan_id: plan.id,
-          active: true
-        })
-        .select()
-        .single();
-
-      if (companyError) throw companyError;
-
-      // Criar perfil do usuário como master
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: user.id,
-          company_id: companyData.id,
-          name: user.user_metadata?.name || user.email,
-          role: 'master',
-          active: true
         });
 
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       toast({
         title: "Sucesso!",
         description: `Sua empresa foi criada com o plano ${plan.name}`,
       });
 
-      // Aguarda um pouco para garantir que o contexto seja atualizado
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
-
+      // Redireciona imediatamente; o contexto será atualizado ao entrar no dashboard
+      navigate('/dashboard');
     } catch (error: any) {
       console.error('Erro ao criar empresa:', error);
       toast({
