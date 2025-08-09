@@ -508,6 +508,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_company_and_profile: {
+        Args: { company_name: string; plan_id: string }
+        Returns: string
+      }
       generate_share_token: {
         Args: Record<PropertyKey, never>
         Returns: string
