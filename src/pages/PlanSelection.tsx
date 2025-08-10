@@ -76,35 +76,28 @@ export default function PlanSelection() {
     }
   };
 
-  const createCompanyAndProfile = async (plan: Plan) => {
+  const startCheckout = async (plan: Plan) => {
     if (!user) return;
 
     setCreating(true);
     try {
-      const companyName = `Empresa de ${user.user_metadata?.name || user.email}`;
-      const { data: newCompanyId, error } = await supabase
-        .rpc('create_company_and_profile', {
-          company_name: companyName,
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
           plan_id: plan.id,
-        });
-
-      if (error) throw error;
-
-      // Atualiza perfil/empresa imediatamente para refletir role master
-      await refreshAuthData();
-
-      toast({
-        title: "Sucesso!",
-        description: `Sua empresa foi criada com o plano ${plan.name}`,
+          is_annual: isAnnual,
+        },
       });
+      if (error) throw error;
+      if (!data?.url) throw new Error('Não foi possível iniciar o pagamento');
 
-      navigate('/dashboard');
+      toast({ title: 'Redirecionando ao pagamento', description: 'Abrindo o checkout em uma nova aba.' });
+      window.open(data.url, '_blank');
     } catch (error: any) {
-      console.error('Erro ao criar empresa:', error);
+      console.error('Erro ao iniciar pagamento:', error);
       toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar empresa",
-        variant: "destructive",
+        title: 'Erro',
+        description: error.message || 'Erro ao iniciar pagamento',
+        variant: 'destructive',
       });
     } finally {
       setCreating(false);
@@ -298,7 +291,7 @@ export default function PlanSelection() {
                     className="w-full"
                     size="lg"
                     variant={isPopular ? "default" : "outline"}
-                    onClick={() => createCompanyAndProfile(plan)}
+                    onClick={() => startCheckout(plan)}
                     disabled={creating || !isEmailVerified}
                   >
                     {creating ? (

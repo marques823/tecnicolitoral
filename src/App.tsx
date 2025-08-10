@@ -23,6 +23,8 @@ import PlanSelection from "./pages/PlanSelection";
 import SuperAdmin from "./pages/SuperAdmin";
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
 import NotFound from "./pages/NotFound";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCanceled from "./pages/PaymentCanceled";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ const AppContent = () => {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/plan-selection" element={<PlanSelection />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-canceled" element={<PaymentCanceled />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/tickets" element={<Tickets />} />
