@@ -26,7 +26,7 @@ export default function PlanSelection() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshAuthData } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +38,22 @@ export default function PlanSelection() {
     
     loadPlans();
   }, [profile, navigate]);
+
+  const isEmailVerified = Boolean(user?.email_confirmed_at);
+
+  const resendVerification = async () => {
+    if (!user?.email) return;
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email,
+      });
+      if (error) throw error;
+      toast({ title: 'E-mail reenviado', description: 'Verifique sua caixa de entrada.' });
+    } catch (err: any) {
+      toast({ title: 'Erro', description: err.message || 'Não foi possível reenviar o e-mail.', variant: 'destructive' });
+    }
+  };
 
   const loadPlans = async () => {
     try {
@@ -74,12 +90,14 @@ export default function PlanSelection() {
 
       if (error) throw error;
 
+      // Atualiza perfil/empresa imediatamente para refletir role master
+      await refreshAuthData();
+
       toast({
         title: "Sucesso!",
         description: `Sua empresa foi criada com o plano ${plan.name}`,
       });
 
-      // Redireciona imediatamente; o contexto será atualizado ao entrar no dashboard
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Erro ao criar empresa:', error);
@@ -172,6 +190,18 @@ export default function PlanSelection() {
             )}
           </div>
         </div>
+
+        {!isEmailVerified && (
+          <Card className="border-dashed">
+            <CardContent className="py-4 flex items-center justify-between">
+              <div>
+                <p className="font-medium">Confirme seu e-mail para continuar</p>
+                <p className="text-sm text-muted-foreground">Enviamos um link para {user?.email}. Após confirmar, recarregue esta página.</p>
+              </div>
+              <Button variant="outline" onClick={resendVerification}>Reenviar e-mail</Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Planos */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -269,7 +299,7 @@ export default function PlanSelection() {
                     size="lg"
                     variant={isPopular ? "default" : "outline"}
                     onClick={() => createCompanyAndProfile(plan)}
-                    disabled={creating}
+                    disabled={creating || !isEmailVerified}
                   >
                     {creating ? (
                       'Criando...'

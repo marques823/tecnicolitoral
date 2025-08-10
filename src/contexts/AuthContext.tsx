@@ -32,6 +32,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  refreshAuthData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -189,16 +190,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCompany(null);
   };
 
-  const value = {
-    user,
-    session,
-    profile,
-    company,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-  };
+const refreshAuthData = async () => {
+  if (!user) return;
+  setLoading(true);
+  try {
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Error refreshing profile:', profileError);
+    } else {
+      setProfile(profileData);
+      if (profileData?.company_id) {
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', profileData.company_id)
+          .single();
+        if (!companyError && companyData) {
+          setCompany(companyData);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error refreshing auth data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const value = {
+  user,
+  session,
+  profile,
+  company,
+  loading,
+  signIn,
+  signUp,
+  signOut,
+  refreshAuthData,
+};
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
