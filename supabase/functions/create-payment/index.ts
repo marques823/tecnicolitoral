@@ -35,13 +35,16 @@ serve(async (req) => {
     if (!plan_id) throw new Error("plan_id is required");
 
     // Fetch plan details securely from DB (avoid trusting client values)
+    console.log("Fetching plan:", plan_id);
     const { data: plan, error: planError } = await supabase
       .from('plans')
       .select('id,name,monthly_price')
       .eq('id', plan_id)
-      .single();
+      .maybeSingle();
 
-    if (planError || !plan) throw new Error("Plano não encontrado");
+    console.log("Plan data:", plan, "Error:", planError);
+    if (planError) throw new Error(`Erro ao buscar plano: ${planError.message}`);
+    if (!plan) throw new Error("Plano não encontrado");
 
     const priceMonthly = Number(plan.monthly_price || 0);
     if (!priceMonthly || priceMonthly <= 0) throw new Error("Preço inválido do plano");
