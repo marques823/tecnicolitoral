@@ -21,14 +21,22 @@ serve(async (req) => {
   const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const stripeSecret = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 
-  const supabase = createClient(supabaseUrl, supabaseAnon);
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
+    });
+  }
+  const token = authHeader.replace("Bearer ", "");
+
+  // Create a Supabase client that forwards the user's JWT so RLS runs in the user's context
+  const supabase = createClient(supabaseUrl, supabaseAnon, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing Authorization header");
-    const token = authHeader.replace("Bearer ", "");
-
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData.user?.email) throw new Error("Not authenticated or email missing");
 
     const { plan_id, is_annual }: CreatePaymentRequest = await req.json();
