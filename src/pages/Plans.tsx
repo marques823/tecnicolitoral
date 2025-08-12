@@ -137,6 +137,7 @@ export default function Plans() {
   };
 
   const formatPrice = (price: number, annual: boolean = false) => {
+    if (price === 0) return 'Grátis';
     const finalPrice = annual ? price * 12 * 0.8 : price; // 20% de desconto no anual
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -232,10 +233,14 @@ export default function Plans() {
                 <p className="text-sm font-medium">Preço {isAnnual ? 'Anual' : 'Mensal'}</p>
                 <p className="text-2xl font-bold">
                   {formatPrice(currentPlan.monthly_price, isAnnual)}
-                  {isAnnual && <span className="text-sm font-normal text-muted-foreground">/ano</span>}
-                  {!isAnnual && <span className="text-sm font-normal text-muted-foreground">/mês</span>}
+                  {currentPlan.monthly_price > 0 && (
+                    <>
+                      {isAnnual && <span className="text-sm font-normal text-muted-foreground">/ano</span>}
+                      {!isAnnual && <span className="text-sm font-normal text-muted-foreground">/mês</span>}
+                    </>
+                  )}
                 </p>
-                {isAnnual && (
+                {isAnnual && currentPlan.monthly_price > 0 && (
                   <p className="text-sm text-green-600">
                     Economia de {getAnnualSavings(currentPlan.monthly_price)} por ano
                   </p>
@@ -273,25 +278,27 @@ export default function Plans() {
                     {getPlanIcon(plan.type)}
                   </div>
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <div className="space-y-2">
-                    <div className="text-3xl font-bold text-primary">
-                      {formatPrice(plan.monthly_price, isAnnual)}
-                      <span className="text-sm font-normal text-muted-foreground">
-                        /{isAnnual ? 'ano' : 'mês'}
-                      </span>
-                    </div>
-                    
-                    {isAnnual && (
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground line-through">
-                          {formatPrice(plan.monthly_price * 12)} por ano
-                        </p>
-                        <p className="text-sm text-green-600 font-medium">
-                          Economia de {getAnnualSavings(plan.monthly_price)} por ano
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                   <div className="space-y-2">
+                     <div className="text-3xl font-bold text-primary">
+                       {formatPrice(plan.monthly_price, isAnnual)}
+                       {plan.monthly_price > 0 && (
+                         <span className="text-sm font-normal text-muted-foreground">
+                           /{isAnnual ? 'ano' : 'mês'}
+                         </span>
+                       )}
+                     </div>
+                     
+                     {isAnnual && plan.monthly_price > 0 && (
+                       <div className="space-y-1">
+                         <p className="text-sm text-muted-foreground line-through">
+                           {formatPrice(plan.monthly_price * 12)} por ano
+                         </p>
+                         <p className="text-sm text-green-600 font-medium">
+                           Economia de {getAnnualSavings(plan.monthly_price)} por ano
+                         </p>
+                       </div>
+                     )}
+                   </div>
                 </CardHeader>
                 
                 <CardContent className="space-y-4">

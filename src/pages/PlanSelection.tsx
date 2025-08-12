@@ -81,6 +81,22 @@ export default function PlanSelection() {
 
     setCreating(true);
     try {
+      // Se o plano é gratuito, cria a empresa diretamente
+      if (plan.monthly_price === 0) {
+        const companyName = `Empresa de ${user.user_metadata?.name || user.email}`;
+        const { error } = await supabase.rpc('create_company_and_profile', {
+          company_name: companyName,
+          plan_id: plan.id,
+        });
+        if (error) throw error;
+        
+        await refreshAuthData();
+        toast({ title: 'Sucesso', description: 'Empresa criada com sucesso!' });
+        navigate('/dashboard');
+        return;
+      }
+
+      // Para planos pagos, usa o Stripe
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: {
           plan_id: plan.id,
@@ -93,10 +109,10 @@ export default function PlanSelection() {
       toast({ title: 'Redirecionando ao pagamento', description: 'Abrindo o checkout em uma nova aba.' });
       window.open(data.url, '_blank');
     } catch (error: any) {
-      console.error('Erro ao iniciar pagamento:', error);
+      console.error('Erro ao iniciar processo:', error);
       toast({
         title: 'Erro',
-        description: error.message || 'Erro ao iniciar pagamento',
+        description: error.message || 'Erro ao processar solicitação',
         variant: 'destructive',
       });
     } finally {
@@ -131,6 +147,7 @@ export default function PlanSelection() {
   };
 
   const formatPrice = (price: number, annual: boolean = false) => {
+    if (price === 0) return 'Grátis';
     const finalPrice = annual ? price * 12 * 0.8 : price; // 20% de desconto no anual
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -222,25 +239,27 @@ export default function PlanSelection() {
                   </div>
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   
-                  <div className="space-y-2">
-                    <div className="text-4xl font-bold text-primary">
-                      {formatPrice(plan.monthly_price, isAnnual)}
-                      <span className="text-lg font-normal text-muted-foreground">
-                        /{isAnnual ? 'ano' : 'mês'}
-                      </span>
-                    </div>
-                    
-                    {isAnnual && (
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground line-through">
-                          {formatPrice(plan.monthly_price * 12)} por ano
-                        </p>
-                        <p className="text-sm text-green-600 font-medium">
-                          Economia de {getAnnualSavings(plan.monthly_price)} por ano
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                   <div className="space-y-2">
+                     <div className="text-4xl font-bold text-primary">
+                       {formatPrice(plan.monthly_price, isAnnual)}
+                       {plan.monthly_price > 0 && (
+                         <span className="text-lg font-normal text-muted-foreground">
+                           /{isAnnual ? 'ano' : 'mês'}
+                         </span>
+                       )}
+                     </div>
+                     
+                     {isAnnual && plan.monthly_price > 0 && (
+                       <div className="space-y-1">
+                         <p className="text-sm text-muted-foreground line-through">
+                           {formatPrice(plan.monthly_price * 12)} por ano
+                         </p>
+                         <p className="text-sm text-green-600 font-medium">
+                           Economia de {getAnnualSavings(plan.monthly_price)} por ano
+                         </p>
+                       </div>
+                     )}
+                   </div>
                 </CardHeader>
                 
                 <CardContent className="space-y-6">
