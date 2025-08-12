@@ -45,13 +45,6 @@ export default function Header() {
             >
               Login
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/create-super-admin')}
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              Criar Admin
-            </Button>
           </div>
           <div className="sm:hidden">
             <Button
@@ -74,14 +67,6 @@ export default function Header() {
                 onClick={() => navigate('/auth')}
               >
                 Login
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => navigate('/create-super-admin')}
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Criar Admin
               </Button>
             </div>
           </div>

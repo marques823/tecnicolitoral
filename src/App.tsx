@@ -53,7 +53,7 @@ const AppContent = () => {
           <Route path="/custom-fields" element={<CustomFields />} />
           <Route path="/technical-notes" element={<TechnicalNotes />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
-          <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
