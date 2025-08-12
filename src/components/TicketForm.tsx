@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 
 type TicketPriority = Database["public"]["Enums"]["ticket_priority"];
 type TicketStatus = Database["public"]["Enums"]["ticket_status"];
@@ -64,6 +64,9 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const [technicians, setTechnicians] = useState<Profile[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const [formData, setFormData] = useState({
     title: ticket?.title || '',
     description: ticket?.description || '',
@@ -110,6 +113,56 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         description: 'Erro ao carregar categorias',
         variant: 'destructive'
       });
+    }
+  };
+
+  const createCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Digite um nome para a categoria',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setCreatingCategory(true);
+      const { data, error } = await supabase
+        .from('categories')
+        .insert([{
+          name: newCategoryName.trim(),
+          company_id: company?.id,
+          active: true
+        }])
+        .select('id, name')
+        .single();
+
+      if (error) throw error;
+
+      // Adicionar a nova categoria à lista
+      setCategories(prev => [...prev, data]);
+      
+      // Selecionar automaticamente a nova categoria
+      setFormData(prev => ({ ...prev, category_id: data.id }));
+      
+      // Limpar o formulário de criação
+      setNewCategoryName('');
+      setShowCreateCategory(false);
+
+      toast({
+        title: 'Sucesso',
+        description: 'Categoria criada com sucesso!'
+      });
+    } catch (error) {
+      console.error('Error creating category:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao criar categoria',
+        variant: 'destructive'
+      });
+    } finally {
+      setCreatingCategory(false);
     }
   };
 
@@ -433,22 +486,112 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Categoria *</Label>
-            <Select
-              value={formData.category_id}
-              onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="category">Categoria *</Label>
+              {categories.length === 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCreateCategory(true)}
+                  className="text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Criar categoria
+                </Button>
+              )}
+            </div>
+            
+            {categories.length > 0 ? (
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Select
+                    value={formData.category_id}
+                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCreateCategory(true)}
+                  className="px-2"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-6 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Nenhuma categoria encontrada
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateCategory(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar primeira categoria
+                </Button>
+              </div>
+            )}
+
+            {showCreateCategory && (
+              <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+                <Label htmlFor="newCategory">Nova categoria</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="newCategory"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="Nome da categoria"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        createCategory();
+                      } else if (e.key === 'Escape') {
+                        setShowCreateCategory(false);
+                        setNewCategoryName('');
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={createCategory}
+                    disabled={creatingCategory}
+                    size="sm"
+                  >
+                    {creatingCategory ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Criar'
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateCategory(false);
+                      setNewCategoryName('');
+                    }}
+                    size="sm"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
