@@ -44,6 +44,7 @@ export default function Plans() {
       const { data, error } = await supabase
         .from('plans')
         .select('*')
+        .not('name', 'ilike', '%admin%') // Filtrar planos admin por nome
         .order('monthly_price');
 
       if (error) throw error;
@@ -84,25 +85,43 @@ export default function Plans() {
 
     setUpgrading(true);
     try {
-      const { error } = await supabase
-        .from('companies')
-        .update({ plan_id: plan.id })
-        .eq('id', company.id);
+      // Se o plano é gratuito, altera diretamente
+      if (plan.monthly_price === 0) {
+        const { error } = await supabase
+          .from('companies')
+          .update({ plan_id: plan.id })
+          .eq('id', company.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setCurrentPlan(plan);
-      setConfirmDialog({ open: false, plan: null });
-      
-      toast({
-        title: "Sucesso",
-        description: `Plano alterado para ${plan.name} com sucesso!`,
+        setCurrentPlan(plan);
+        setConfirmDialog({ open: false, plan: null });
+        
+        toast({
+          title: "Sucesso",
+          description: `Plano alterado para ${plan.name} com sucesso!`,
+        });
+        return;
+      }
+
+      // Para planos pagos, usa o Stripe
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          plan_id: plan.id,
+          is_annual: isAnnual,
+        },
       });
-    } catch (error) {
-      console.error('Erro ao alterar plano:', error);
+      if (error) throw error;
+      if (!data?.url) throw new Error('Não foi possível iniciar o pagamento');
+
+      setConfirmDialog({ open: false, plan: null });
+      toast({ title: 'Redirecionando ao pagamento', description: 'Abrindo o checkout em uma nova aba.' });
+      window.open(data.url, '_blank');
+    } catch (error: any) {
+      console.error('Erro ao processar plano:', error);
       toast({
         title: "Erro",
-        description: "Erro ao alterar plano",
+        description: error.message || "Erro ao processar alteração de plano",
         variant: "destructive",
       });
     } finally {
@@ -329,7 +348,9 @@ export default function Plans() {
                       onClick={() => setConfirmDialog({ open: true, plan })}
                       disabled={upgrading}
                     >
-                      {plan.monthly_price > (currentPlan?.monthly_price || 0) 
+                      {plan.monthly_price === 0 
+                        ? 'Alterar para Gratuito'
+                        : plan.monthly_price > (currentPlan?.monthly_price || 0) 
                         ? 'Fazer Upgrade' 
                         : 'Alterar Plano'
                       }
@@ -375,21 +396,30 @@ export default function Plans() {
                 </div>
               </div>
               
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirmDialog({ open: false, plan: null })}
-                  disabled={upgrading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => handleUpgradePlan(confirmDialog.plan!)}
-                  disabled={upgrading}
-                >
-                  {upgrading ? 'Alterando...' : 'Confirmar'}
-                </Button>
-              </div>
+               {confirmDialog.plan.monthly_price > 0 && (
+                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                   <p className="text-sm text-blue-800">
+                     💳 Este plano tem custo. Você será redirecionado para o pagamento.
+                   </p>
+                 </div>
+               )}
+               
+               <div className="flex justify-end space-x-2">
+                 <Button
+                   variant="outline"
+                   onClick={() => setConfirmDialog({ open: false, plan: null })}
+                   disabled={upgrading}
+                 >
+                   Cancelar
+                 </Button>
+                 <Button
+                   onClick={() => handleUpgradePlan(confirmDialog.plan!)}
+                   disabled={upgrading}
+                 >
+                   {upgrading ? 'Processando...' : 
+                    confirmDialog.plan.monthly_price === 0 ? 'Confirmar' : 'Ir para Pagamento'}
+                 </Button>
+               </div>
             </div>
           )}
         </DialogContent>
