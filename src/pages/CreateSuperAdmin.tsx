@@ -12,41 +12,39 @@ export default function CreateSuperAdmin() {
   const createSuperAdmin = async () => {
     setCreating(true);
     try {
-      // Buscar a empresa TicketFlow Admin
-      const { data: companies } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('name', 'TicketFlow Admin')
-        .limit(1);
+      // Usar o ID da empresa TicketFlow Admin diretamente
+      const companyId = '794de572-0c6d-4dcf-916e-428ac17c91a5';
 
-      if (!companies || companies.length === 0) {
-        throw new Error('Empresa TicketFlow Admin não encontrada');
-      }
+      console.log('Criando super admin para empresa:', companyId);
 
       // Criar super admin usando a edge function
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email: 'admin@ticketflow.com',
-          password: 'T84dy866n@',
-          name: 'Administrador',
+          password: 'SuperAdmin123!',
+          name: 'Super Administrador',
           role: 'super_admin',
-          company_id: companies[0].id,
+          company_id: companyId,
           active: true
         }
       });
+
+      console.log('Resposta da edge function:', { data, error });
 
       if (error) {
         console.error('Edge function error:', error);
         throw new Error(error.message || 'Erro ao criar super admin');
       }
 
-      if (!data.success) {
-        throw new Error(data.error || 'Erro ao criar super admin');
+      if (!data || !data.success) {
+        const errorMsg = data?.error || 'Erro desconhecido ao criar super admin';
+        console.error('Edge function returned error:', errorMsg);
+        throw new Error(errorMsg);
       }
 
       toast({
-        title: "Super Admin criado!",
-        description: "Email: admin@ticketflow.com | Senha: T84dy866n@",
+        title: "Super Admin criado com sucesso!",
+        description: "Email: admin@ticketflow.com | Senha: SuperAdmin123!",
       });
 
       console.log('Super admin criado com sucesso:', data);
@@ -79,7 +77,7 @@ export default function CreateSuperAdmin() {
               <span>admin@ticketflow.com</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              Senha: T84dy866n@
+              Senha: SuperAdmin123!
             </div>
           </div>
 
