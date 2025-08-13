@@ -15,7 +15,26 @@ export default function CreateSuperAdmin() {
       // Usar o ID da empresa TicketFlow Admin diretamente
       const companyId = '794de572-0c6d-4dcf-916e-428ac17c91a5';
 
-      console.log('Criando super admin para empresa:', companyId);
+      console.log('Verificando se perfil super admin já existe...');
+
+      // Verificar se já existe um perfil super admin
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*, user_id')
+        .eq('role', 'super_admin')
+        .eq('company_id', companyId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        console.log('Super admin já existe:', existingProfile);
+        toast({
+          title: "Super Admin já existe!",
+          description: "Use as credenciais: admin@ticketflow.com | SuperAdmin123!",
+        });
+        return;
+      }
+
+      console.log('Criando novo usuário super admin...');
 
       // Criar super admin usando a edge function
       const { data, error } = await supabase.functions.invoke('create-user', {
