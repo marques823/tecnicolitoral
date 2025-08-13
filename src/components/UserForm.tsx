@@ -137,8 +137,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
   const roleOptions = [
     { value: 'client', label: 'Cliente', description: 'Pode criar e visualizar seus próprios chamados' },
     { value: 'technician', label: 'Técnico', description: 'Pode gerenciar chamados da empresa' },
-    { value: 'master', label: 'Master', description: 'Acesso total ao sistema da empresa' },
-    { value: 'super_admin', label: 'Super Admin', description: 'Acesso a todas as empresas do sistema' }
+    { value: 'master', label: 'Master', description: 'Acesso total ao sistema da empresa' }
   ];
 
   return (
