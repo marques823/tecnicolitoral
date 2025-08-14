@@ -22,6 +22,7 @@ import TechnicalNotes from "./pages/TechnicalNotes";
 import PlanSelection from "./pages/PlanSelection";
 import SuperAdmin from "./pages/SuperAdmin";
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
+import SuperAdminAccess from "./pages/SuperAdminAccess";
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
@@ -54,6 +55,7 @@ const AppContent = () => {
           <Route path="/technical-notes" element={<TechnicalNotes />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
+          <Route path="/super-admin-access" element={<SuperAdminAccess />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
