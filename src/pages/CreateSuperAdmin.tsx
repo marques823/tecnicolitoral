@@ -58,6 +58,25 @@ export default function CreateSuperAdmin() {
       if (!data || !data.success) {
         const errorMsg = data?.error || 'Erro desconhecido ao criar super admin';
         console.error('Edge function returned error:', errorMsg);
+        
+        // Se o erro for de usuário duplicado, verificar se o perfil existe
+        if (errorMsg.includes('já existe') || errorMsg.includes('duplicate')) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('role', 'super_admin')
+            .eq('company_id', companyId)
+            .maybeSingle();
+          
+          if (profile) {
+            toast({
+              title: "Super Admin já configurado!",
+              description: "Use as credenciais: admin@ticketflow.com | SuperAdmin123!",
+            });
+            return;
+          }
+        }
+        
         throw new Error(errorMsg);
       }
 
