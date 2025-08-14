@@ -18,24 +18,30 @@ export default function CreateSuperAdmin() {
       console.log('Verificando se perfil super admin já existe...');
 
       // Verificar se já existe um perfil super admin
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'super_admin')
         .eq('company_id', companyId)
         .maybeSingle();
 
+      if (profileError) {
+        console.error('Erro ao verificar perfil:', profileError);
+        throw new Error(`Erro ao verificar perfil: ${profileError.message}`);
+      }
+
       if (existingProfile) {
         console.log('Super admin já existe:', existingProfile);
         toast({
-          title: "Super Admin já configurado!",
+          title: "Super Admin já existe!",
           description: "Use as credenciais: admin@ticketflow.com | SuperAdmin123!",
         });
         return;
       }
 
+      console.log('Verificando se usuário auth existe...');
+
       // Verificar se o usuário auth existe
-      console.log('Verificando usuário no auth...');
       const { data: authUsers, error: listError } = await supabase.auth.admin.listUsers();
       
       if (listError) {
@@ -49,7 +55,7 @@ export default function CreateSuperAdmin() {
         console.log('Usuário auth existe, criando apenas o perfil...');
         
         // Criar apenas o perfil para o usuário existente
-        const { error: profileError } = await supabase
+        const { error: insertError } = await supabase
           .from('profiles')
           .insert({
             user_id: existingAuthUser.id,
@@ -59,19 +65,19 @@ export default function CreateSuperAdmin() {
             active: true
           });
 
-        if (profileError) {
-          console.error('Erro ao criar perfil:', profileError);
-          throw new Error(`Erro ao criar perfil: ${profileError.message}`);
+        if (insertError) {
+          console.error('Erro ao criar perfil:', insertError);
+          throw new Error(`Erro ao criar perfil: ${insertError.message}`);
         }
 
         toast({
           title: "Super Admin configurado!",
-          description: "Perfil criado para usuário existente. Use: admin@ticketflow.com | SuperAdmin123!",
+          description: "Perfil criado! Use: admin@ticketflow.com | SuperAdmin123!",
         });
         return;
       }
 
-      console.log('Criando novo usuário super admin...');
+      console.log('Usuário não existe, criando novo...');
 
       // Criar super admin usando a edge function
       const { data, error } = await supabase.functions.invoke('create-user', {
@@ -84,8 +90,6 @@ export default function CreateSuperAdmin() {
           active: true
         }
       });
-
-      console.log('Resposta da edge function:', { data, error });
 
       if (error) {
         console.error('Edge function error:', error);
@@ -102,8 +106,6 @@ export default function CreateSuperAdmin() {
         title: "Super Admin criado com sucesso!",
         description: "Email: admin@ticketflow.com | Senha: SuperAdmin123!",
       });
-
-      console.log('Super admin criado com sucesso:', data);
 
     } catch (error: any) {
       console.error('Erro ao criar super admin:', error);
