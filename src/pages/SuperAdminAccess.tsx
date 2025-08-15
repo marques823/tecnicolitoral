@@ -2,24 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, User, Key, Building, LogIn } from 'lucide-react';
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SuperAdminAccess() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: 'admin@ticketflow.com',
-        password: 'SuperAdmin123!'
-      });
+      const { error } = await signIn('admin@ticketflow.com', 'SuperAdmin123!');
 
       if (error) {
         toast.error('Erro ao fazer login: ' + error.message);
+        console.error('Login error details:', error);
         return;
       }
 
@@ -27,7 +26,7 @@ export default function SuperAdminAccess() {
       navigate('/dashboard');
     } catch (error) {
       toast.error('Erro inesperado ao fazer login');
-      console.error('Login error:', error);
+      console.error('Unexpected login error:', error);
     } finally {
       setIsLoading(false);
     }
