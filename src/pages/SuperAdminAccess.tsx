@@ -4,37 +4,55 @@ import { Shield, User, Key, Building, LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function SuperAdminAccess() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
 
   const handleLogin = async () => {
     setIsLoading(true);
     console.log('Iniciando processo de login...');
     
     try {
-      console.log('Tentando fazer login com:', 'marques823+administrador@gmail.com');
-      const { error } = await signIn('marques823+administrador@gmail.com', 'SuperAdmin123!');
+      console.log('Testando conexão direta com Supabase...');
+      
+      // Teste direto com supabase client
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: 'marques823+administrador@gmail.com',
+        password: 'SuperAdmin123!'
+      });
 
-      console.log('Resultado do signIn:', { error });
+      console.log('Resultado do auth direto:', { authData, authError });
 
-      if (error) {
-        console.error('Erro detalhado no login:', {
-          message: error.message,
-          status: error.status,
-          statusText: error.statusText,
-          error: error
-        });
-        toast.error('Erro ao fazer login: ' + error.message);
+      if (authError) {
+        console.error('Erro no auth direto:', authError);
+        toast.error('Erro ao fazer login: ' + authError.message);
         return;
       }
 
-      console.log('Login bem-sucedido, redirecionando...');
-      toast.success('Login realizado com sucesso!');
-      navigate('/dashboard');
+      if (authData.user) {
+        console.log('Usuário autenticado com sucesso:', authData.user.id);
+        
+        // Teste de consulta ao perfil
+        console.log('Testando consulta ao perfil...');
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', authData.user.id)
+          .maybeSingle();
+
+        console.log('Resultado da consulta do perfil:', { profileData, profileError });
+
+        if (profileError) {
+          console.error('Erro ao buscar perfil:', profileError);
+          toast.error('Erro ao buscar dados do usuário: ' + profileError.message);
+          return;
+        }
+
+        toast.success('Login realizado com sucesso!');
+        navigate('/dashboard');
+      }
     } catch (error) {
       console.error('Erro inesperado capturado:', error);
       toast.error('Erro inesperado ao fazer login');
