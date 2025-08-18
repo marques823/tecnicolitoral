@@ -13,21 +13,33 @@ export default function SuperAdminAccess() {
 
   const handleLogin = async () => {
     setIsLoading(true);
+    console.log('Iniciando processo de login...');
+    
     try {
+      console.log('Tentando fazer login com:', 'marques823+administrador@gmail.com');
       const { error } = await signIn('marques823+administrador@gmail.com', 'SuperAdmin123!');
 
+      console.log('Resultado do signIn:', { error });
+
       if (error) {
+        console.error('Erro detalhado no login:', {
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText,
+          error: error
+        });
         toast.error('Erro ao fazer login: ' + error.message);
-        console.error('Login error details:', error);
         return;
       }
 
+      console.log('Login bem-sucedido, redirecionando...');
       toast.success('Login realizado com sucesso!');
       navigate('/dashboard');
     } catch (error) {
+      console.error('Erro inesperado capturado:', error);
       toast.error('Erro inesperado ao fazer login');
-      console.error('Unexpected login error:', error);
     } finally {
+      console.log('Finalizando processo de login...');
       setIsLoading(false);
     }
   };
