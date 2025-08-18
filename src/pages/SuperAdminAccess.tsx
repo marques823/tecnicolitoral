@@ -14,7 +14,7 @@ export default function SuperAdminAccess() {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await signIn('admin@ticketflow.com', 'SuperAdmin123!');
+      const { error } = await signIn('marques823+administrador@gmail.com', 'SuperAdmin123!');
 
       if (error) {
         toast.error('Erro ao fazer login: ' + error.message);
@@ -51,7 +51,7 @@ export default function SuperAdminAccess() {
               <User className="w-5 h-5 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Email</p>
-                <p className="text-sm text-muted-foreground">admin@ticketflow.com</p>
+                <p className="text-sm text-muted-foreground">marques823+administrador@gmail.com</p>
               </div>
             </div>
             
