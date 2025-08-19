@@ -20,10 +20,13 @@ export default function SuperAdminAccess() {
       
       const { data: superAdmin, error: queryError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('user_id', '8437f36d-ec5a-4b78-9be6-dc967a109cd2') // ID do super admin existente
-        .eq('active', true)
+        .select(`
+          *,
+          companies!inner(name, id)
+        `)
         .eq('role', 'super_admin')
+        .eq('active', true)
+        .limit(1)
         .maybeSingle();
 
       console.log('Resultado da consulta super admin:', { superAdmin, queryError });
