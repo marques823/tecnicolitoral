@@ -17,7 +17,34 @@ export default function SuperAdminAccess() {
     try {
       console.log('Testando conexão direta com Supabase...');
       
-      // Teste direto com supabase client
+      // Verificar se o usuário super admin existe
+      console.log('Verificando usuários super admin...');
+      const { data: superAdmins, error: queryError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_id
+        `)
+        .eq('role', 'super_admin')
+        .limit(1);
+
+      console.log('Super admins encontrados:', { superAdmins, queryError });
+
+      if (queryError) {
+        console.error('Erro ao buscar super admin:', queryError);
+        toast.error('Erro ao verificar super admin: ' + queryError.message);
+        return;
+      }
+
+      if (!superAdmins || superAdmins.length === 0) {
+        toast.error('Nenhum super admin encontrado no sistema.');
+        return;
+      }
+
+      // Usar dados do super admin encontrado
+      console.log('Tentando login como super admin:', superAdmins[0].user_id);
+      
+      // Tentar fazer login com as credenciais
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: 'marques823+administrador@gmail.com',
         password: 'SuperAdmin123!'
