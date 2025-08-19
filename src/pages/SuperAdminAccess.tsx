@@ -15,16 +15,16 @@ export default function SuperAdminAccess() {
     console.log('Iniciando acesso direto ao super admin...');
     
     try {
-      // Como há um bug no Supabase Auth com a coluna email_change,
-      // vamos criar um acesso direto temporário
-      console.log('Verificando super admin no sistema...');
+      // Verificar se há super admin no sistema usando o ID que já sabemos que existe
+      console.log('Verificando super admin existente...');
       
       const { data: superAdmin, error: queryError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'super_admin')
+        .eq('user_id', '8437f36d-ec5a-4b78-9be6-dc967a109cd2') // ID do super admin existente
         .eq('active', true)
-        .limit(1);
+        .eq('role', 'super_admin')
+        .maybeSingle();
 
       console.log('Resultado da consulta super admin:', { superAdmin, queryError });
 
@@ -34,35 +34,63 @@ export default function SuperAdminAccess() {
         return;
       }
 
-      if (!superAdmin || superAdmin.length === 0) {
-        toast.error('Acesso super admin não configurado.');
+      if (!superAdmin) {
+        toast.error('Super admin não encontrado ou inativo.');
+        console.log('Tentando buscar qualquer super admin ativo...');
+        
+        // Buscar qualquer super admin ativo
+        const { data: anyAdmin, error: anyError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'super_admin')
+          .eq('active', true)
+          .limit(1);
+          
+        console.log('Resultado busca qualquer admin:', { anyAdmin, anyError });
+        
+        if (anyError || !anyAdmin || anyAdmin.length === 0) {
+          toast.error('Nenhum super admin ativo encontrado no sistema.');
+          return;
+        }
+        
+        // Usar o primeiro super admin encontrado
+        const adminToUse = anyAdmin[0];
+        console.log('Usando super admin:', adminToUse);
+        
+        // Criar sessão temporária
+        const adminData = {
+          user_id: adminToUse.user_id,
+          company_id: adminToUse.company_id,
+          role: adminToUse.role,
+          name: adminToUse.name,
+          timestamp: Date.now()
+        };
+        
+        localStorage.setItem('temp_super_admin', JSON.stringify(adminData));
+        toast.success('Acesso super admin ativado!');
+        navigate('/dashboard');
         return;
       }
 
-      // Simular login bem-sucedido para super admin
-      // Em um ambiente de produção, isso seria feito através de autenticação adequada
-      console.log('Super admin encontrado, criando sessão temporária...');
+      // Super admin específico encontrado
+      console.log('Super admin encontrado:', superAdmin);
       
-      // Armazenar dados do super admin no localStorage para uso temporário
       const adminData = {
-        user_id: superAdmin[0].user_id,
-        company_id: superAdmin[0].company_id,
-        role: superAdmin[0].role,
-        name: superAdmin[0].name,
+        user_id: superAdmin.user_id,
+        company_id: superAdmin.company_id,
+        role: superAdmin.role,
+        name: superAdmin.name,
         timestamp: Date.now()
       };
       
       localStorage.setItem('temp_super_admin', JSON.stringify(adminData));
-      
       toast.success('Acesso super admin ativado!');
-      console.log('Redirecionando para dashboard...');
       navigate('/dashboard');
       
     } catch (error) {
       console.error('Erro inesperado:', error);
       toast.error('Erro inesperado ao acessar o sistema');
     } finally {
-      console.log('Finalizando processo...');
       setIsLoading(false);
     }
   };
