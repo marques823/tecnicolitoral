@@ -15,8 +15,8 @@ export default function SuperAdminAccess() {
     console.log('Iniciando acesso direto ao super admin...');
     
     try {
-      // Verificar se há super admin no sistema usando o ID que já sabemos que existe
-      console.log('Verificando super admin existente...');
+      // Buscar qualquer super admin ativo
+      console.log('Buscando super admin ativo...');
       
       const { data: superAdmin, error: queryError } = await supabase
         .from('profiles')
@@ -35,44 +35,12 @@ export default function SuperAdminAccess() {
       }
 
       if (!superAdmin) {
+        console.log('Super admin não encontrado');
         toast.error('Super admin não encontrado ou inativo.');
-        console.log('Tentando buscar qualquer super admin ativo...');
-        
-        // Buscar qualquer super admin ativo
-        const { data: anyAdmin, error: anyError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'super_admin')
-          .eq('active', true)
-          .limit(1);
-          
-        console.log('Resultado busca qualquer admin:', { anyAdmin, anyError });
-        
-        if (anyError || !anyAdmin || anyAdmin.length === 0) {
-          toast.error('Nenhum super admin ativo encontrado no sistema.');
-          return;
-        }
-        
-        // Usar o primeiro super admin encontrado
-        const adminToUse = anyAdmin[0];
-        console.log('Usando super admin:', adminToUse);
-        
-        // Criar sessão temporária
-        const adminData = {
-          user_id: adminToUse.user_id,
-          company_id: adminToUse.company_id,
-          role: adminToUse.role,
-          name: adminToUse.name,
-          timestamp: Date.now()
-        };
-        
-        localStorage.setItem('temp_super_admin', JSON.stringify(adminData));
-        toast.success('Acesso super admin ativado!');
-        navigate('/dashboard');
         return;
       }
 
-      // Super admin específico encontrado
+      // Super admin encontrado - criar sessão temporária
       console.log('Super admin encontrado:', superAdmin);
       
       const adminData = {
