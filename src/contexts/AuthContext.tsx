@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface Profile {
   id: string;
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  
 
   useEffect(() => {
     // Set up auth state listener
@@ -76,6 +76,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
 
               setProfile(profileData);
+
+              // Se é super admin, mostrar notificação
+              if (profileData?.role === 'super_admin') {
+                toast.success('🛡️ Acesso Super Admin ativado!');
+              }
 
               // Fetch company data
               if (profileData?.company_id) {
@@ -119,20 +124,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        toast({
-          title: "Erro no login",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast.error(error.message);
       }
 
       return { error };
     } catch (error: any) {
-      toast({
-        title: "Erro no login",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+      toast.error("Ocorreu um erro inesperado");
       return { error };
     }
   };
@@ -153,31 +150,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        toast({
-          title: "Erro no cadastro",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast.error(error.message);
       } else if (data.user && !data.session) {
-        toast({
-          title: "Cadastro realizado",
-          description: "Verifique seu email para confirmar a conta",
-        });
+        toast.success("Verifique seu email para confirmar a conta");
       } else if (data.session) {
         // Usuário logado automaticamente (confirmação de email desabilitada)
-        toast({
-          title: "Cadastro realizado com sucesso!",
-          description: "Bem-vindo ao TicketFlow",
-        });
+        toast.success("Cadastro realizado com sucesso! Bem-vindo ao TicketFlow");
       }
 
       return { error };
     } catch (error: any) {
-      toast({
-        title: "Erro no cadastro",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+      toast.error("Ocorreu um erro inesperado");
       return { error };
     }
   };

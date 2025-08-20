@@ -519,22 +519,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          active: boolean
-          company_id: string
-          created_at: string
-          id: string
-          name: string
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
-          user_id: string
-        }[]
-      }
       get_user_company_id: {
         Args: { user_uuid: string }
         Returns: string
+      }
+      promote_to_super_admin: {
+        Args: { user_email: string }
+        Returns: boolean
       }
       user_has_master_role: {
         Args: { user_uuid: string }

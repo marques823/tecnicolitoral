@@ -8,7 +8,7 @@ import { useCompanyTheme } from "@/hooks/useCompanyTheme";
 import { useNotificationHandler } from "@/hooks/useNotificationHandler";
 import Header from "@/components/Header";
 import NavigationMenu from "@/components/NavigationMenu";
-import Index from "./pages/Index";
+import IndexLanding from "./pages/IndexLanding";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/UserManagement";
@@ -22,7 +22,7 @@ import TechnicalNotes from "./pages/TechnicalNotes";
 import PlanSelection from "./pages/PlanSelection";
 import SuperAdmin from "./pages/SuperAdmin";
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
-import SuperAdminAccess from "./pages/SuperAdminAccess";
+
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCanceled from "./pages/PaymentCanceled";
@@ -39,7 +39,7 @@ const AppContent = () => {
       <NavigationMenu />
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<IndexLanding />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/plan-selection" element={<PlanSelection />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
@@ -55,7 +55,7 @@ const AppContent = () => {
           <Route path="/technical-notes" element={<TechnicalNotes />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
           <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
-          <Route path="/super-admin-access" element={<SuperAdminAccess />} />
+          
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
