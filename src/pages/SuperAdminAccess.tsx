@@ -18,13 +18,7 @@ export default function SuperAdminAccess() {
       // Buscar qualquer super admin ativo
       console.log('Buscando super admin ativo...');
       
-      const { data: superAdmin, error: queryError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'super_admin')
-        .eq('active', true)
-        .limit(1)
-        .maybeSingle();
+      const { data: superAdmin, error: queryError } = await supabase.rpc('get_super_admin');
 
       console.log('Resultado da consulta super admin:', { superAdmin, queryError });
 
@@ -34,20 +28,21 @@ export default function SuperAdminAccess() {
         return;
       }
 
-      if (!superAdmin) {
+      if (!superAdmin || superAdmin.length === 0) {
         console.log('Super admin não encontrado');
         toast.error('Super admin não encontrado ou inativo.');
         return;
       }
 
       // Super admin encontrado - criar sessão temporária
-      console.log('Super admin encontrado:', superAdmin);
+      console.log('Super admin encontrado:', superAdmin[0]);
       
+      const firstAdmin = superAdmin[0];
       const adminData = {
-        user_id: superAdmin.user_id,
-        company_id: superAdmin.company_id,
-        role: superAdmin.role,
-        name: superAdmin.name,
+        user_id: firstAdmin.user_id,
+        company_id: firstAdmin.company_id,
+        role: firstAdmin.role,
+        name: firstAdmin.name,
         timestamp: Date.now()
       };
       
