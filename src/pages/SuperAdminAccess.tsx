@@ -20,10 +20,7 @@ export default function SuperAdminAccess() {
       
       const { data: superAdmin, error: queryError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          companies!inner(name, id)
-        `)
+        .select('*')
         .eq('role', 'super_admin')
         .eq('active', true)
         .limit(1)
