@@ -44,7 +44,8 @@ const AppContent = () => {
           <Route path="/plan-selection" element={<PlanSelection />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-canceled" element={<PaymentCanceled />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
+            <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/tickets" element={<Tickets />} />
           <Route path="/categories" element={<Categories />} />
@@ -54,7 +55,6 @@ const AppContent = () => {
           <Route path="/custom-fields" element={<CustomFields />} />
           <Route path="/technical-notes" element={<TechnicalNotes />} />
           <Route path="/super-admin" element={<SuperAdmin />} />
-          <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
           
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

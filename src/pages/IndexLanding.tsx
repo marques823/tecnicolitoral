@@ -1,8 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, Ticket, BarChart3, Zap } from "lucide-react";
+import { ArrowRight, Users, Ticket, BarChart3, Zap, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
-import SuperAdminPromotion from "@/components/SuperAdminPromotion";
 
 const IndexLanding = () => {
   return (
@@ -79,16 +78,19 @@ const IndexLanding = () => {
         </div>
       </section>
 
-      {/* Super Admin Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-4">Área Administrativa</h2>
-            <p className="text-muted-foreground">
-              Para administradores do sistema
-            </p>
-          </div>
-          <SuperAdminPromotion />
+      {/* Admin Access */}
+      <section className="py-16 px-4 bg-muted/50">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold mb-4">Acesso Administrativo</h2>
+          <p className="text-muted-foreground mb-6">
+            Área restrita para configuração do sistema
+          </p>
+          <Button asChild variant="outline">
+            <Link to="/create-super-admin">
+              <Shield className="w-4 h-4 mr-2" />
+              Área Admin
+            </Link>
+          </Button>
         </div>
       </section>
     </div>
