@@ -29,7 +29,17 @@ import {
   Mail,
   Key,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Lock,
+  DollarSign,
+  LineChart,
+  Wrench,
+  AlertTriangle,
+  Server,
+  CreditCard,
+  Target,
+  Globe,
+  Bell
 } from 'lucide-react';
 
 interface Company {
@@ -474,11 +484,15 @@ export default function SuperAdmin() {
 
         {/* Tabs for Different Admin Functions */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="companies">Empresas</TabsTrigger>
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="system">Sistema</TabsTrigger>
+            <TabsTrigger value="companies">Gestão de Empresas</TabsTrigger>
+            <TabsTrigger value="users">Gestão de Usuários</TabsTrigger>
+            <TabsTrigger value="security">Segurança e Auditoria</TabsTrigger>
+            <TabsTrigger value="settings">Configurações Gerais</TabsTrigger>
+            <TabsTrigger value="financial">Financeiro e Contratos</TabsTrigger>
+            <TabsTrigger value="reports">Relatórios e Métricas</TabsTrigger>
+            <TabsTrigger value="support">Suporte e Manutenção</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -709,35 +723,302 @@ export default function SuperAdmin() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="system" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Database className="w-5 h-5" />
-                  <span>Logs do Sistema</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {systemLogs.map((log) => (
-                    <div key={log.id} className="border-l-2 border-primary pl-4 pb-2">
-                      <div className="flex items-center justify-between">
+          <TabsContent value="security" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Lock className="w-5 h-5" />
+                    <span>Logs de Segurança</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {systemLogs.slice(0, 10).map((log) => (
+                      <div key={log.id} className="flex items-center justify-between text-sm">
                         <div className="flex items-center space-x-2">
-                          <Badge variant="outline">{log.action}</Badge>
-                          <span className="text-sm font-medium">{log.company_name}</span>
+                          <AlertTriangle className="w-4 h-4 text-orange-500" />
+                          <span>{log.action}</span>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleString('pt-BR')}
+                          {new Date(log.timestamp).toLocaleTimeString('pt-BR')}
                         </span>
                       </div>
-                      {log.details && (
-                        <p className="text-sm text-muted-foreground mt-1">{log.details}</p>
-                      )}
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Shield className="w-5 h-5" />
+                    <span>Políticas de Acesso</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span>Autenticação 2FA</span>
+                      <Badge variant="outline">Opcional</Badge>
                     </div>
-                  ))}
+                    <div className="flex justify-between items-center">
+                      <span>Timeout de Sessão</span>
+                      <Badge variant="outline">24h</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Tentativas de Login</span>
+                      <Badge variant="outline">5 max</Badge>
+                    </div>
+                    <Button className="w-full mt-4">Configurar Políticas</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Settings className="w-5 h-5" />
+                    <span>Configurações do Sistema</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span>Nome do Sistema</span>
+                      <span className="font-medium">TicketFlow</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Versão</span>
+                      <Badge variant="outline">v1.0.0</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Manutenção Programada</span>
+                      <Badge variant="secondary">Não agendada</Badge>
+                    </div>
+                    <Button className="w-full">Editar Configurações</Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Globe className="w-5 h-5" />
+                    <span>Configurações Globais</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span>Fuso Horário</span>
+                      <span className="font-medium">America/Sao_Paulo</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Idioma Padrão</span>
+                      <span className="font-medium">Português (BR)</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Notificações</span>
+                      <Badge variant="default">Ativas</Badge>
+                    </div>
+                    <Button className="w-full">Configurar</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="financial" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <DollarSign className="w-5 h-5" />
+                    <span>Receita Mensal</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-green-600">R$ 12.450</p>
+                    <p className="text-sm text-muted-foreground">+15% vs mês anterior</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <CreditCard className="w-5 h-5" />
+                    <span>Assinaturas Ativas</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-blue-600">{stats.activeCompanies}</p>
+                    <p className="text-sm text-muted-foreground">empresas pagantes</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Target className="w-5 h-5" />
+                    <span>Taxa de Conversão</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-purple-600">78%</p>
+                    <p className="text-sm text-muted-foreground">trial para pago</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Contratos e Faturamento</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Contratos Ativos</span>
+                    <span className="font-bold">{stats.activeCompanies}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Renovações este Mês</span>
+                    <span className="font-bold">8</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Cancelamentos</span>
+                    <span className="font-bold text-red-600">2</span>
+                  </div>
+                  <Button className="w-full">Ver Relatório Detalhado</Button>
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="reports" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <LineChart className="w-5 h-5" />
+                    <span>Métricas de Performance</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Uptime do Sistema</span>
+                      <span className="font-bold text-green-600">99.9%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tempo Médio de Resposta</span>
+                      <span className="font-bold">250ms</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tickets Resolvidos/Dia</span>
+                      <span className="font-bold">{Math.round(stats.totalTickets / 30)}</span>
+                    </div>
+                    <Button className="w-full">Gerar Relatório</Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BarChart3 className="w-5 h-5" />
+                    <span>Análise de Uso</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Usuários Ativos (30d)</span>
+                      <span className="font-bold">{Math.round(stats.totalUsers * 0.8)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tickets por Usuário</span>
+                      <span className="font-bold">{Math.round(stats.totalTickets / stats.totalUsers)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Taxa de Satisfação</span>
+                      <span className="font-bold text-green-600">4.7/5</span>
+                    </div>
+                    <Button className="w-full">Exportar Dados</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="support" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Wrench className="w-5 h-5" />
+                    <span>Manutenção do Sistema</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span>Status do Servidor</span>
+                      <Badge variant="default">Online</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Backup Automático</span>
+                      <Badge variant="default">Ativo</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Última Manutenção</span>
+                      <span className="text-sm">15/01/2024</span>
+                    </div>
+                    <Button className="w-full">Agendar Manutenção</Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Server className="w-5 h-5" />
+                    <span>Logs do Sistema</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {systemLogs.map((log) => (
+                      <div key={log.id} className="border-l-2 border-primary pl-4 pb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline">{log.action}</Badge>
+                            <span className="text-sm font-medium">{log.company_name}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(log.timestamp).toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+                        {log.details && (
+                          <p className="text-sm text-muted-foreground mt-1">{log.details}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Button className="w-full mt-4">Ver Todos os Logs</Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
