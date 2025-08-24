@@ -19,12 +19,14 @@ import {
   Download,
   History,
   Share2,
-  MoreVertical
+  MoreVertical,
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TicketForm from '@/components/TicketForm';
 import TicketHistory from '@/components/TicketHistory';
 import TicketShare from '@/components/TicketShare';
+import TechnicalNotesForTicket from '@/components/TechnicalNotesForTicket';
 import { exportTicketToPDF } from '@/utils/pdfExport';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -66,6 +68,8 @@ const Tickets = () => {
   const [historyTicket, setHistoryTicket] = useState<Ticket | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showTicketDetails, setShowTicketDetails] = useState(false);
+  const [showTechnicalNotes, setShowTechnicalNotes] = useState(false);
+  const [technicalNotesTicket, setTechnicalNotesTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -149,6 +153,13 @@ const Tickets = () => {
     e.stopPropagation();
     const companyData = company ? { name: company.name } : undefined;
     exportTicketToPDF(ticket, companyData);
+  };
+
+  const handleCreateTechnicalNote = (ticket: Ticket, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTechnicalNotesTicket(ticket);
+    setShowTechnicalNotes(true);
+    setShowTicketDetails(false);
   };
 
   const handleStatusChange = async (newStatus: TicketStatus) => {
@@ -559,6 +570,17 @@ const Tickets = () => {
                   </Button>
                 )}
                 
+                {canEditTickets && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => handleCreateTechnicalNote(selectedTicket, e)}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Criar Nota Técnica
+                  </Button>
+                )}
+                
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -604,6 +626,26 @@ const Tickets = () => {
             </DialogDescription>
           </DialogHeader>
           {historyTicket && <TicketHistory ticketId={historyTicket.id} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Technical Notes Dialog */}
+      <Dialog open={showTechnicalNotes} onOpenChange={setShowTechnicalNotes}>
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Notas Técnicas - {technicalNotesTicket?.title}</DialogTitle>
+            <DialogDescription>
+              Gerencie as notas técnicas deste chamado
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-[75vh] overflow-hidden">
+            {technicalNotesTicket && (
+              <TechnicalNotesForTicket 
+                ticketId={technicalNotesTicket.id}
+                onClose={() => setShowTechnicalNotes(false)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
