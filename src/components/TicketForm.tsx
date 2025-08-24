@@ -88,20 +88,25 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const canChangeStatus = profile?.role === 'company_admin' || profile?.role === 'technician';
   const isClientUser = profile?.role === 'client_user';
 
-  // Carregamento simples apenas quando o componente monta
+  // Carregamento apenas quando o componente monta e tem os dados necessários
   useEffect(() => {
-    if (user && profile && company) {
-      loadBasicData();
-      
-      // Se é client_user, criar automaticamente um cliente baseado no perfil
-      if (isClientUser && !isEditing) {
-        createOrFindClientForUser();
+    if (user && profile) {
+      if (company?.id) {
+        loadBasicData();
+        
+        // Se é client_user, criar automaticamente um cliente baseado no perfil
+        if (isClientUser && !isEditing) {
+          createOrFindClientForUser();
+        }
       }
     }
-  }, []);
+  }, [user, profile, company]);
 
   const loadBasicData = async () => {
-    if (!company?.id) return;
+    if (!company?.id) {
+      console.log('No company ID available');
+      return;
+    }
 
     try {
       // Carregar categorias
@@ -341,7 +346,9 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   }
 
   return (
-    <Dialog open={true} onOpenChange={() => onCancel()}>
+    <>
+      {console.log('TicketForm rendering, user:', !!user, 'profile:', !!profile, 'company:', !!company)}
+      <Dialog open={true} onOpenChange={() => onCancel()}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -674,6 +681,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 
