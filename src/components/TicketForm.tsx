@@ -103,7 +103,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const canChangeStatus = profile?.role === 'master' || profile?.role === 'technician';
 
   useEffect(() => {
-    console.log('🎫 TicketForm useEffect - Dados de autenticação:', { user, profile, company });
+    console.log('🎫 TicketForm useEffect - Dados de autenticação:', { user: !!user, profile: !!profile, company: !!company });
     
     // Aguardar carregamento dos dados de autenticação
     if (!user || !profile || !company) {
@@ -111,21 +111,34 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       return;
     }
 
+    let mounted = true;
+
     const loadData = async () => {
-      console.log('🔄 Carregando dados do formulário...');
-      await loadCategories();
-      await loadClients();
-      await loadCustomFields();
-      if (canAssignTickets) {
-        await loadTechnicians();
-      }
-      if (isEditing && ticket) {
-        await loadCustomFieldValues();
+      try {
+        console.log('🔄 Carregando dados do formulário...');
+        
+        if (mounted) await loadCategories();
+        if (mounted) await loadClients();
+        if (mounted) await loadCustomFields();
+        
+        if (canAssignTickets && mounted) {
+          await loadTechnicians();
+        }
+        
+        if (isEditing && ticket && mounted) {
+          await loadCustomFieldValues();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
       }
     };
     
     loadData();
-  }, [canAssignTickets, isEditing, ticket, user, profile, company]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id, profile?.id, company?.id]); // Dependências mais específicas
 
   const loadCategories = async () => {
     if (!company?.id) {
@@ -229,16 +242,23 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   };
 
   const loadTechnicians = async () => {
+    if (!company?.id) {
+      console.log('❌ Empresa não carregada para carregar técnicos');
+      return;
+    }
+
     try {
+      console.log('🔄 Carregando técnicos para empresa:', company.id);
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, role, user_id')
-        .eq('company_id', company?.id)
+        .eq('company_id', company.id)
         .in('role', ['master', 'technician'])
         .eq('active', true)
         .order('name');
 
       if (error) throw error;
+      console.log('✅ Técnicos carregados:', data);
       setTechnicians(data || []);
     } catch (error) {
       console.error('Error loading technicians:', error);
@@ -246,11 +266,17 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   };
 
   const loadCustomFields = async () => {
+    if (!company?.id) {
+      console.log('❌ Empresa não carregada para carregar campos personalizados');
+      return;
+    }
+
     try {
+      console.log('🔄 Carregando campos personalizados para empresa:', company.id);
       const { data, error } = await supabase
         .from('custom_fields')
         .select('*')
-        .eq('company_id', company?.id)
+        .eq('company_id', company.id)
         .eq('active', true)
         .order('sort_order');
 
@@ -261,6 +287,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         options: field.options ? field.options as string[] : undefined
       })) || [];
       
+      console.log('✅ Campos personalizados carregados:', fieldsWithParsedOptions);
       setCustomFields(fieldsWithParsedOptions);
     } catch (error) {
       console.error('Error loading custom fields:', error);

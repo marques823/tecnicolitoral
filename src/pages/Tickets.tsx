@@ -23,7 +23,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import TicketFormSimple from '@/components/TicketFormSimple';
+import TicketForm from '@/components/TicketForm';
 import TicketHistory from '@/components/TicketHistory';
 import TicketShare from '@/components/TicketShare';
 import TechnicalNotesForTicket from '@/components/TechnicalNotesForTicket';
@@ -462,23 +462,12 @@ const Tickets = () => {
       </main>
 
       {/* Ticket Form Modal */}
-      {showTicketForm && !editingTicket && (
-        <TicketFormSimple
+      {showTicketForm && (
+        <TicketForm
+          ticket={editingTicket}
           onSuccess={handleTicketFormSuccess}
           onCancel={() => setShowTicketForm(false)}
         />
-      )}
-      
-      {showTicketForm && editingTicket && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Edição Temporariamente Desabilitada</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              A edição de tickets está temporariamente desabilitada durante a correção do formulário.
-            </p>
-            <Button onClick={() => setShowTicketForm(false)}>Fechar</Button>
-          </div>
-        </div>
       )}
 
       {/* Ticket Details Dialog */}
