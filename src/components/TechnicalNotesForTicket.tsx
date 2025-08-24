@@ -210,36 +210,53 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
     if (!confirm("Tem certeza que deseja excluir esta nota?")) return;
 
     try {
+      console.log("Iniciando exclusão da nota:", noteId);
+      
       // Primeiro buscar a nota para obter as fotos
-      const { data: noteData } = await supabase
+      const { data: noteData, error: fetchError } = await supabase
         .from("technical_notes")
         .select("photos")
         .eq("id", noteId)
         .single();
 
+      if (fetchError) {
+        console.error("Erro ao buscar dados da nota:", fetchError);
+        throw fetchError;
+      }
+
+      console.log("Dados da nota encontrados:", noteData);
+
       // Deletar fotos do storage se existirem
       if (noteData?.photos && noteData.photos.length > 0) {
+        console.log("Deletando fotos:", noteData.photos);
         const { error: storageError } = await supabase.storage
           .from('technical-notes')
           .remove(noteData.photos);
         
         if (storageError) {
           console.error("Erro ao deletar fotos:", storageError);
+        } else {
+          console.log("Fotos deletadas com sucesso");
         }
       }
 
       // Deletar a nota
+      console.log("Deletando nota do banco...");
       const { error } = await supabase
         .from("technical_notes")
         .delete()
         .eq("id", noteId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao deletar nota:", error);
+        throw error;
+      }
       
+      console.log("Nota deletada com sucesso");
       toast.success("Nota técnica excluída com sucesso!");
-      loadNotes();
+      await loadNotes(); // Usar await para garantir que recarregue
     } catch (error) {
-      console.error("Erro ao excluir nota:", error);
+      console.error("Erro completo ao excluir nota:", error);
       toast.error("Erro ao excluir nota técnica");
     }
   };
