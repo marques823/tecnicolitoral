@@ -103,68 +103,79 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const canChangeStatus = profile?.role === 'master' || profile?.role === 'technician';
 
   useEffect(() => {
-    console.log('🎫 TicketForm useEffect - Dados de autenticação:', { user: !!user, profile: !!profile, company: !!company });
-    
-    // Aguardar carregamento dos dados de autenticação
-    if (!user || !profile || !company) {
-      console.log('🚨 Aguardando carregamento dos dados de autenticação...');
-      return;
+    // Carregamento inicial simples - sem dependências complexas
+    if (user && profile && company) {
+      loadAllData();
     }
+  }, []); // Dependência vazia - executa apenas uma vez
 
-    let mounted = true;
-
-    const loadData = async () => {
-      try {
-        console.log('🔄 Carregando dados do formulário...');
-        
-        if (mounted) await loadCategories();
-        if (mounted) await loadClients();
-        if (mounted) await loadCustomFields();
-        
-        if (canAssignTickets && mounted) {
-          await loadTechnicians();
-        }
-        
-        if (isEditing && ticket && mounted) {
-          await loadCustomFieldValues();
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-      }
-    };
+  const loadAllData = async () => {
+    if (!user || !profile || !company) return;
     
-    loadData();
-
-    return () => {
-      mounted = false;
-    };
-  }, [user?.id, profile?.id, company?.id]); // Dependências mais específicas
-
-  const loadCategories = async () => {
-    if (!company?.id) {
-      console.log('❌ Empresa não carregada ainda');
-      return;
-    }
-
     try {
-      console.log('🔄 Carregando categorias para empresa:', company.id);
-      const { data, error } = await supabase
+      console.log('🔄 Carregando todos os dados...');
+      
+      // Carregar categorias
+      const { data: categoriesData } = await supabase
         .from('categories')
         .select('id, name')
         .eq('company_id', company.id)
         .eq('active', true)
         .order('name');
+      setCategories(categoriesData || []);
 
-      if (error) throw error;
-      console.log('✅ Categorias carregadas:', data);
-      setCategories(data || []);
+      // Carregar clientes
+      const { data: clientsData } = await supabase
+        .from('clients')
+        .select('id, name, email, phone, address, company_name, document')
+        .eq('company_id', company.id)
+        .eq('active', true)
+        .order('name');
+      setClients(clientsData || []);
+
+      // Carregar campos personalizados
+      const { data: customFieldsData } = await supabase
+        .from('custom_fields')
+        .select('*')
+        .eq('company_id', company.id)
+        .eq('active', true)
+        .order('sort_order');
+      
+      const fieldsWithParsedOptions = customFieldsData?.map(field => ({
+        ...field,
+        options: field.options ? field.options as string[] : undefined
+      })) || [];
+      setCustomFields(fieldsWithParsedOptions);
+
+      // Carregar técnicos se necessário
+      if (profile?.role === 'master' || profile?.role === 'technician') {
+        const { data: techniciansData } = await supabase
+          .from('profiles')
+          .select('id, name, role, user_id')
+          .eq('company_id', company.id)
+          .in('role', ['master', 'technician'])
+          .eq('active', true)
+          .order('name');
+        setTechnicians(techniciansData || []);
+      }
+
+      // Carregar valores de campos personalizados se editando
+      if (ticket?.id) {
+        const { data: valuesData } = await supabase
+          .from('custom_field_values')
+          .select('custom_field_id, value')
+          .eq('ticket_id', ticket.id);
+
+        const values: Record<string, string> = {};
+        valuesData?.forEach(item => {
+          values[item.custom_field_id] = item.value || '';
+        });
+        setCustomFieldValues(values);
+      }
+
+      console.log('✅ Todos os dados carregados');
     } catch (error) {
-      console.error('Error loading categories:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar categorias',
-        variant: 'destructive'
-      });
+      console.error('❌ Erro ao carregar dados:', error);
     }
   };
 
@@ -215,104 +226,6 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       });
     } finally {
       setCreatingCategory(false);
-    }
-  };
-
-  const loadClients = async () => {
-    if (!company?.id) {
-      console.log('❌ Empresa não carregada para carregar clientes');
-      return;
-    }
-
-    try {
-      console.log('🔄 Carregando clientes para empresa:', company.id);
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, name, email, phone, address, company_name, document')
-        .eq('company_id', company.id)
-        .eq('active', true)
-        .order('name');
-
-      if (error) throw error;
-      console.log('✅ Clientes carregados:', data);
-      setClients(data || []);
-    } catch (error) {
-      console.error('Error loading clients:', error);
-    }
-  };
-
-  const loadTechnicians = async () => {
-    if (!company?.id) {
-      console.log('❌ Empresa não carregada para carregar técnicos');
-      return;
-    }
-
-    try {
-      console.log('🔄 Carregando técnicos para empresa:', company.id);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, role, user_id')
-        .eq('company_id', company.id)
-        .in('role', ['master', 'technician'])
-        .eq('active', true)
-        .order('name');
-
-      if (error) throw error;
-      console.log('✅ Técnicos carregados:', data);
-      setTechnicians(data || []);
-    } catch (error) {
-      console.error('Error loading technicians:', error);
-    }
-  };
-
-  const loadCustomFields = async () => {
-    if (!company?.id) {
-      console.log('❌ Empresa não carregada para carregar campos personalizados');
-      return;
-    }
-
-    try {
-      console.log('🔄 Carregando campos personalizados para empresa:', company.id);
-      const { data, error } = await supabase
-        .from('custom_fields')
-        .select('*')
-        .eq('company_id', company.id)
-        .eq('active', true)
-        .order('sort_order');
-
-      if (error) throw error;
-      
-      const fieldsWithParsedOptions = data?.map(field => ({
-        ...field,
-        options: field.options ? field.options as string[] : undefined
-      })) || [];
-      
-      console.log('✅ Campos personalizados carregados:', fieldsWithParsedOptions);
-      setCustomFields(fieldsWithParsedOptions);
-    } catch (error) {
-      console.error('Error loading custom fields:', error);
-    }
-  };
-
-  const loadCustomFieldValues = async () => {
-    if (!ticket?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('custom_field_values')
-        .select('custom_field_id, value')
-        .eq('ticket_id', ticket.id);
-
-      if (error) throw error;
-
-      const values: Record<string, string> = {};
-      data?.forEach(item => {
-        values[item.custom_field_id] = item.value || '';
-      });
-
-      setCustomFieldValues(values);
-    } catch (error) {
-      console.error('Error loading custom field values:', error);
     }
   };
 
