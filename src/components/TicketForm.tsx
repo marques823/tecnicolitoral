@@ -130,7 +130,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           .from('profiles')
           .select('id, name, role, user_id')
           .eq('company_id', company.id)
-          .in('role', ['company_admin', 'technician'])
+          .in('role', ['company_admin', 'technician', 'client_user'])
           .eq('active', true)
           .order('name');
         setTechnicians(techniciansData || []);
