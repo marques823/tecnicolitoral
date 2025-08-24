@@ -144,10 +144,8 @@ const Tickets = () => {
   };
 
   const handleCreateTicket = () => {
-    console.log('🎯 handleCreateTicket called - showTicketForm before:', showTicketForm);
     setEditingTicket(null);
     setShowTicketForm(true);
-    console.log('🎯 showTicketForm set to true, state should update');
   };
 
   const handleTicketClick = (ticket: Ticket) => {
@@ -470,19 +468,13 @@ const Tickets = () => {
       </main>
 
       {/* Ticket Form Modal */}
-      {(() => {
-        console.log('🔍 Checking showTicketForm:', showTicketForm, 'editingTicket:', !!editingTicket);
-        return showTicketForm && (
-          <>
-            {console.log('✅ Rendering TicketForm component')}
-            <TicketForm
-              ticket={editingTicket}
-              onSuccess={handleTicketFormSuccess}
-              onCancel={() => setShowTicketForm(false)}
-            />
-          </>
-        );
-      })()}
+      {showTicketForm && (
+        <TicketForm
+          ticket={editingTicket}
+          onSuccess={handleTicketFormSuccess}
+          onCancel={() => setShowTicketForm(false)}
+        />
+      )}
 
       {/* Ticket Details Dialog */}
       <Dialog open={showTicketDetails} onOpenChange={setShowTicketDetails}>
