@@ -321,10 +321,10 @@ export default function Settings() {
     if (!confirmDelete) return;
 
     const secondConfirm = window.prompt(
-      'Para confirmar, digite "DELETAR" (em maiúsculas):'
+      "Para confirmar, digite 'DELETE' (em maiúsculas):"
     );
 
-    if (secondConfirm !== 'DELETAR') {
+    if (secondConfirm !== "DELETE") {
       toast({
         title: "Cancelado",
         description: "Deleção da conta cancelada",
@@ -744,7 +744,7 @@ export default function Settings() {
                 <div>
                   <h4 className="font-medium text-destructive">Deletar Conta</h4>
                   <p className="text-sm text-muted-foreground">
-                    Esta ação é irreversível. Todos os seus dados, incluindo perfil, configurações e histórico serão permanentemente deletados.
+                    Esta ação é irreversível. Todos os seus dados, incluindo perfil, configurações e histórico serão permanentemente deletados. Você precisará digitar "DELETE" para confirmar.
                   </p>
                 </div>
 
