@@ -20,7 +20,8 @@ import {
   Upload,
   Image,
   Palette,
-  Eye
+  Eye,
+  Trash2
 } from 'lucide-react';
 
 interface CompanySettings {
@@ -62,9 +63,10 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { profile, company, user } = useAuth();
+  const { profile, company, user, signOut } = useAuth();
 
   const canManageCompany = profile?.role === 'master' || profile?.role === 'super_admin';
 
@@ -306,6 +308,70 @@ export default function Settings() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!user?.id) return;
+
+    const confirmDelete = window.confirm(
+      'Tem certeza que deseja deletar sua conta? Esta ação é irreversível e todos os seus dados serão perdidos.'
+    );
+
+    if (!confirmDelete) return;
+
+    const secondConfirm = window.prompt(
+      'Para confirmar, digite "DELETAR" (em maiúsculas):'
+    );
+
+    if (secondConfirm !== 'DELETAR') {
+      toast({
+        title: "Cancelado",
+        description: "Deleção da conta cancelada",
+      });
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      // Deletar o perfil primeiro
+      if (profile?.id) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', profile.id);
+
+        if (profileError) {
+          console.error('Erro ao deletar perfil:', profileError);
+        }
+      }
+
+      // Deletar o usuário através da edge function manage-user
+      const { error: userError } = await supabase.functions.invoke('manage-user', {
+        body: {
+          action: 'delete_user',
+          user_id: user.id
+        }
+      });
+
+      if (userError) throw userError;
+
+      toast({
+        title: "Conta deletada",
+        description: "Sua conta foi deletada com sucesso",
+      });
+
+      // Fazer logout e redirecionar
+      await signOut();
+    } catch (error) {
+      console.error('Erro ao deletar conta:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao deletar conta. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -662,6 +728,37 @@ export default function Settings() {
             <p className="text-sm text-blue-700">
               Suas informações estão protegidas e criptografadas
             </p>
+          </div>
+
+          <Separator />
+
+          {/* Zona de Perigo */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+              <h3 className="font-semibold text-destructive">Zona de Perigo</h3>
+            </div>
+
+            <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-medium text-destructive">Deletar Conta</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Esta ação é irreversível. Todos os seus dados, incluindo perfil, configurações e histórico serão permanentemente deletados.
+                  </p>
+                </div>
+
+                <Button 
+                  variant="destructive" 
+                  onClick={deleteAccount}
+                  disabled={deleting}
+                  className="w-full sm:w-auto"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {deleting ? 'Deletando...' : 'Deletar Minha Conta'}
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
