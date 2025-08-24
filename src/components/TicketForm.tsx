@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, User } from 'lucide-react';
 
 type TicketPriority = Database["public"]["Enums"]["ticket_priority"];
 type TicketStatus = Database["public"]["Enums"]["ticket_status"];
@@ -38,6 +38,17 @@ interface Profile {
   user_id: string;
 }
 
+interface Client {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  company_name?: string | null;
+  document?: string | null;
+  active: boolean;
+}
+
 interface TicketFormProps {
   ticket?: Ticket | null;
   onSuccess: () => void;
@@ -51,26 +62,41 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [technicians, setTechnicians] = useState<Profile[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [showCreateClient, setShowCreateClient] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [creatingCategory, setCreatingCategory] = useState(false);
+  const [newClientData, setNewClientData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company_name: ''
+  });
   const [formData, setFormData] = useState({
     title: ticket?.title || '',
     description: ticket?.description || '',
     priority: (ticket?.priority || 'medium') as TicketPriority,
     status: (ticket?.status || 'open') as TicketStatus,
     category_id: ticket?.category_id || '',
-    assigned_to: ticket?.assigned_to || 'unassigned'
+    assigned_to: ticket?.assigned_to || 'unassigned',
+    client_id: ticket?.client_id || ''
   });
 
   const isEditing = !!ticket;
   const canAssignTickets = profile?.role === 'company_admin' || profile?.role === 'technician';
   const canChangeStatus = profile?.role === 'company_admin' || profile?.role === 'technician';
+  const isClientUser = profile?.role === 'client_user';
 
   // Carregamento simples apenas quando o componente monta
   useEffect(() => {
     if (user && profile && company) {
       loadBasicData();
+      
+      // Se é client_user, criar automaticamente um cliente baseado no perfil
+      if (isClientUser && !isEditing) {
+        createOrFindClientForUser();
+      }
     }
   }, []);
 
@@ -87,6 +113,17 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         .order('name');
       setCategories(categoriesData || []);
 
+      // Carregar clientes (para técnicos e admins)
+      if (!isClientUser) {
+        const { data: clientsData } = await supabase
+          .from('clients')
+          .select('id, name, email, phone, company_name, active')
+          .eq('company_id', company.id)
+          .eq('active', true)
+          .order('name');
+        setClients(clientsData || []);
+      }
+
       // Carregar técnicos se necessário
       if (canAssignTickets) {
         const { data: techniciansData } = await supabase
@@ -100,6 +137,89 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       }
     } catch (error) {
       console.error('Error loading basic data:', error);
+    }
+  };
+
+  // Criar ou encontrar cliente para client_user
+  const createOrFindClientForUser = async () => {
+    if (!profile || !company) return;
+
+    try {
+      // Primeiro, verificar se já existe um cliente para este usuário
+      const { data: existingClient } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('company_id', company.id)
+        .eq('name', profile.name)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (existingClient) {
+        setFormData(prev => ({ ...prev, client_id: existingClient.id }));
+      } else {
+        // Criar novo cliente baseado no perfil do usuário
+        const { data: newClient, error } = await supabase
+          .from('clients')
+          .insert({
+            company_id: company.id,
+            name: profile.name,
+            email: user?.email || null,
+            active: true
+          })
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        
+        if (newClient) {
+          setFormData(prev => ({ ...prev, client_id: newClient.id }));
+        }
+      }
+    } catch (error) {
+      console.error('Error creating/finding client:', error);
+    }
+  };
+
+  const createNewClient = async () => {
+    if (!newClientData.name.trim() || !company) return;
+
+    try {
+      setCreatingCategory(true); // Reusing the same loading state
+      
+      const { data: newClient, error } = await supabase
+        .from('clients')
+        .insert({
+          company_id: company.id,
+          name: newClientData.name.trim(),
+          email: newClientData.email.trim() || null,
+          phone: newClientData.phone.trim() || null,
+          company_name: newClientData.company_name.trim() || null,
+          active: true
+        })
+        .select('id, name, email, phone, company_name, active')
+        .single();
+
+      if (error) throw error;
+
+      if (newClient) {
+        setClients(prev => [...prev, newClient]);
+        setFormData(prev => ({ ...prev, client_id: newClient.id }));
+        setShowCreateClient(false);
+        setNewClientData({ name: '', email: '', phone: '', company_name: '' });
+        
+        toast({
+          title: 'Cliente criado',
+          description: 'Novo cliente criado e selecionado com sucesso'
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao criar cliente',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setCreatingCategory(false);
     }
   };
 
@@ -167,11 +287,12 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         title: formData.title.trim(),
         description: formData.description.trim(),
         priority: formData.priority,
+        status: formData.status,
         category_id: formData.category_id,
-        company_id: company?.id,
-        ...(isEditing && canChangeStatus && { status: formData.status }),
-        ...(canAssignTickets && formData.assigned_to !== 'unassigned' && { assigned_to: formData.assigned_to }),
-        ...(!isEditing && { created_by: user?.id })
+        company_id: company.id,
+        created_by: user.id,
+        assigned_to: formData.assigned_to === 'unassigned' ? null : formData.assigned_to,
+        client_id: formData.client_id || null
       };
 
       if (isEditing) {
@@ -365,6 +486,120 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
               </div>
             )}
           </div>
+
+          {/* Campo de Cliente - só para técnicos e admins */}
+          {!isClientUser && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="client">Cliente</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCreateClient(true)}
+                  className="text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Novo cliente
+                </Button>
+              </div>
+              
+              <Select
+                value={formData.client_id}
+                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um cliente (opcional)" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-background">
+                  <SelectItem value="">Nenhum cliente</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{client.name}</span>
+                        {(client.company_name || client.email) && (
+                          <span className="text-xs text-muted-foreground">
+                            {client.company_name && client.email 
+                              ? `${client.company_name} • ${client.email}`
+                              : client.company_name || client.email
+                            }
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {showCreateClient && (
+                <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+                  <Label>Novo cliente</Label>
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Nome do cliente *"
+                      value={newClientData.name}
+                      onChange={(e) => setNewClientData({ ...newClientData, name: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Email"
+                      type="email"
+                      value={newClientData.email}
+                      onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Telefone"
+                      value={newClientData.phone}
+                      onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Empresa"
+                      value={newClientData.company_name}
+                      onChange={(e) => setNewClientData({ ...newClientData, company_name: e.target.value })}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={createNewClient}
+                        disabled={creatingCategory || !newClientData.name.trim()}
+                        size="sm"
+                      >
+                        {creatingCategory ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Criar Cliente'
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowCreateClient(false);
+                          setNewClientData({ name: '', email: '', phone: '', company_name: '' });
+                        }}
+                        size="sm"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mostrar cliente selecionado automaticamente para client_user */}
+          {isClientUser && formData.client_id && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Cliente
+              </Label>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm font-medium">{profile?.name}</p>
+                <p className="text-xs text-muted-foreground">Chamado será criado em seu nome</p>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="priority">Prioridade</Label>

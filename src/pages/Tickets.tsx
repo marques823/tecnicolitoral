@@ -20,7 +20,8 @@ import {
   History,
   Share2,
   MoreVertical,
-  FileText
+  FileText,
+  User
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TicketForm from '@/components/TicketForm';
@@ -442,12 +443,18 @@ const Tickets = () => {
                       <p className="text-xs text-muted-foreground truncate mb-2">
                         {ticket.description}
                       </p>
-                      <div className="flex items-center space-x-3 text-xs text-muted-foreground">
-                        <span>{new Date(ticket.created_at).toLocaleDateString('pt-BR')}</span>
-                        {ticket.categories && (
-                          <span>{ticket.categories.name}</span>
-                        )}
-                      </div>
+                       <div className="flex items-center space-x-3 text-xs text-muted-foreground">
+                         <span>{new Date(ticket.created_at).toLocaleDateString('pt-BR')}</span>
+                         {ticket.categories && (
+                           <span>{ticket.categories.name}</span>
+                         )}
+                         {ticket.clients && (
+                           <span className="flex items-center">
+                             <User className="w-3 h-3 mr-1" />
+                             {ticket.clients.name}
+                           </span>
+                         )}
+                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       {getStatusBadge(ticket.status || 'open')}
