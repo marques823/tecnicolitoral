@@ -162,6 +162,33 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         ];
 
         setClients(allClients);
+      } else {
+        // Se for cliente_user, buscar apenas os dados do próprio usuário e auto-selecionar
+        const { data: ownClientData } = await supabase
+          .from('profiles')
+          .select('id, name, user_id, email_contato, telefone, razao_social')
+          .eq('user_id', user?.id)
+          .eq('role', 'client_user')
+          .single();
+
+        if (ownClientData) {
+          const clientAsClient: Client = {
+            id: ownClientData.id,
+            name: ownClientData.name,
+            email: ownClientData.email_contato,
+            phone: ownClientData.telefone,
+            company_name: ownClientData.razao_social,
+            active: true,
+            type: 'client_user' as const,
+            user_id: ownClientData.user_id,
+            address: null,
+            document: null
+          };
+          
+          setClients([clientAsClient]);
+          // Auto-selecionar o próprio cliente
+          setFormData(prev => ({ ...prev, client_id: ownClientData.id }));
+        }
       }
 
       // Carregar técnicos se necessário
