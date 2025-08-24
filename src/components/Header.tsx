@@ -84,7 +84,7 @@ export default function Header() {
 
     const roleSpecificItems = [];
     
-    if (profile?.role === 'master') {
+    if (profile?.role === 'company_admin') {
       roleSpecificItems.push(
         { icon: BarChart3, label: 'Relatórios', path: '/reports' },
         { icon: Users, label: 'Usuários', path: '/users' },
@@ -101,7 +101,7 @@ export default function Header() {
       );
     }
     
-    if (profile?.role === 'super_admin') {
+    if (profile?.role === 'system_owner') {
       roleSpecificItems.push(
         { icon: Shield, label: 'Super Admin', path: '/super-admin' }
       );
@@ -139,9 +139,9 @@ export default function Header() {
               <User className="w-4 h-4" />
               <span className="truncate max-w-32">{profile?.name || user.email}</span>
               <span className="text-muted-foreground text-xs">
-                ({profile?.role === 'master' ? 'Master' : 
+                 ({profile?.role === 'company_admin' ? 'Admin da Empresa' : 
                   profile?.role === 'technician' ? 'Técnico' : 
-                  profile?.role === 'super_admin' ? 'Super Admin' : 'Cliente'})
+                  profile?.role === 'system_owner' ? 'System Owner' : 'Cliente'})
               </span>
             </div>
             
@@ -189,9 +189,9 @@ export default function Header() {
                 <div>
                   <p className="font-medium text-sm">{profile?.name || user.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    {profile?.role === 'master' ? 'Master' : 
-                     profile?.role === 'technician' ? 'Técnico' : 
-                     profile?.role === 'super_admin' ? 'Super Admin' : 'Cliente'}
+                     {profile?.role === 'company_admin' ? 'Admin da Empresa' : 
+                      profile?.role === 'technician' ? 'Técnico' : 
+                      profile?.role === 'system_owner' ? 'System Owner' : 'Cliente'}
                   </p>
                 </div>
               </div>

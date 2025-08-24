@@ -60,7 +60,7 @@ interface Profile {
   user_id: string;
   company_id: string;
   name: string;
-  role: 'master' | 'technician' | 'client' | 'super_admin';
+  role: 'company_admin' | 'technician' | 'client_user' | 'system_owner';
   active: boolean;
   companies?: {
     name: string;
@@ -104,7 +104,7 @@ export default function SuperAdmin() {
   const { toast } = useToast();
   const { profile } = useAuth();
 
-  const isSuperAdmin = profile?.role === 'super_admin';
+  const isSuperAdmin = profile?.role === 'system_owner';
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -366,7 +366,7 @@ export default function SuperAdmin() {
           <AlertCircle className="w-16 h-16 mx-auto text-destructive" />
           <h2 className="text-2xl font-bold">Acesso Negado</h2>
           <p className="text-muted-foreground">
-            Apenas super administradores podem acessar esta área.
+            Apenas proprietários do sistema podem acessar esta área.
           </p>
         </div>
       </div>
@@ -389,7 +389,7 @@ export default function SuperAdmin() {
           <div className="flex items-center space-x-4">
             <Shield className="w-8 h-8 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold">Super Admin</h1>
+              <h1 className="text-3xl font-bold">System Owner</h1>
               <p className="text-muted-foreground">
                 Painel de administração do sistema TicketFlow
               </p>
@@ -656,10 +656,10 @@ export default function SuperAdmin() {
                           <td className="py-2">{profile.companies?.name}</td>
                           <td className="py-2">
                             <Badge variant="outline">
-                              {profile.role === 'master' ? 'Master' :
-                               profile.role === 'technician' ? 'Técnico' :
-                               profile.role === 'client' ? 'Cliente' :
-                               profile.role === 'super_admin' ? 'Super Admin' : profile.role}
+                               {profile.role === 'company_admin' ? 'Admin da Empresa' :
+                                profile.role === 'technician' ? 'Técnico' :
+                                profile.role === 'client_user' ? 'Cliente' :
+                                profile.role === 'system_owner' ? 'System Owner' : profile.role}
                             </Badge>
                           </td>
                           <td className="py-2">
@@ -1105,10 +1105,10 @@ function ProfileEditForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="client">Cliente</SelectItem>
+            <SelectItem value="client_user">Cliente</SelectItem>
             <SelectItem value="technician">Técnico</SelectItem>
-            <SelectItem value="master">Master</SelectItem>
-            <SelectItem value="super_admin">Super Admin</SelectItem>
+            <SelectItem value="company_admin">Admin da Empresa</SelectItem>
+            <SelectItem value="system_owner">System Owner</SelectItem>
           </SelectContent>
         </Select>
       </div>

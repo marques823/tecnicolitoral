@@ -53,7 +53,7 @@ export default function CustomFields() {
   const { toast } = useToast();
   const { profile, company } = useAuth();
 
-  const canManageFields = profile?.role === 'master';
+  const canManageFields = profile?.role === 'company_admin';
 
   useEffect(() => {
     checkPlanSupport();

@@ -78,7 +78,7 @@ export default function Reports() {
     exportReportToPDF(reportData, companyData, additionalData);
   };
 
-  const canViewReports = profile?.role === 'master' || profile?.role === 'technician';
+  const canViewReports = profile?.role === 'company_admin' || profile?.role === 'technician';
 
   useEffect(() => {
     if (canViewReports) {

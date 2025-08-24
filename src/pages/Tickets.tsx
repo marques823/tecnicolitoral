@@ -118,7 +118,7 @@ const Tickets = () => {
         `);
 
       // Para clientes, mostrar apenas os tickets que eles criaram
-      if (profile?.role === 'client') {
+      if (profile?.role === 'client_user') {
         query = query.eq('created_by', user?.id);
       } else {
         // Para masters e technicians, mostrar todos os tickets da empresa
@@ -309,7 +309,7 @@ const Tickets = () => {
   };
 
   // Verificar se o usuário pode editar tickets (masters e technicians)
-  const canEditTickets = profile?.role === 'master' || profile?.role === 'technician';
+  const canEditTickets = profile?.role === 'company_admin' || profile?.role === 'technician';
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {

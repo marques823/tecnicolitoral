@@ -32,7 +32,7 @@ const Clients = () => {
   const [showClientForm, setShowClientForm] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
-  const canManageClients = profile?.role === 'master';
+  const canManageClients = profile?.role === 'company_admin';
 
   useEffect(() => {
     if (!loading && !user) {

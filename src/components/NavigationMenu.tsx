@@ -30,7 +30,7 @@ export default function NavigationMenu() {
 
     const roleSpecificItems = [];
     
-    if (profile?.role === 'master') {
+    if (profile?.role === 'company_admin') {
       roleSpecificItems.push(
         { icon: BarChart3, label: 'Relatórios', path: '/reports' },
         { icon: Users, label: 'Usuários', path: '/users' },
@@ -48,9 +48,9 @@ export default function NavigationMenu() {
       );
     }
     
-    if (profile?.role === 'super_admin') {
+    if (profile?.role === 'system_owner') {
       roleSpecificItems.push(
-        { icon: Shield, label: 'Super Admin', path: '/super-admin' }
+        { icon: Shield, label: 'System Owner', path: '/super-admin' }
       );
     }
 

@@ -21,7 +21,7 @@ export default function CreateSuperAdmin() {
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'super_admin')
+        .eq('role', 'system_owner')
         .eq('company_id', companyId)
         .maybeSingle();
 
@@ -61,7 +61,7 @@ export default function CreateSuperAdmin() {
             user_id: existingAuthUser.id,
             company_id: companyId,
             name: 'Super Administrador',
-            role: 'super_admin',
+            role: 'system_owner',
             active: true
           });
 
@@ -85,7 +85,7 @@ export default function CreateSuperAdmin() {
           email: 'admin@ticketflow.com',
           password: 'SuperAdmin123!',
           name: 'Super Administrador',
-          role: 'super_admin',
+          role: 'system_owner',
           company_id: companyId,
           active: true
         }

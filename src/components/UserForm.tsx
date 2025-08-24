@@ -14,7 +14,7 @@ interface UserProfile {
   id: string;
   user_id: string;
   name: string;
-  role: 'master' | 'technician' | 'client' | 'super_admin';
+  role: 'company_admin' | 'technician' | 'client_user' | 'system_owner';
   active: boolean;
 }
 
@@ -30,7 +30,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
     name: '',
     email: '',
     password: '',
-    role: 'client' as 'master' | 'technician' | 'client' | 'super_admin',
+    role: 'client_user' as 'company_admin' | 'technician' | 'client_user' | 'system_owner',
     active: true
   });
   const [loading, setLoading] = useState(false);
@@ -135,9 +135,9 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
   };
 
   const roleOptions = [
-    { value: 'client', label: 'Cliente', description: 'Pode criar e visualizar seus próprios chamados' },
+    { value: 'client_user', label: 'Cliente', description: 'Pode criar e visualizar seus próprios chamados' },
     { value: 'technician', label: 'Técnico', description: 'Pode gerenciar chamados da empresa' },
-    { value: 'master', label: 'Master', description: 'Acesso total ao sistema da empresa' }
+    { value: 'company_admin', label: 'Admin da Empresa', description: 'Acesso total ao sistema da empresa' }
   ];
 
   return (
@@ -223,7 +223,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
                 <Label htmlFor="role">Função</Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value: 'master' | 'technician' | 'client' | 'super_admin') => 
+                  onValueChange={(value: 'company_admin' | 'technician' | 'client_user' | 'system_owner') => 
                     setFormData({ ...formData, role: value })
                   }
                 >

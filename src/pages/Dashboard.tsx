@@ -88,7 +88,7 @@ const Dashboard = () => {
     // Total de tickets baseado no role do usuário
     let ticketsQuery = supabase.from('tickets').select('status, resolved_at');
 
-    if (profile?.role === 'client') {
+    if (profile?.role === 'client_user') {
       // Cliente só vê seus próprios tickets
       ticketsQuery = ticketsQuery.eq('created_by', user?.id);
     } else if (profile?.role === 'technician') {
@@ -120,7 +120,7 @@ const Dashboard = () => {
   };
 
   const loadUserStats = async () => {
-    if (profile?.role !== 'master') return;
+    if (profile?.role !== 'company_admin') return;
 
     const [{ data: activeUsers }, { data: plans }] = await Promise.all([
       supabase
@@ -150,7 +150,7 @@ const Dashboard = () => {
       .order('created_at', { ascending: false })
       .limit(5);
 
-    if (profile?.role === 'client') {
+    if (profile?.role === 'client_user') {
       ticketQuery = ticketQuery.eq('created_by', user?.id);
     } else if (profile?.role === 'technician') {
       ticketQuery = ticketQuery.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
@@ -222,15 +222,15 @@ const Dashboard = () => {
 
   const getRoleBadge = (role: string) => {
     const variants = {
-      master: 'default',
+      company_admin: 'default',
       technician: 'secondary',
-      client: 'outline'
+      client_user: 'outline'
     } as const;
     
     const labels = {
-      master: 'Master',
+      company_admin: 'Admin da Empresa',
       technician: 'Técnico',
-      client: 'Cliente'
+      client_user: 'Cliente'
     };
 
     return (
@@ -263,7 +263,7 @@ const Dashboard = () => {
               <Card className="p-3 sm:p-6">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
                   <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
-                    {profile.role === 'client' ? 'Meus Chamados' : 'Total'}
+                    {profile.role === 'client_user' ? 'Meus Chamados' : 'Total'}
                   </CardTitle>
                   <Ticket className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
@@ -272,7 +272,7 @@ const Dashboard = () => {
                     {loadingData ? '...' : stats.totalTickets}
                   </div>
                   <p className="text-xs text-muted-foreground hidden sm:block">
-                    {profile.role === 'client' ? 'Total criados' : 'Todos os tickets'}
+                    {profile.role === 'client_user' ? 'Total criados' : 'Todos os tickets'}
                   </p>
                 </CardContent>
               </Card>
@@ -314,24 +314,24 @@ const Dashboard = () => {
               <Card className="p-3 sm:p-6">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
                   <CardTitle className="text-xs sm:text-sm font-medium">
-                    {profile.role === 'master' ? 'Usuários' : 'Concluídos'}
+                    {profile.role === 'company_admin' ? 'Usuários' : 'Concluídos'}
                   </CardTitle>
-                  {profile.role === 'master' ? 
-                    <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" /> :
-                    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-success rounded-full"></div>
-                  }
+                   {profile.role === 'company_admin' ? 
+                     <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" /> :
+                     <div className="w-2 h-2 sm:w-3 sm:h-3 bg-success rounded-full"></div>
+                   }
                 </CardHeader>
                 <CardContent className="p-0 sm:p-6 sm:pt-0">
                   <div className="text-lg sm:text-2xl font-bold">
                     {loadingData ? '...' : 
-                      profile.role === 'master' ? stats.activeUsers : stats.resolvedToday
+                      profile.role === 'company_admin' ? stats.activeUsers : stats.resolvedToday
                     }
                   </div>
                   <p className="text-xs text-muted-foreground hidden sm:block">
-                    {profile.role === 'master' 
-                      ? `de ${stats.maxUsers} disponíveis`
-                      : 'Finalizados hoje'
-                    }
+                     {profile.role === 'company_admin' 
+                       ? `de ${stats.maxUsers} disponíveis`
+                       : 'Finalizados hoje'
+                     }
                   </p>
                 </CardContent>
               </Card>
@@ -363,7 +363,7 @@ const Dashboard = () => {
                     <Ticket className="mr-2 h-4 w-4" />
                     Gerenciar Chamados
                   </Button>
-                  {(profile.role === 'master' || profile.role === 'technician') && (
+                  {(profile.role === 'company_admin' || profile.role === 'technician') && (
                     <Button 
                       className="w-full justify-start h-10 sm:h-auto" 
                       variant="outline"
@@ -373,7 +373,7 @@ const Dashboard = () => {
                       Relatórios
                     </Button>
                   )}
-                  {profile.role === 'master' && (
+                  {profile.role === 'company_admin' && (
                     <>
                       <Button 
                         className="w-full justify-start h-10 sm:h-auto" 
@@ -417,7 +417,7 @@ const Dashboard = () => {
                       </Button>
                     </>
                   )}
-                  {profile.role === 'super_admin' && (
+                  {profile.role === 'system_owner' && (
                     <Button 
                       className="w-full justify-start" 
                       variant="outline"
@@ -441,13 +441,13 @@ const Dashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    {profile.role === 'client' ? 'Meus Últimos Chamados' : 'Últimos Chamados'}
+                    {profile.role === 'client_user' ? 'Meus Últimos Chamados' : 'Últimos Chamados'}
                   </CardTitle>
                   <CardDescription>
-                    {profile.role === 'client' 
-                      ? 'Seus chamados mais recentes'
-                      : 'Acompanhe os chamados mais recentes'
-                    }
+                     {profile.role === 'client_user' 
+                       ? 'Seus chamados mais recentes'
+                       : 'Acompanhe os chamados mais recentes'
+                     }
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

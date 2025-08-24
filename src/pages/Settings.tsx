@@ -68,7 +68,7 @@ export default function Settings() {
   const { toast } = useToast();
   const { profile, company, user, signOut } = useAuth();
 
-  const canManageCompany = profile?.role === 'master' || profile?.role === 'super_admin';
+  const canManageCompany = profile?.role === 'company_admin' || profile?.role === 'system_owner';
 
   useEffect(() => {
     loadSettings();
@@ -608,7 +608,7 @@ export default function Settings() {
             <Label htmlFor="profile-role">Função</Label>
             <Input
               id="profile-role"
-              value={profile?.role === 'master' ? 'Master' : 
+              value={profile?.role === 'company_admin' ? 'Admin da Empresa' : 
                     profile?.role === 'technician' ? 'Técnico' : 'Cliente'}
               disabled
               className="bg-muted"

@@ -7,7 +7,7 @@ interface Profile {
   id: string;
   user_id: string;
   company_id: string;
-  role: 'master' | 'technician' | 'client' | 'super_admin';
+  role: 'company_admin' | 'technician' | 'client_user' | 'system_owner';
   name: string;
   active: boolean;
 }
@@ -81,9 +81,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('👤 Perfil carregado:', profileData);
               setProfile(profileData);
 
-              // Se é super admin, mostrar notificação
-              if (profileData?.role === 'super_admin') {
-                toast.success('🛡️ Acesso Super Admin ativado!');
+              // Se é system owner, mostrar notificação
+              if (profileData?.role === 'system_owner') {
+                toast.success('🛡️ Acesso System Owner ativado!');
               }
 
               // Fetch company data

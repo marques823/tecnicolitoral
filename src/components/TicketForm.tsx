@@ -64,8 +64,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   });
 
   const isEditing = !!ticket;
-  const canAssignTickets = profile?.role === 'master' || profile?.role === 'technician';
-  const canChangeStatus = profile?.role === 'master' || profile?.role === 'technician';
+  const canAssignTickets = profile?.role === 'company_admin' || profile?.role === 'technician';
+  const canChangeStatus = profile?.role === 'company_admin' || profile?.role === 'technician';
 
   // Carregamento simples apenas quando o componente monta
   useEffect(() => {
@@ -93,7 +93,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           .from('profiles')
           .select('id, name, role, user_id')
           .eq('company_id', company.id)
-          .in('role', ['master', 'technician'])
+          .in('role', ['company_admin', 'technician'])
           .eq('active', true)
           .order('name');
         setTechnicians(techniciansData || []);
@@ -418,7 +418,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                   <SelectItem value="unassigned">Não atribuído</SelectItem>
                   {technicians.map((tech) => (
                     <SelectItem key={tech.user_id} value={tech.user_id}>
-                      {tech.name} ({tech.role === 'master' ? 'Master' : 'Técnico'})
+                      {tech.name} ({tech.role === 'company_admin' ? 'Admin' : 'Técnico'})
                     </SelectItem>
                   ))}
                 </SelectContent>

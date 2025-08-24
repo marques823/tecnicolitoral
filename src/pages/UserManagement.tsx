@@ -31,7 +31,7 @@ interface UserProfile {
   id: string;
   user_id: string;
   name: string;
-  role: 'master' | 'technician' | 'client';
+  role: 'company_admin' | 'technician' | 'client_user';
   active: boolean;
   created_at: string;
   user_email?: string;
@@ -60,16 +60,16 @@ const UserManagement = () => {
   const [passwordResetUser, setPasswordResetUser] = useState<UserProfile | null>(null);
   const [emailChangeUser, setEmailChangeUser] = useState<UserProfile | null>(null);
 
-  // Verificar se o usuário é Master
+  // Verificar se o usuário é Company Admin
   useEffect(() => {
-    if (!user || !profile || profile.role !== 'master') {
+    if (!user || !profile || profile.role !== 'company_admin') {
       navigate('/dashboard');
     }
   }, [user, profile, navigate]);
 
   // Carregar usuários e plano
   useEffect(() => {
-    if (company && profile?.role === 'master') {
+    if (company && profile?.role === 'company_admin') {
       loadUsers();
       loadPlan();
     }
@@ -241,15 +241,15 @@ const UserManagement = () => {
 
   const getRoleBadge = (role: string) => {
     const variants = {
-      master: 'default',
+      company_admin: 'default',
       technician: 'secondary',
-      client: 'outline'
+      client_user: 'outline'
     } as const;
     
     const labels = {
-      master: 'Master',
+      company_admin: 'Admin da Empresa',
       technician: 'Técnico',
-      client: 'Cliente'
+      client_user: 'Cliente'
     };
 
     return (

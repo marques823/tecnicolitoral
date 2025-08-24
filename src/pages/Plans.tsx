@@ -32,7 +32,7 @@ export default function Plans() {
   const { toast } = useToast();
   const { profile, company } = useAuth();
 
-  const canManagePlans = profile?.role === 'master';
+  const canManagePlans = profile?.role === 'company_admin';
 
   useEffect(() => {
     loadPlans();

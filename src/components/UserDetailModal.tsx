@@ -22,7 +22,7 @@ interface UserProfile {
   id: string;
   user_id: string;
   name: string;
-  role: 'master' | 'technician' | 'client';
+  role: 'company_admin' | 'technician' | 'client_user';
   active: boolean;
   created_at: string;
   user_email?: string;
@@ -51,15 +51,15 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
 }) => {
   const getRoleBadge = (role: string) => {
     const variants = {
-      master: 'default',
+      company_admin: 'default',
       technician: 'secondary',
-      client: 'outline'
+      client_user: 'outline'
     } as const;
     
     const labels = {
-      master: 'Master',
+      company_admin: 'Admin da Empresa',
       technician: 'Técnico',
-      client: 'Cliente'
+      client_user: 'Cliente'
     };
 
     return (

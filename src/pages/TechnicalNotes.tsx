@@ -699,7 +699,7 @@ export default function TechnicalNotes() {
                     <Edit className="h-4 w-4" />
                     <span className="ml-2 lg:hidden">Editar</span>
                   </Button>
-                  {(profile?.role === 'master' || note.created_by === profile?.user_id) && (
+                  {(profile?.role === 'company_admin' || note.created_by === profile?.user_id) && (
                     <Button
                       variant="outline"
                       size="sm"

@@ -32,7 +32,7 @@ export default function Categories() {
   const { toast } = useToast();
   const { profile } = useAuth();
 
-  const canManageCategories = profile?.role === 'master';
+  const canManageCategories = profile?.role === 'company_admin';
 
   useEffect(() => {
     loadCategories();
