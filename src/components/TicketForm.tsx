@@ -90,15 +90,24 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
 
   // Carregamento apenas quando o componente monta e tem os dados necessários
   useEffect(() => {
+    console.log('TicketForm useEffect - user:', !!user, 'profile:', !!profile, 'company:', !!company?.id);
+    
     if (user && profile) {
+      console.log('User and profile available');
       if (company?.id) {
+        console.log('Company ID available, loading basic data');
         loadBasicData();
         
         // Se é client_user, criar automaticamente um cliente baseado no perfil
         if (isClientUser && !isEditing) {
+          console.log('Client user detected, creating/finding client');
           createOrFindClientForUser();
         }
+      } else {
+        console.log('No company ID available');
       }
+    } else {
+      console.log('Missing user or profile data');
     }
   }, [user, profile, company]);
 
@@ -333,8 +342,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
 
   // Se não há usuário autenticado, não renderizar o formulário
   if (!user || !profile) {
+    console.log('TicketForm: Missing user or profile, not rendering');
     return null;
   }
+
+  console.log('TicketForm: Rendering form component');
 
   return (
     <Dialog open={true} onOpenChange={() => onCancel()}>
