@@ -143,8 +143,10 @@ const Tickets = () => {
   };
 
   const handleCreateTicket = () => {
+    console.log('handleCreateTicket called');
     setEditingTicket(null);
     setShowTicketForm(true);
+    console.log('showTicketForm set to true');
   };
 
   const handleTicketClick = (ticket: Ticket) => {
@@ -155,6 +157,7 @@ const Tickets = () => {
 
   const handleEditTicket = (ticket: Ticket) => {
     console.log('Edit ticket:', ticket.title);
+    console.log('Setting editingTicket and showTicketForm');
     setEditingTicket(ticket);
     setShowTicketForm(true);
     setShowTicketDetails(false);
@@ -470,11 +473,14 @@ const Tickets = () => {
 
       {/* Ticket Form Modal */}
       {showTicketForm && (
-        <TicketForm
-          ticket={editingTicket}
-          onSuccess={handleTicketFormSuccess}
-          onCancel={() => setShowTicketForm(false)}
-        />
+        <>
+          {console.log('Rendering TicketForm, showTicketForm:', showTicketForm, 'editingTicket:', editingTicket)}
+          <TicketForm
+            ticket={editingTicket}
+            onSuccess={handleTicketFormSuccess}
+            onCancel={() => setShowTicketForm(false)}
+          />
+        </>
       )}
 
       {/* Ticket Details Dialog */}
