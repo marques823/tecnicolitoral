@@ -126,13 +126,16 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
 
       // Carregar técnicos se necessário
       if (canAssignTickets) {
-        const { data: techniciansData } = await supabase
+        console.log('Carregando técnicos para company:', company.id);
+        const { data: techniciansData, error: techError } = await supabase
           .from('profiles')
           .select('id, name, role, user_id, cpf_cnpj, razao_social, endereco, telefone, email_contato')
           .eq('company_id', company.id)
           .in('role', ['company_admin', 'technician', 'client_user'])
           .eq('active', true)
           .order('name');
+        
+        console.log('Resultado técnicos:', { techniciansData, techError });
         setTechnicians(techniciansData || []);
       }
     } catch (error) {

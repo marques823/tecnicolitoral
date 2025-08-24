@@ -279,14 +279,17 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email_contato">Email de Contato</Label>
+                <Label htmlFor="email_contato">Email de Contato Alternativo</Label>
                 <Input
                   id="email_contato"
                   type="email"
-                  placeholder="email@cliente.com"
+                  placeholder="email.alternativo@cliente.com (opcional)"
                   value={formData.email_contato}
                   onChange={(e) => setFormData({ ...formData, email_contato: e.target.value })}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Email diferente do login para contato
+                </p>
               </div>
             </CardContent>
           </Card>
