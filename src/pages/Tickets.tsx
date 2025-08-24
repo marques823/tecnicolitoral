@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -54,6 +54,7 @@ interface Ticket {
 
 const Tickets = () => {
   const { user, profile, company, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -82,6 +83,16 @@ const Tickets = () => {
       loadTickets();
     }
   }, [company, profile]);
+
+  // Verificar se deve abrir o formulário de novo ticket automaticamente
+  useEffect(() => {
+    if (searchParams.get('action') === 'new') {
+      setShowTicketForm(true);
+      // Remover o parâmetro da URL após abrir o formulário
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams]);
 
   const loadTickets = async () => {
     try {
