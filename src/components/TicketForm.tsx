@@ -346,9 +346,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   }
 
   return (
-    <>
-      {console.log('TicketForm rendering, user:', !!user, 'profile:', !!profile, 'company:', !!company)}
-      <Dialog open={true} onOpenChange={() => onCancel()}>
+    <Dialog open={true} onOpenChange={() => onCancel()}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -681,7 +679,6 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         </form>
       </DialogContent>
     </Dialog>
-    </>
   );
 };
 
