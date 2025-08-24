@@ -637,7 +637,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                   <SelectItem value="unassigned">Não atribuído</SelectItem>
                   {technicians.map((tech) => (
                     <SelectItem key={tech.user_id} value={tech.user_id}>
-                      {tech.name} ({tech.role === 'company_admin' ? 'Admin' : 'Técnico'})
+                      {tech.name} ({
+                        tech.role === 'company_admin' ? 'Admin' : 
+                        tech.role === 'technician' ? 'Técnico' : 
+                        'Cliente'
+                      })
                     </SelectItem>
                   ))}
                 </SelectContent>
