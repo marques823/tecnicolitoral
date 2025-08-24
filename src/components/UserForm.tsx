@@ -31,7 +31,12 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
     email: '',
     password: '',
     role: 'client_user' as 'company_admin' | 'technician' | 'client_user' | 'system_owner',
-    active: true
+    active: true,
+    cpf_cnpj: '',
+    razao_social: '',
+    endereco: '',
+    telefone: '',
+    email_contato: ''
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -43,7 +48,12 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
         email: '', // Email não pode ser editado facilmente
         password: '', // Password vazio para edição
         role: user.role,
-        active: user.active
+        active: user.active,
+        cpf_cnpj: (user as any).cpf_cnpj || '',
+        razao_social: (user as any).razao_social || '',
+        endereco: (user as any).endereco || '',
+        telefone: (user as any).telefone || '',
+        email_contato: (user as any).email_contato || ''
       });
     }
   }, [user]);
@@ -60,7 +70,12 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
           .update({
             name: formData.name,
             role: formData.role,
-            active: formData.active
+            active: formData.active,
+            cpf_cnpj: formData.cpf_cnpj || null,
+            razao_social: formData.razao_social || null,
+            endereco: formData.endereco || null,
+            telefone: formData.telefone || null,
+            email_contato: formData.email_contato || null
           })
           .eq('id', user.id);
 
@@ -91,7 +106,12 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
             name: formData.name,
             role: formData.role,
             company_id: companyId,
-            active: formData.active
+            active: formData.active,
+            cpf_cnpj: formData.cpf_cnpj || null,
+            razao_social: formData.razao_social || null,
+            endereco: formData.endereco || null,
+            telefone: formData.telefone || null,
+            email_contato: formData.email_contato || null
           }
         });
 
@@ -201,14 +221,76 @@ const UserForm: React.FC<UserFormProps> = ({ user, companyId, onSuccess, onCance
                       minLength={6}
                       required
                     />
-                    <p className="text-xs text-muted-foreground">
-                      O usuário poderá alterar a senha no primeiro acesso
-                    </p>
-                  </div>
-                </>
-              )}
+                  <p className="text-xs text-muted-foreground">
+                    O usuário poderá alterar a senha no primeiro acesso
+                  </p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Informações Adicionais para Clientes */}
+        {formData.role === 'client_user' && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Informações do Cliente</CardTitle>
+              <CardDescription>Campos opcionais para clientes com login</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cpf_cnpj">CPF/CNPJ</Label>
+                <Input
+                  id="cpf_cnpj"
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  value={formData.cpf_cnpj}
+                  onChange={(e) => setFormData({ ...formData, cpf_cnpj: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="razao_social">Razão Social</Label>
+                <Input
+                  id="razao_social"
+                  placeholder="Nome da empresa ou razão social"
+                  value={formData.razao_social}
+                  onChange={(e) => setFormData({ ...formData, razao_social: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endereco">Endereço</Label>
+                <Input
+                  id="endereco"
+                  placeholder="Endereço completo"
+                  value={formData.endereco}
+                  onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="telefone">Telefone</Label>
+                <Input
+                  id="telefone"
+                  placeholder="(00) 00000-0000"
+                  value={formData.telefone}
+                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email_contato">Email de Contato</Label>
+                <Input
+                  id="email_contato"
+                  type="email"
+                  placeholder="email@cliente.com"
+                  value={formData.email_contato}
+                  onChange={(e) => setFormData({ ...formData, email_contato: e.target.value })}
+                />
+              </div>
             </CardContent>
           </Card>
+        )}
 
           {/* Permissões */}
           <Card>

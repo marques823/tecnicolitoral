@@ -13,6 +13,11 @@ interface CreateUserRequest {
   role: 'company_admin' | 'technician' | 'client_user' | 'system_owner';
   company_id: string;
   active: boolean;
+  cpf_cnpj?: string;
+  razao_social?: string;
+  endereco?: string;
+  telefone?: string;
+  email_contato?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -59,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Dados da requisição inválidos');
     }
 
-    const { email, password, name, role, company_id, active } = requestBody;
+    const { email, password, name, role, company_id, active, cpf_cnpj, razao_social, endereco, telefone, email_contato } = requestBody;
     
     console.log('Parsed request data:', { 
       email, 
@@ -146,7 +151,12 @@ const handler = async (req: Request): Promise<Response> => {
         company_id,
         name,
         role,
-        active
+        active,
+        cpf_cnpj: cpf_cnpj || null,
+        razao_social: razao_social || null,
+        endereco: endereco || null,
+        telefone: telefone || null,
+        email_contato: email_contato || null
       });
 
     if (profileError) {

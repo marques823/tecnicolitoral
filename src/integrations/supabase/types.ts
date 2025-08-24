@@ -288,30 +288,45 @@ export type Database = {
         Row: {
           active: boolean | null
           company_id: string
+          cpf_cnpj: string | null
           created_at: string
+          email_contato: string | null
+          endereco: string | null
           id: string
           name: string
+          razao_social: string | null
           role: Database["public"]["Enums"]["user_role"]
+          telefone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           active?: boolean | null
           company_id: string
+          cpf_cnpj?: string | null
           created_at?: string
+          email_contato?: string | null
+          endereco?: string | null
           id?: string
           name: string
+          razao_social?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          telefone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           active?: boolean | null
           company_id?: string
+          cpf_cnpj?: string | null
           created_at?: string
+          email_contato?: string | null
+          endereco?: string | null
           id?: string
           name?: string
+          razao_social?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          telefone?: string | null
           updated_at?: string
           user_id?: string
         }

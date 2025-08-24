@@ -128,7 +128,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       if (canAssignTickets) {
         const { data: techniciansData } = await supabase
           .from('profiles')
-          .select('id, name, role, user_id')
+          .select('id, name, role, user_id, cpf_cnpj, razao_social, endereco, telefone, email_contato')
           .eq('company_id', company.id)
           .in('role', ['company_admin', 'technician', 'client_user'])
           .eq('active', true)
