@@ -10,7 +10,7 @@ interface CreateUserRequest {
   email: string;
   password: string;
   name: string;
-  role: 'master' | 'technician' | 'client' | 'super_admin';
+  role: 'company_admin' | 'technician' | 'client_user' | 'system_owner';
   company_id: string;
   active: boolean;
 }
