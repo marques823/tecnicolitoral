@@ -349,11 +349,11 @@ const Dashboard = () => {
                 <CardContent className="space-y-3 sm:space-y-4">
                   <Button 
                     className="w-full justify-start h-10 sm:h-auto" 
-                    variant="outline"
+                    variant="default"
                     onClick={() => navigate('/tickets?action=new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Novo Chamado
+                    Criar Novo Chamado
                   </Button>
                   <Button 
                     className="w-full justify-start h-10 sm:h-auto" 
@@ -361,7 +361,7 @@ const Dashboard = () => {
                     onClick={() => navigate('/tickets')}
                   >
                     <Ticket className="mr-2 h-4 w-4" />
-                    Ver Chamados
+                    Gerenciar Chamados
                   </Button>
                   {(profile.role === 'master' || profile.role === 'technician') && (
                     <Button 
