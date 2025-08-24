@@ -577,7 +577,7 @@ const Tickets = () => {
                     onClick={(e) => handleCreateTechnicalNote(selectedTicket, e)}
                   >
                     <FileText className="w-4 h-4 mr-2" />
-                    Criar Nota Técnica
+                    Notas Técnicas
                   </Button>
                 )}
                 

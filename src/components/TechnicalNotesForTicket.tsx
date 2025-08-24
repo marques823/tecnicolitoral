@@ -210,12 +210,32 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
     if (!confirm("Tem certeza que deseja excluir esta nota?")) return;
 
     try {
+      // Primeiro buscar a nota para obter as fotos
+      const { data: noteData } = await supabase
+        .from("technical_notes")
+        .select("photos")
+        .eq("id", noteId)
+        .single();
+
+      // Deletar fotos do storage se existirem
+      if (noteData?.photos && noteData.photos.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('technical-notes')
+          .remove(noteData.photos);
+        
+        if (storageError) {
+          console.error("Erro ao deletar fotos:", storageError);
+        }
+      }
+
+      // Deletar a nota
       const { error } = await supabase
         .from("technical_notes")
         .delete()
         .eq("id", noteId);
 
       if (error) throw error;
+      
       toast.success("Nota técnica excluída com sucesso!");
       loadNotes();
     } catch (error) {
