@@ -24,6 +24,12 @@ interface Ticket {
   created_by: string;
   assigned_to?: string | null;
   category_id: string;
+  client_name?: string | null;
+  client_email?: string | null;
+  client_phone?: string | null;
+  client_address?: string | null;
+  client_company?: string | null;
+  client_document?: string | null;
 }
 
 interface Category {
@@ -73,7 +79,13 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     priority: (ticket?.priority || 'medium') as TicketPriority,
     status: (ticket?.status || 'open') as TicketStatus,
     category_id: ticket?.category_id || '',
-    assigned_to: ticket?.assigned_to || 'unassigned'
+    assigned_to: ticket?.assigned_to || 'unassigned',
+    client_name: ticket?.client_name || '',
+    client_email: ticket?.client_email || '',
+    client_phone: ticket?.client_phone || '',
+    client_address: ticket?.client_address || '',
+    client_company: ticket?.client_company || '',
+    client_document: ticket?.client_document || ''
   });
 
   const isEditing = !!ticket;
@@ -393,6 +405,12 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         priority: formData.priority,
         category_id: formData.category_id,
         company_id: company?.id,
+        client_name: formData.client_name.trim() || null,
+        client_email: formData.client_email.trim() || null,
+        client_phone: formData.client_phone.trim() || null,
+        client_address: formData.client_address.trim() || null,
+        client_company: formData.client_company.trim() || null,
+        client_document: formData.client_document.trim() || null,
         ...(isEditing && canChangeStatus && { status: formData.status }),
         ...(canAssignTickets && formData.assigned_to !== 'unassigned' && { assigned_to: formData.assigned_to }),
         ...(!isEditing && { created_by: user?.id })
@@ -610,6 +628,77 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                 <SelectItem value="urgent">Urgente</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Informações do Cliente */}
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-medium mb-3">Informações do Cliente</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="client_name">Nome do Cliente</Label>
+                <Input
+                  id="client_name"
+                  value={formData.client_name}
+                  onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
+                  placeholder="Digite o nome do cliente"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="client_email">Email</Label>
+                  <Input
+                    id="client_email"
+                    type="email"
+                    value={formData.client_email}
+                    onChange={(e) => setFormData({ ...formData, client_email: e.target.value })}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="client_phone">Telefone</Label>
+                  <Input
+                    id="client_phone"
+                    value={formData.client_phone}
+                    onChange={(e) => setFormData({ ...formData, client_phone: e.target.value })}
+                    placeholder="(11) 99999-9999"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="client_address">Endereço</Label>
+                <Input
+                  id="client_address"
+                  value={formData.client_address}
+                  onChange={(e) => setFormData({ ...formData, client_address: e.target.value })}
+                  placeholder="Digite o endereço completo"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="client_company">Empresa</Label>
+                  <Input
+                    id="client_company"
+                    value={formData.client_company}
+                    onChange={(e) => setFormData({ ...formData, client_company: e.target.value })}
+                    placeholder="Nome da empresa"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="client_document">CPF/CNPJ</Label>
+                  <Input
+                    id="client_document"
+                    value={formData.client_document}
+                    onChange={(e) => setFormData({ ...formData, client_document: e.target.value })}
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {canChangeStatus && isEditing && (

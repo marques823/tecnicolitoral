@@ -444,6 +444,12 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category_id: string
+          client_address: string | null
+          client_company: string | null
+          client_document: string | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
           company_id: string
           created_at: string
           created_by: string
@@ -458,6 +464,12 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           category_id: string
+          client_address?: string | null
+          client_company?: string | null
+          client_document?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           company_id: string
           created_at?: string
           created_by: string
@@ -472,6 +484,12 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           category_id?: string
+          client_address?: string | null
+          client_company?: string | null
+          client_document?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           company_id?: string
           created_at?: string
           created_by?: string
