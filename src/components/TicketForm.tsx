@@ -358,6 +358,94 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             />
           </div>
 
+          {/* Campo de Cliente - só para técnicos e admins */}
+          {!isClientUser && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="client">Cliente</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCreateClient(true)}
+                  className="text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Novo cliente
+                </Button>
+              </div>
+              
+              <Select
+                value={formData.client_id}
+                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um cliente (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum cliente</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                      {client.company_name && ` - ${client.company_name}`}
+                      {client.email && ` (${client.email})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {showCreateClient && (
+                <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+                  <Label>Novo cliente</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                    <Input
+                      placeholder="Nome do cliente *"
+                      value={newClientData.name}
+                      onChange={(e) => setNewClientData({ ...newClientData, name: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Email"
+                      value={newClientData.email}
+                      onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Telefone"
+                      value={newClientData.phone}
+                      onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Empresa"
+                      value={newClientData.company_name}
+                      onChange={(e) => setNewClientData({ ...newClientData, company_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={createNewClient}
+                      disabled={creatingCategory || !newClientData.name.trim()}
+                      size="sm"
+                    >
+                      {creatingCategory ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        'Criar'
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowCreateClient(false)}
+                      size="sm"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="description">Descrição *</Label>
             <Textarea
@@ -479,97 +567,6 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             )}
           </div>
 
-          {/* Campo de Cliente - só para técnicos e admins */}
-          {!isClientUser && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="client">Cliente</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCreateClient(true)}
-                  className="text-xs"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Novo cliente
-                </Button>
-              </div>
-              
-              <Select
-                value={formData.client_id}
-                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um cliente (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum cliente</SelectItem>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                      {client.company_name && ` - ${client.company_name}`}
-                      {client.email && ` (${client.email})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {showCreateClient && (
-                <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
-                  <Label>Novo cliente</Label>
-                  <div className="space-y-3">
-                    <Input
-                      placeholder="Nome do cliente *"
-                      value={newClientData.name}
-                      onChange={(e) => setNewClientData({ ...newClientData, name: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Email"
-                      type="email"
-                      value={newClientData.email}
-                      onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Telefone"
-                      value={newClientData.phone}
-                      onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Empresa"
-                      value={newClientData.company_name}
-                      onChange={(e) => setNewClientData({ ...newClientData, company_name: e.target.value })}
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={createNewClient}
-                        disabled={creatingCategory || !newClientData.name.trim()}
-                        size="sm"
-                      >
-                        {creatingCategory ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          'Criar Cliente'
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setShowCreateClient(false);
-                          setNewClientData({ name: '', email: '', phone: '', company_name: '' });
-                        }}
-                        size="sm"
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Mostrar cliente selecionado automaticamente para client_user */}
           {isClientUser && formData.client_id && (
