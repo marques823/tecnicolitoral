@@ -331,18 +331,9 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     }
   };
 
-  // Mostrar loading apenas se ainda estiver carregando os dados básicos
+  // Se não há usuário autenticado, não renderizar o formulário
   if (!user || !profile) {
-    return (
-      <Dialog open={true} onOpenChange={() => onCancel()}>
-        <DialogContent className="max-w-md">
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin mr-2" />
-            <span>Carregando...</span>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
+    return null;
   }
 
   return (

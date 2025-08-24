@@ -84,10 +84,11 @@ const Tickets = () => {
   const [technicalNotesTicket, setTechnicalNotesTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || !profile)) {
       navigate('/auth');
+      return;
     }
-  }, [user, loading, navigate]);
+  }, [user, profile, loading, navigate]);
 
   useEffect(() => {
     if (company && profile) {
