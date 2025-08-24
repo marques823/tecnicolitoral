@@ -80,7 +80,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     status: (ticket?.status || 'open') as TicketStatus,
     category_id: ticket?.category_id || '',
     assigned_to: ticket?.assigned_to || 'unassigned',
-    client_id: ticket?.client_id || ''
+    client_id: ticket?.client_id || 'none'
   });
 
   const isEditing = !!ticket;
@@ -292,7 +292,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         company_id: company.id,
         created_by: user.id,
         assigned_to: formData.assigned_to === 'unassigned' ? null : formData.assigned_to,
-        client_id: formData.client_id || null
+        client_id: formData.client_id === 'none' ? null : formData.client_id
       };
 
       if (isEditing) {
@@ -504,7 +504,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                   <SelectValue placeholder="Selecione um cliente (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum cliente</SelectItem>
+                  <SelectItem value="none">Nenhum cliente</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
