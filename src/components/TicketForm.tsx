@@ -163,7 +163,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
 
         setClients(allClients);
       } else {
-        // Se for cliente_user, buscar apenas os dados do próprio usuário e auto-selecionar
+        // Se for cliente_user, buscar apenas os dados do próprio usuário
         const { data: ownClientData } = await supabase
           .from('profiles')
           .select('id, name, user_id, email_contato, telefone, razao_social')
@@ -172,22 +172,56 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           .single();
 
         if (ownClientData) {
-          const clientAsClient: Client = {
-            id: ownClientData.id,
-            name: ownClientData.name,
-            email: ownClientData.email_contato,
-            phone: ownClientData.telefone,
-            company_name: ownClientData.razao_social,
-            active: true,
-            type: 'client_user' as const,
-            user_id: ownClientData.user_id,
-            address: null,
-            document: null
-          };
-          
-          setClients([clientAsClient]);
-          // Auto-selecionar o próprio cliente
-          setFormData(prev => ({ ...prev, client_id: ownClientData.id }));
+          // Verificar se já existe um cliente correspondente na tabela clients
+          const { data: existingClient } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('name', ownClientData.name)
+            .eq('company_id', company.id)
+            .maybeSingle();
+
+          let clientId = existingClient?.id;
+
+          // Se não existe, criar um registro na tabela clients
+          if (!clientId) {
+            const { data: newClient, error: createError } = await supabase
+              .from('clients')
+              .insert({
+                name: ownClientData.name,
+                email: ownClientData.email_contato,
+                phone: ownClientData.telefone,
+                company_name: ownClientData.razao_social,
+                company_id: company.id,
+                active: true
+              })
+              .select('id')
+              .single();
+
+            if (createError) {
+              console.error('Error creating client record:', createError);
+            } else {
+              clientId = newClient.id;
+            }
+          }
+
+          if (clientId) {
+            const clientAsClient: Client = {
+              id: clientId,
+              name: ownClientData.name,
+              email: ownClientData.email_contato,
+              phone: ownClientData.telefone,
+              company_name: ownClientData.razao_social,
+              active: true,
+              type: 'client_user' as const,
+              user_id: ownClientData.user_id,
+              address: null,
+              document: null
+            };
+            
+            setClients([clientAsClient]);
+            // Auto-selecionar o próprio cliente
+            setFormData(prev => ({ ...prev, client_id: clientId }));
+          }
         }
       }
 
