@@ -289,8 +289,16 @@ export type Database = {
           content: string
           created_at: string
           created_by: string
+          devices_info: Json | null
+          equipment_models: string[] | null
           id: string
           is_public: boolean
+          observations: string | null
+          photos: string[] | null
+          problem_description: string | null
+          services_needed: string[] | null
+          services_performed: string[] | null
+          solution_description: string | null
           tags: string[] | null
           ticket_id: string | null
           title: string
@@ -301,8 +309,16 @@ export type Database = {
           content: string
           created_at?: string
           created_by: string
+          devices_info?: Json | null
+          equipment_models?: string[] | null
           id?: string
           is_public?: boolean
+          observations?: string | null
+          photos?: string[] | null
+          problem_description?: string | null
+          services_needed?: string[] | null
+          services_performed?: string[] | null
+          solution_description?: string | null
           tags?: string[] | null
           ticket_id?: string | null
           title: string
@@ -313,8 +329,16 @@ export type Database = {
           content?: string
           created_at?: string
           created_by?: string
+          devices_info?: Json | null
+          equipment_models?: string[] | null
           id?: string
           is_public?: boolean
+          observations?: string | null
+          photos?: string[] | null
+          problem_description?: string | null
+          services_needed?: string[] | null
+          services_performed?: string[] | null
+          solution_description?: string | null
           tags?: string[] | null
           ticket_id?: string | null
           title?: string
