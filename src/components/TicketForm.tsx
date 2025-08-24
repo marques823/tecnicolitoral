@@ -326,7 +326,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     }
   };
 
-  if (!user || !profile || !company) {
+  // Mostrar loading apenas se ainda estiver carregando os dados básicos
+  if (!user || !profile) {
     return (
       <Dialog open={true} onOpenChange={() => onCancel()}>
         <DialogContent className="max-w-md">
