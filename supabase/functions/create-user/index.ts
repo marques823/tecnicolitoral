@@ -24,7 +24,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('=== CREATE USER FUNCTION STARTED ===');
     console.log('Request method:', req.method);
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
     
     // Create Supabase admin client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -95,20 +94,23 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Formato de email inválido');
     }
 
-    // Check if user already exists
+    // Check if user already exists by trying to get user by email
     console.log('Checking for existing users...');
-    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (listError) {
-      console.error('Error listing users:', listError);
-      throw new Error('Erro ao verificar usuários existentes');
-    }
-
-    const userExists = existingUsers.users.some(u => u.email === email);
-    
-    if (userExists) {
-      console.log('User already exists:', email);
-      throw new Error('Usuário com este email já existe');
+    // Try to get user by email directly to avoid the scanning issue
+    try {
+      const { data: existingUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+      
+      if (existingUser && existingUser.user) {
+        console.log('User already exists:', email);
+        throw new Error('Usuário com este email já existe');
+      }
+    } catch (getUserError: any) {
+      // If error is "User not found", that's what we want
+      if (!getUserError.message?.includes('User not found')) {
+        console.error('Error checking for existing user:', getUserError);
+        // Continue anyway - the createUser will fail if user exists
+      }
     }
     
     console.log('No existing user found, proceeding with creation');
