@@ -47,6 +47,8 @@ interface Client {
   company_name?: string | null;
   document?: string | null;
   active: boolean;
+  type: 'client' | 'client_user'; // Para distinguir entre clientes sem login e com login
+  user_id?: string; // Para clientes com login (vem da tabela profiles)
 }
 
 interface TicketFormProps {
@@ -115,13 +117,51 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
 
       // Carregar clientes (para técnicos e admins)
       if (!isClientUser) {
+        // Carregar clientes sem login (da tabela clients)
         const { data: clientsData } = await supabase
           .from('clients')
           .select('id, name, email, phone, company_name, active')
           .eq('company_id', company.id)
           .eq('active', true)
           .order('name');
-        setClients(clientsData || []);
+
+        // Carregar clientes com login (da tabela profiles com role client_user)
+        const { data: clientUsersData } = await supabase
+          .from('profiles')
+          .select('id, name, user_id, email_contato, telefone, razao_social')
+          .eq('company_id', company.id)
+          .eq('role', 'client_user')
+          .eq('active', true)
+          .order('name');
+
+        // Combinar os dois tipos de clientes
+        const allClients: Client[] = [
+          ...(clientsData || []).map(client => ({
+            id: client.id,
+            name: client.name,
+            email: client.email,
+            phone: client.phone,
+            company_name: client.company_name,
+            active: client.active,
+            type: 'client' as const,
+            address: null,
+            document: null
+          })),
+          ...(clientUsersData || []).map(clientUser => ({
+            id: clientUser.id,
+            name: clientUser.name,
+            email: clientUser.email_contato,
+            phone: clientUser.telefone,
+            company_name: clientUser.razao_social,
+            active: true,
+            type: 'client_user' as const,
+            user_id: clientUser.user_id,
+            address: null,
+            document: null
+          }))
+        ];
+
+        setClients(allClients);
       }
 
       // Carregar técnicos se necessário
@@ -205,7 +245,13 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       if (error) throw error;
 
       if (newClient) {
-        setClients(prev => [...prev, newClient]);
+        const clientToAdd: Client = {
+          ...newClient,
+          type: 'client',
+          address: null,
+          document: null
+        };
+        setClients(prev => [...prev, clientToAdd]);
         setFormData(prev => ({ ...prev, client_id: newClient.id }));
         setShowCreateClient(false);
         setNewClientData({ name: '', email: '', phone: '', company_name: '' });
@@ -387,13 +433,14 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nenhum cliente</SelectItem>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                      {client.company_name && ` - ${client.company_name}`}
-                      {client.email && ` (${client.email})`}
-                    </SelectItem>
-                  ))}
+                   {clients.map((client) => (
+                     <SelectItem key={client.id} value={client.id}>
+                       {client.name}
+                       {client.company_name && ` - ${client.company_name}`}
+                       {client.email && ` (${client.email})`}
+                       {client.type === 'client_user' && ' [Com Login]'}
+                     </SelectItem>
+                   ))}
                 </SelectContent>
               </Select>
 
