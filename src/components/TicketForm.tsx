@@ -70,6 +70,15 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const { user, profile, company } = useAuth();
   const { toast } = useToast();
   
+  console.log('🎫 TicketForm renderizado com:', { 
+    hasUser: !!user, 
+    hasProfile: !!profile, 
+    hasCompany: !!company,
+    userId: user?.id,
+    profileRole: profile?.role,
+    companyId: company?.id 
+  });
+  
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -94,7 +103,16 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   const canChangeStatus = profile?.role === 'master' || profile?.role === 'technician';
 
   useEffect(() => {
+    console.log('🎫 TicketForm useEffect - Dados de autenticação:', { user, profile, company });
+    
+    // Aguardar carregamento dos dados de autenticação
+    if (!user || !profile || !company) {
+      console.log('🚨 Aguardando carregamento dos dados de autenticação...');
+      return;
+    }
+
     const loadData = async () => {
+      console.log('🔄 Carregando dados do formulário...');
       await loadCategories();
       await loadClients();
       await loadCustomFields();
@@ -107,18 +125,25 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     };
     
     loadData();
-  }, [canAssignTickets, isEditing, ticket]);
+  }, [canAssignTickets, isEditing, ticket, user, profile, company]);
 
   const loadCategories = async () => {
+    if (!company?.id) {
+      console.log('❌ Empresa não carregada ainda');
+      return;
+    }
+
     try {
+      console.log('🔄 Carregando categorias para empresa:', company.id);
       const { data, error } = await supabase
         .from('categories')
         .select('id, name')
-        .eq('company_id', company?.id)
+        .eq('company_id', company.id)
         .eq('active', true)
         .order('name');
 
       if (error) throw error;
+      console.log('✅ Categorias carregadas:', data);
       setCategories(data || []);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -181,15 +206,22 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   };
 
   const loadClients = async () => {
+    if (!company?.id) {
+      console.log('❌ Empresa não carregada para carregar clientes');
+      return;
+    }
+
     try {
+      console.log('🔄 Carregando clientes para empresa:', company.id);
       const { data, error } = await supabase
         .from('clients')
         .select('id, name, email, phone, address, company_name, document')
-        .eq('company_id', company?.id)
+        .eq('company_id', company.id)
         .eq('active', true)
         .order('name');
 
       if (error) throw error;
+      console.log('✅ Clientes carregados:', data);
       setClients(data || []);
     } catch (error) {
       console.error('Error loading clients:', error);
@@ -473,6 +505,20 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       setLoading(false);
     }
   };
+
+  // Loading state - aguardar carregamento dos dados essenciais
+  if (!user || !profile || !company) {
+    return (
+      <Dialog open={true} onOpenChange={() => onCancel()}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin mr-2" />
+            <span>Carregando...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={true} onOpenChange={() => onCancel()}>

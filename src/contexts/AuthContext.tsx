@@ -63,6 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           setTimeout(async () => {
             try {
+              console.log('🔐 Carregando dados do usuário:', session.user.id);
+              
               // Fetch user profile
               const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
@@ -72,9 +74,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
               if (profileError) {
                 console.error('Error fetching profile:', profileError);
+                setLoading(false);
                 return;
               }
 
+              console.log('👤 Perfil carregado:', profileData);
               setProfile(profileData);
 
               // Se é super admin, mostrar notificação
@@ -84,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
               // Fetch company data
               if (profileData?.company_id) {
+                console.log('🏢 Carregando empresa:', profileData.company_id);
                 const { data: companyData, error: companyError } = await supabase
                   .from('companies')
                   .select('*')
@@ -91,19 +96,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   .single();
 
                 if (!companyError && companyData) {
+                  console.log('✅ Empresa carregada:', companyData);
                   setCompany(companyData);
+                } else {
+                  console.error('❌ Erro ao carregar empresa:', companyError);
                 }
               }
+              
+              setLoading(false);
             } catch (error) {
               console.error('Error fetching user data:', error);
+              setLoading(false);
             }
           }, 0);
         } else {
+          console.log('🚪 Usuário deslogado');
           setProfile(null);
           setCompany(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
