@@ -24,12 +24,7 @@ interface Ticket {
   created_by: string;
   assigned_to?: string | null;
   category_id: string;
-  client_name?: string | null;
-  client_email?: string | null;
-  client_phone?: string | null;
-  client_address?: string | null;
-  client_company?: string | null;
-  client_document?: string | null;
+  client_id?: string | null;
 }
 
 interface Category {
@@ -55,6 +50,16 @@ interface CustomField {
   sort_order: number;
 }
 
+interface Client {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  company_name?: string | null;
+  document?: string | null;
+}
+
 interface TicketFormProps {
   ticket?: Ticket | null;
   onSuccess: () => void;
@@ -67,6 +72,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [technicians, setTechnicians] = useState<Profile[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
@@ -80,12 +86,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     status: (ticket?.status || 'open') as TicketStatus,
     category_id: ticket?.category_id || '',
     assigned_to: ticket?.assigned_to || 'unassigned',
-    client_name: ticket?.client_name || '',
-    client_email: ticket?.client_email || '',
-    client_phone: ticket?.client_phone || '',
-    client_address: ticket?.client_address || '',
-    client_company: ticket?.client_company || '',
-    client_document: ticket?.client_document || ''
+    client_id: ticket?.client_id || ''
   });
 
   const isEditing = !!ticket;
@@ -95,6 +96,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
   useEffect(() => {
     const loadData = async () => {
       await loadCategories();
+      await loadClients();
       await loadCustomFields();
       if (canAssignTickets) {
         await loadTechnicians();
@@ -175,6 +177,22 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       });
     } finally {
       setCreatingCategory(false);
+    }
+  };
+
+  const loadClients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name, email, phone, address, company_name, document')
+        .eq('company_id', company?.id)
+        .eq('active', true)
+        .order('name');
+
+      if (error) throw error;
+      setClients(data || []);
+    } catch (error) {
+      console.error('Error loading clients:', error);
     }
   };
 
@@ -405,12 +423,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         priority: formData.priority,
         category_id: formData.category_id,
         company_id: company?.id,
-        client_name: formData.client_name.trim() || null,
-        client_email: formData.client_email.trim() || null,
-        client_phone: formData.client_phone.trim() || null,
-        client_address: formData.client_address.trim() || null,
-        client_company: formData.client_company.trim() || null,
-        client_document: formData.client_document.trim() || null,
+        client_id: formData.client_id || null,
         ...(isEditing && canChangeStatus && { status: formData.status }),
         ...(canAssignTickets && formData.assigned_to !== 'unassigned' && { assigned_to: formData.assigned_to }),
         ...(!isEditing && { created_by: user?.id })
@@ -630,75 +643,26 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             </Select>
           </div>
 
-          {/* Informações do Cliente */}
-          <div className="border-t pt-4">
-            <h3 className="text-sm font-medium mb-3">Informações do Cliente</h3>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="client_name">Nome do Cliente</Label>
-                <Input
-                  id="client_name"
-                  value={formData.client_name}
-                  onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
-                  placeholder="Digite o nome do cliente"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="client_email">Email</Label>
-                  <Input
-                    id="client_email"
-                    type="email"
-                    value={formData.client_email}
-                    onChange={(e) => setFormData({ ...formData, client_email: e.target.value })}
-                    placeholder="email@exemplo.com"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="client_phone">Telefone</Label>
-                  <Input
-                    id="client_phone"
-                    value={formData.client_phone}
-                    onChange={(e) => setFormData({ ...formData, client_phone: e.target.value })}
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="client_address">Endereço</Label>
-                <Input
-                  id="client_address"
-                  value={formData.client_address}
-                  onChange={(e) => setFormData({ ...formData, client_address: e.target.value })}
-                  placeholder="Digite o endereço completo"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="client_company">Empresa</Label>
-                  <Input
-                    id="client_company"
-                    value={formData.client_company}
-                    onChange={(e) => setFormData({ ...formData, client_company: e.target.value })}
-                    placeholder="Nome da empresa"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="client_document">CPF/CNPJ</Label>
-                  <Input
-                    id="client_document"
-                    value={formData.client_document}
-                    onChange={(e) => setFormData({ ...formData, client_document: e.target.value })}
-                    placeholder="000.000.000-00"
-                  />
-                </div>
-              </div>
-            </div>
+          {/* Seleção de Cliente */}
+          <div className="space-y-2">
+            <Label htmlFor="client">Cliente</Label>
+            <Select
+              value={formData.client_id}
+              onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um cliente (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nenhum cliente</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name}
+                    {client.company_name && ` - ${client.company_name}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {canChangeStatus && isEditing && (

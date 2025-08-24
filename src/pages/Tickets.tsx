@@ -47,14 +47,18 @@ interface Ticket {
   resolved_at?: string | null;
   company_id: string;
   updated_at: string;
-  client_name?: string | null;
-  client_email?: string | null;
-  client_phone?: string | null;
-  client_address?: string | null;
-  client_company?: string | null;
-  client_document?: string | null;
+  client_id?: string | null;
   categories?: {
     name: string;
+  } | null;
+  clients?: {
+    id: string;
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    company_name?: string | null;
+    document?: string | null;
   } | null;
 }
 
@@ -109,7 +113,8 @@ const Tickets = () => {
         .from('tickets')
         .select(`
           *,
-          categories (name)
+          categories (name),
+          clients (id, name, email, phone, address, company_name, document)
         `);
 
       // Para clientes, mostrar apenas os tickets que eles criaram
@@ -577,56 +582,55 @@ const Tickets = () => {
               </div>
               
               {/* Client Information */}
-              {(selectedTicket.client_name || selectedTicket.client_email || selectedTicket.client_phone || 
-                selectedTicket.client_address || selectedTicket.client_company || selectedTicket.client_document) && (
+              {selectedTicket.clients && (
                 <div className="space-y-4">
                   <h4 className="font-medium text-sm text-muted-foreground border-t pt-4">Informações do Cliente</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    {selectedTicket.client_name && (
+                    {selectedTicket.clients.name && (
                       <div>
                         <span className="font-medium text-muted-foreground">Nome:</span>
                         <br />
-                        {selectedTicket.client_name}
+                        {selectedTicket.clients.name}
                       </div>
                     )}
                     
-                    {selectedTicket.client_email && (
+                    {selectedTicket.clients.email && (
                       <div>
                         <span className="font-medium text-muted-foreground">Email:</span>
                         <br />
-                        {selectedTicket.client_email}
+                        {selectedTicket.clients.email}
                       </div>
                     )}
                     
-                    {selectedTicket.client_phone && (
+                    {selectedTicket.clients.phone && (
                       <div>
                         <span className="font-medium text-muted-foreground">Telefone:</span>
                         <br />
-                        {selectedTicket.client_phone}
+                        {selectedTicket.clients.phone}
                       </div>
                     )}
                     
-                    {selectedTicket.client_company && (
+                    {selectedTicket.clients.company_name && (
                       <div>
                         <span className="font-medium text-muted-foreground">Empresa:</span>
                         <br />
-                        {selectedTicket.client_company}
+                        {selectedTicket.clients.company_name}
                       </div>
                     )}
                     
-                    {selectedTicket.client_document && (
+                    {selectedTicket.clients.document && (
                       <div>
                         <span className="font-medium text-muted-foreground">CPF/CNPJ:</span>
                         <br />
-                        {selectedTicket.client_document}
+                        {selectedTicket.clients.document}
                       </div>
                     )}
                     
-                    {selectedTicket.client_address && (
+                    {selectedTicket.clients.address && (
                       <div className="md:col-span-2">
                         <span className="font-medium text-muted-foreground">Endereço:</span>
                         <br />
-                        {selectedTicket.client_address}
+                        {selectedTicket.clients.address}
                       </div>
                     )}
                   </div>

@@ -52,6 +52,48 @@ export type Database = {
           },
         ]
       }
+      clients: {
+        Row: {
+          active: boolean
+          address: string | null
+          company_id: string
+          company_name: string | null
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          company_id: string
+          company_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          company_id?: string
+          company_name?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           active: boolean | null
@@ -444,12 +486,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           category_id: string
-          client_address: string | null
-          client_company: string | null
-          client_document: string | null
-          client_email: string | null
-          client_name: string | null
-          client_phone: string | null
+          client_id: string | null
           company_id: string
           created_at: string
           created_by: string
@@ -464,12 +501,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           category_id: string
-          client_address?: string | null
-          client_company?: string | null
-          client_document?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          client_phone?: string | null
+          client_id?: string | null
           company_id: string
           created_at?: string
           created_by: string
@@ -484,12 +516,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           category_id?: string
-          client_address?: string | null
-          client_company?: string | null
-          client_document?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          client_phone?: string | null
+          client_id?: string | null
           company_id?: string
           created_at?: string
           created_by?: string
@@ -507,6 +534,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
           {

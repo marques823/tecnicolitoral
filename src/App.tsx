@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/UserManagement";
 import Tickets from "./pages/Tickets";
+import Clients from "./pages/Clients";
 import Categories from "./pages/Categories";
 import Reports from "./pages/Reports";
 import Plans from "./pages/Plans";
@@ -46,9 +47,10 @@ const AppContent = () => {
           <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
             <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/users" element={<UserManagement />} />
-          <Route path="/tickets" element={<Tickets />} />
-          <Route path="/categories" element={<Categories />} />
+           <Route path="/users" element={<UserManagement />} />
+           <Route path="/tickets" element={<Tickets />} />
+           <Route path="/clients" element={<Clients />} />
+           <Route path="/categories" element={<Categories />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/settings" element={<Settings />} />

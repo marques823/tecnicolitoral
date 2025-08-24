@@ -5,6 +5,7 @@ import {
   Home,
   Ticket,
   Users,
+  UserCheck,
   BarChart3,
   Tags,
   Settings,
@@ -23,7 +24,8 @@ export default function NavigationMenu() {
   const getMenuItems = () => {
     const commonItems = [
       { icon: Home, label: 'Dashboard', path: '/dashboard' },
-      { icon: Ticket, label: 'Chamados', path: '/tickets' }
+      { icon: Ticket, label: 'Chamados', path: '/tickets' },
+      { icon: UserCheck, label: 'Clientes', path: '/clients' }
     ];
 
     const roleSpecificItems = [];
