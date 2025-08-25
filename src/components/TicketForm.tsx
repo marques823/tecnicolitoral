@@ -219,8 +219,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             };
             
             setClients([clientAsClient]);
-            // Auto-selecionar o próprio cliente
-            setFormData(prev => ({ ...prev, client_id: clientId }));
+            // Auto-selecionar o próprio cliente e atualizar o formData
+            setFormData(prev => ({ 
+              ...prev, 
+              client_id: clientId
+            }));
           }
         }
       }
