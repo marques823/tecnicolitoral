@@ -130,7 +130,7 @@ export const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps
         {comments.length === 0 ? (
           <Card>
             <CardContent className="p-4 text-center text-muted-foreground">
-              Nenhum comentário ainda. Seja o primeiro a comentar!
+              {canAddComments ? "Nenhum comentário ainda. Seja o primeiro a comentar!" : "Nenhum comentário ainda."}
             </CardContent>
           </Card>
         ) : (
