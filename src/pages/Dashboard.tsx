@@ -241,93 +241,130 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-subtle">
+      {/* Hero Section */}
+      <div className="bg-gradient-hero text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 sm:mb-0">
+              <h1 className="text-2xl sm:text-3xl font-bold animate-fade-in">
+                Bem-vindo, {profile?.name}!
+              </h1>
+              <p className="text-white/90 mt-2">
+                {company?.name} • {getRoleBadge(profile?.role || '')}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                onClick={() => navigate('/tickets?action=new')}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Chamado
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!company ? (
           // No company assigned
-          <div className="text-center py-12">
-            <Building2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Aguardando atribuição</h2>
-            <p className="text-muted-foreground mb-6">
-              Você ainda não foi atribuído a uma empresa. Entre em contato com o administrador.
-            </p>
-            <Button variant="outline" onClick={handleSignOut}>
-              Fazer logout
-            </Button>
+          <div className="text-center py-16 animate-fade-in">
+            <div className="bg-gradient-card p-8 rounded-2xl shadow-lg border border-white/20 backdrop-blur-sm max-w-md mx-auto">
+              <Building2 className="w-16 h-16 mx-auto text-primary mb-6 animate-float" />
+              <h2 className="text-2xl font-bold mb-4">Aguardando atribuição</h2>
+              <p className="text-muted-foreground mb-8">
+                Você ainda não foi atribuído a uma empresa. Entre em contato com o administrador.
+              </p>
+              <Button variant="outline" onClick={handleSignOut} className="w-full">
+                <LogOut className="mr-2 h-4 w-4" />
+                Fazer logout
+              </Button>
+            </div>
           </div>
         ) : (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-              <Card className="p-3 sm:p-6">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 animate-scale-in">
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
                     {profile.role === 'client_user' ? 'Meus Chamados' : 'Total'}
                   </CardTitle>
-                  <Ticket className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Ticket className="h-4 w-4 text-primary" />
+                  </div>
                 </CardHeader>
-                <CardContent className="p-0 sm:p-6 sm:pt-0">
-                  <div className="text-lg sm:text-2xl font-bold">
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">
                     {loadingData ? '...' : stats.totalTickets}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden sm:block">
+                  <p className="text-xs text-muted-foreground">
                     {profile.role === 'client_user' ? 'Total criados' : 'Todos os tickets'}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="p-3 sm:p-6">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
                     Abertos
                   </CardTitle>
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-destructive rounded-full"></div>
+                  <div className="p-2 bg-destructive/10 rounded-lg">
+                    <div className="w-4 h-4 bg-destructive rounded-full"></div>
+                  </div>
                 </CardHeader>
-                <CardContent className="p-0 sm:p-6 sm:pt-0">
-                  <div className="text-lg sm:text-2xl font-bold">
+                <CardContent>
+                  <div className="text-2xl font-bold text-destructive">
                     {loadingData ? '...' : stats.openTickets}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden sm:block">
+                  <p className="text-xs text-muted-foreground">
                     Aguardando atendimento
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="p-3 sm:p-6">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">
-                    Progresso
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Em Progresso
                   </CardTitle>
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-warning rounded-full"></div>
+                  <div className="p-2 bg-warning/10 rounded-lg">
+                    <div className="w-4 h-4 bg-warning rounded-full"></div>
+                  </div>
                 </CardHeader>
-                <CardContent className="p-0 sm:p-6 sm:pt-0">
-                  <div className="text-lg sm:text-2xl font-bold">
+                <CardContent>
+                  <div className="text-2xl font-bold text-warning">
                     {loadingData ? '...' : stats.inProgressTickets}
                   </div>
-                  <p className="text-xs text-muted-foreground hidden sm:block">
+                  <p className="text-xs text-muted-foreground">
                     Sendo processados
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="p-3 sm:p-6">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 sm:p-6 sm:pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
                     {profile.role === 'company_admin' ? 'Usuários' : 'Concluídos'}
                   </CardTitle>
-                   {profile.role === 'company_admin' ? 
-                     <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" /> :
-                     <div className="w-2 h-2 sm:w-3 sm:h-3 bg-success rounded-full"></div>
-                   }
+                  <div className={`p-2 rounded-lg ${profile.role === 'company_admin' ? 'bg-primary/10' : 'bg-success/10'}`}>
+                    {profile.role === 'company_admin' ? 
+                      <Users className="h-4 w-4 text-primary" /> :
+                      <div className="w-4 h-4 bg-success rounded-full"></div>
+                    }
+                  </div>
                 </CardHeader>
-                <CardContent className="p-0 sm:p-6 sm:pt-0">
-                  <div className="text-lg sm:text-2xl font-bold">
+                <CardContent>
+                  <div className={`text-2xl font-bold ${profile.role === 'company_admin' ? 'text-primary' : 'text-success'}`}>
                     {loadingData ? '...' : 
                       profile.role === 'company_admin' ? stats.activeUsers : stats.resolvedToday
                     }
                   </div>
-                  <p className="text-xs text-muted-foreground hidden sm:block">
+                  <p className="text-xs text-muted-foreground">
                      {profile.role === 'company_admin' 
                        ? `de ${stats.maxUsers} disponíveis`
                        : 'Finalizados hoje'
@@ -338,25 +375,29 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-              <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in">
                 <CardHeader>
-                  <CardTitle>Ações Rápidas</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Settings className="h-5 w-5 text-primary" />
+                    </div>
+                    Ações Rápidas
+                  </CardTitle>
                   <CardDescription>
                     Acesse as funcionalidades principais
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 sm:space-y-4">
+                <CardContent className="space-y-3">
                   <Button 
-                    className="w-full justify-start h-10 sm:h-auto" 
-                    variant="default"
+                    className="w-full justify-start bg-primary hover:bg-primary-glow transition-colors" 
                     onClick={() => navigate('/tickets?action=new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Criar Novo Chamado
                   </Button>
                   <Button 
-                    className="w-full justify-start h-10 sm:h-auto" 
+                    className="w-full justify-start" 
                     variant="outline"
                     onClick={() => navigate('/tickets')}
                   >
@@ -365,7 +406,7 @@ const Dashboard = () => {
                   </Button>
                   {(profile.role === 'company_admin' || profile.role === 'technician') && (
                     <Button 
-                      className="w-full justify-start h-10 sm:h-auto" 
+                      className="w-full justify-start" 
                       variant="outline"
                       onClick={() => navigate('/reports')}
                     >
@@ -376,7 +417,7 @@ const Dashboard = () => {
                   {profile.role === 'company_admin' && (
                     <>
                       <Button 
-                        className="w-full justify-start h-10 sm:h-auto" 
+                        className="w-full justify-start" 
                         variant="outline"
                         onClick={() => navigate('/users')}
                       >
@@ -389,7 +430,7 @@ const Dashboard = () => {
                         onClick={() => navigate('/categories')}
                       >
                         <Tags className="mr-2 h-4 w-4" />
-                        Gerenciar Categorias
+                        Categorias
                       </Button>
                       <Button 
                         className="w-full justify-start" 
@@ -438,9 +479,12 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in">
                 <CardHeader>
-                  <CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Ticket className="h-5 w-5 text-primary" />
+                    </div>
                     {profile.role === 'client_user' ? 'Meus Últimos Chamados' : 'Últimos Chamados'}
                   </CardTitle>
                   <CardDescription>
@@ -452,27 +496,34 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   {loadingData ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {[1, 2, 3].map(i => (
-                        <div key={i} className="flex items-center justify-between p-3 border rounded-lg animate-pulse">
+                        <div key={i} className="flex items-center justify-between p-4 bg-background/50 rounded-lg animate-pulse">
                           <div className="space-y-2">
-                            <div className="h-4 bg-gray-200 rounded w-32"></div>
-                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            <div className="h-4 bg-muted rounded w-32"></div>
+                            <div className="h-3 bg-muted rounded w-24"></div>
                           </div>
-                          <div className="h-6 bg-gray-200 rounded w-16"></div>
+                          <div className="h-6 bg-muted rounded-full w-16"></div>
                         </div>
                       ))}
                     </div>
                   ) : recentTickets.length === 0 ? (
-                    <p className="text-center py-4 text-muted-foreground">
-                      Nenhum chamado encontrado
-                    </p>
+                    <div className="text-center py-8">
+                      <Ticket className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                      <p className="text-muted-foreground">
+                        Nenhum chamado encontrado
+                      </p>
+                    </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {recentTickets.map((ticket) => (
-                        <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-                          <div>
-                            <p className="font-medium">{ticket.title}</p>
+                        <div 
+                          key={ticket.id} 
+                          className="flex items-center justify-between p-4 bg-background/50 rounded-lg hover:bg-background/70 transition-all duration-200 cursor-pointer border border-white/10"
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-foreground truncate">{ticket.title}</p>
                             <p className="text-sm text-muted-foreground">
                               Criado por {ticket.created_by_name}
                             </p>
