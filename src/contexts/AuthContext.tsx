@@ -30,7 +30,7 @@ interface AuthContextType {
   company: Company | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string, companyName?: string, cnpj?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshAuthData: () => Promise<void>;
 }
@@ -145,7 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, companyName?: string, cnpj?: string) => {
     try {
       const redirectUrl = `${window.location.origin}/plan-selection`;
       
@@ -156,6 +156,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           emailRedirectTo: redirectUrl,
           data: {
             name: name,
+            company_name: companyName,
+            cnpj: cnpj
           }
         }
       });

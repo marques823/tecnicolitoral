@@ -7,14 +7,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Loader2, Building2, Users, Ticket } from 'lucide-react';
+import { Loader2, Building2, Ticket } from 'lucide-react';
+import { validateCNPJ, formatCNPJ } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [cnpj, setCnpj] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,9 +39,43 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar CNPJ
+    if (!validateCNPJ(cnpj)) {
+      toast({
+        title: "CNPJ inválido",
+        description: "Por favor, digite um CNPJ válido",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validar se todos os campos estão preenchidos
+    if (!name.trim() || !companyName.trim() || !email.trim() || !password.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
-    await signUp(email, password, name);
-    setLoading(false);
+    try {
+      await signUp(email, password, name, companyName, cnpj);
+    } catch (error) {
+      console.error('Erro no cadastro:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatCNPJ(value);
+    if (formatted.length <= 18) { // Limita o tamanho máximo
+      setCnpj(formatted);
+    }
   };
 
   return (
@@ -59,7 +98,7 @@ const Auth = () => {
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Cadastrar</TabsTrigger>
+                <TabsTrigger value="signup">Cadastrar Empresa</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin" className="space-y-4">
@@ -96,11 +135,33 @@ const Auth = () => {
               <TabsContent value="signup" className="space-y-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nome completo</Label>
+                    <Label htmlFor="signup-company">Nome da Empresa</Label>
+                    <Input
+                      id="signup-company"
+                      type="text"
+                      placeholder="Razão social da empresa"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-cnpj">CNPJ</Label>
+                    <Input
+                      id="signup-cnpj"
+                      type="text"
+                      placeholder="00.000.000/0000-00"
+                      value={cnpj}
+                      onChange={handleCnpjChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Nome do Responsável</Label>
                     <Input
                       id="signup-name"
                       type="text"
-                      placeholder="Seu nome"
+                      placeholder="Nome completo do responsável"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
@@ -111,7 +172,7 @@ const Auth = () => {
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="seu@email.com"
+                      placeholder="email@empresa.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -126,12 +187,16 @@ const Auth = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      minLength={6}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Criar conta
+                    Cadastrar Empresa
                   </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Cadastro exclusivo para empresas com CNPJ válido
+                  </p>
                 </form>
               </TabsContent>
             </Tabs>
