@@ -544,44 +544,58 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             />
           </div>
 
-          {/* Campo de Cliente - só para técnicos e admins */}
-          {!isClientUser && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="client">Cliente</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCreateClient(true)}
-                  className="text-xs"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Novo cliente
-                </Button>
+          {/* Campo de Cliente - unificado para todos os tipos de usuário */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Cliente
+            </Label>
+            
+            {isClientUser ? (
+              /* Para client_users - mostrar informação do próprio cliente */
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm font-medium">{profile?.name}</p>
+                <p className="text-xs text-muted-foreground">Chamado será criado em seu nome</p>
               </div>
-              
-              <Select
-                value={formData.client_id}
-                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um cliente (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum cliente</SelectItem>
-                   {clients.map((client) => (
-                     <SelectItem key={client.id} value={client.id}>
-                       {client.name}
-                       {client.company_name && ` - ${client.company_name}`}
-                       {client.email && ` (${client.email})`}
-                       {client.type === 'client_user' && ' [Com Login]'}
-                     </SelectItem>
-                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+            ) : (
+              /* Para técnicos/admins - campo de seleção */
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Selecione um cliente (opcional)</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCreateClient(true)}
+                    className="text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Novo cliente
+                  </Button>
+                </div>
+                
+                <Select
+                  value={formData.client_id}
+                  onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um cliente (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum cliente</SelectItem>
+                     {clients.map((client) => (
+                       <SelectItem key={client.id} value={client.id}>
+                         {client.name}
+                         {client.company_name && ` - ${client.company_name}`}
+                         {client.email && ` (${client.email})`}
+                         {client.type === 'client_user' && ' [Com Login]'}
+                       </SelectItem>
+                     ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
 
           {/* Formulário para criar novo cliente - só para admins e técnicos */}
           {!isClientUser && showCreateClient && (
@@ -754,21 +768,6 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
               </div>
             )}
           </div>
-
-
-          {/* Mostrar cliente selecionado automaticamente para client_user */}
-          {isClientUser && formData.client_id && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Cliente
-              </Label>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm font-medium">{profile?.name}</p>
-                <p className="text-xs text-muted-foreground">Chamado será criado em seu nome</p>
-              </div>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="priority">Prioridade</Label>
