@@ -49,6 +49,28 @@ export const useCompanyTheme = () => {
           if (companyData.primary_color) {
             const primaryHsl = hexToHsl(companyData.primary_color);
             root.style.setProperty('--primary', primaryHsl);
+            
+            // Criar uma versão mais clara para primary-glow
+            const primaryRgb = {
+              r: parseInt(companyData.primary_color.slice(1, 3), 16),
+              g: parseInt(companyData.primary_color.slice(3, 5), 16),
+              b: parseInt(companyData.primary_color.slice(5, 7), 16),
+            };
+            
+            // Aumentar a luminosidade em 20%
+            const glowRgb = {
+              r: Math.min(255, primaryRgb.r + 51),
+              g: Math.min(255, primaryRgb.g + 51),
+              b: Math.min(255, primaryRgb.b + 51),
+            };
+            
+            const glowHex = '#' + [glowRgb.r, glowRgb.g, glowRgb.b].map(x => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+            
+            const glowHsl = hexToHsl(glowHex);
+            root.style.setProperty('--primary-glow', glowHsl);
           }
 
           if (companyData.secondary_color) {
@@ -76,7 +98,10 @@ export const useCompanyTheme = () => {
       }
     };
 
-    applyCompanyTheme();
+    // Aplicar tema imediatamente se já temos dados da empresa
+    if (company?.id) {
+      applyCompanyTheme();
+    }
   }, [company?.id]);
 
   // Cleanup function para remover estilos personalizados

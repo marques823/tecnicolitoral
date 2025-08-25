@@ -91,6 +91,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Prevent flash of unstyled content */
+    transition: background-color 0.1s ease-in-out, color 0.1s ease-in-out;
+  }
+  
+  /* Prevent flash of wrong colors on page load */
+  html {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
   
   /* Mobile touch improvements */
