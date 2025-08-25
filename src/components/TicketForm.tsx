@@ -134,9 +134,13 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           .eq('active', true)
           .order('name');
 
-        // Combinar os dois tipos de clientes
-        const allClients: Client[] = [
-          ...(clientsData || []).map(client => ({
+        // Criar map para evitar duplicatas por nome
+        const clientsMap = new Map<string, Client>();
+
+        // Adicionar clientes sem login primeiro
+        (clientsData || []).forEach(client => {
+          const key = client.name.toLowerCase().trim();
+          clientsMap.set(key, {
             id: client.id,
             name: client.name,
             email: client.email,
@@ -146,20 +150,32 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             type: 'client' as const,
             address: null,
             document: null
-          })),
-          ...(clientUsersData || []).map(clientUser => ({
-            id: clientUser.id,
-            name: clientUser.name,
-            email: clientUser.email_contato,
-            phone: clientUser.telefone,
-            company_name: clientUser.razao_social,
-            active: true,
-            type: 'client_user' as const,
-            user_id: clientUser.user_id,
-            address: null,
-            document: null
-          }))
-        ];
+          });
+        });
+
+        // Adicionar clientes com login, verificando duplicatas por nome
+        (clientUsersData || []).forEach(clientUser => {
+          const key = clientUser.name.toLowerCase().trim();
+          if (!clientsMap.has(key)) {
+            clientsMap.set(key, {
+              id: clientUser.id,
+              name: clientUser.name,
+              email: clientUser.email_contato,
+              phone: clientUser.telefone,
+              company_name: clientUser.razao_social,
+              active: true,
+              type: 'client_user' as const,
+              user_id: clientUser.user_id,
+              address: null,
+              document: null
+            });
+          }
+        });
+
+        // Converter map em array e ordenar por nome
+        const allClients = Array.from(clientsMap.values()).sort((a, b) => 
+          a.name.localeCompare(b.name)
+        );
 
         setClients(allClients);
       } else {
