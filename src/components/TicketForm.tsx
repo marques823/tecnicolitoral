@@ -555,7 +555,6 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
               /* Para client_users - mostrar informação do próprio cliente */
               <div className="p-3 bg-muted/50 rounded-lg">
                 <p className="text-sm font-medium">{profile?.name}</p>
-                <p className="text-xs text-muted-foreground">Chamado será criado em seu nome</p>
               </div>
             ) : (
               /* Para técnicos/admins - campo de seleção */
