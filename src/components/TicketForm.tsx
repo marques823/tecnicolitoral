@@ -396,6 +396,46 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
     try {
       setLoading(true);
 
+      // Se o client_id selecionado é de um client_user (profiles), criar/encontrar o cliente correspondente na tabela clients
+      let finalClientId = formData.client_id === 'none' || formData.client_id === '' ? null : formData.client_id;
+      
+      if (finalClientId) {
+        const selectedClient = clients.find(c => c.id === finalClientId);
+        if (selectedClient && selectedClient.type === 'client_user') {
+          // É um client_user, precisa criar/encontrar registro na tabela clients
+          const { data: existingClient } = await supabase
+            .from('clients')
+            .select('id')
+            .eq('company_id', company.id)
+            .eq('email', selectedClient.email || user?.email)
+            .single();
+
+          if (existingClient) {
+            finalClientId = existingClient.id;
+          } else {
+            // Criar novo registro na tabela clients
+            const { data: newClient, error: createError } = await supabase
+              .from('clients')
+              .insert({
+                name: selectedClient.name,
+                email: selectedClient.email || user?.email,
+                phone: selectedClient.phone,
+                company_name: selectedClient.company_name,
+                company_id: company.id,
+                active: true
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error('Error creating client record:', createError);
+              throw createError;
+            }
+            finalClientId = newClient.id;
+          }
+        }
+      }
+
       const ticketData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
@@ -405,12 +445,13 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         company_id: company.id,
         created_by: user.id,
         assigned_to: formData.assigned_to === 'unassigned' || formData.assigned_to === '' ? null : formData.assigned_to,
-        client_id: formData.client_id === 'none' || formData.client_id === '' ? null : formData.client_id
+        client_id: finalClientId
       };
 
-      console.log('🔍 TICKET DATA BEING SENT:', {
-        ...ticketData,
-        formData: formData
+      console.log('🔍 FINAL TICKET DATA:', {
+        originalClientId: formData.client_id,
+        finalClientId,
+        ticketData
       });
 
       if (isEditing) {
