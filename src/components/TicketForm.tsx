@@ -409,16 +409,33 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       };
 
       if (isEditing) {
-        console.log('Updating ticket:', ticket!.id, 'with data:', ticketData);
-        const { error } = await supabase
+        console.log('🔄 DEBUGGING UPDATE - Current user profile:', {
+          userId: user?.id,
+          userEmail: user?.email,
+          profileRole: profile?.role,
+          companyId: company?.id,
+          ticketId: ticket!.id,
+          isEditing: true
+        });
+        
+        const { error, data } = await supabase
           .from('tickets')
           .update(ticketData)
-          .eq('id', ticket!.id);
+          .eq('id', ticket!.id)
+          .select();
+          
         if (error) {
-          console.error('Update error:', error);
+          console.error('❌ UPDATE ERROR DETAILS:', {
+            errorCode: error.code,
+            errorMessage: error.message,
+            errorDetails: error.details,
+            errorHint: error.hint,
+            fullError: error
+          });
           throw error;
         }
-        console.log('Ticket updated successfully');
+        
+        console.log('✅ Update successful, data:', data);
       } else {
         console.log('Creating new ticket with data:', ticketData);
         const { error } = await supabase
