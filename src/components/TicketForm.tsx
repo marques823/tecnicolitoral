@@ -507,56 +507,57 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                    ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
 
-              {showCreateClient && (
-                <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
-                  <Label>Novo cliente</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    <Input
-                      placeholder="Nome do cliente *"
-                      value={newClientData.name}
-                      onChange={(e) => setNewClientData({ ...newClientData, name: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Email"
-                      value={newClientData.email}
-                      onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Telefone"
-                      value={newClientData.phone}
-                      onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Empresa"
-                      value={newClientData.company_name}
-                      onChange={(e) => setNewClientData({ ...newClientData, company_name: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      onClick={createNewClient}
-                      disabled={creatingCategory || !newClientData.name.trim()}
-                      size="sm"
-                    >
-                      {creatingCategory ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Criar'
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowCreateClient(false)}
-                      size="sm"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
-              )}
+          {/* Formulário para criar novo cliente - só para admins e técnicos */}
+          {!isClientUser && showCreateClient && (
+            <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
+              <Label>Novo cliente</Label>
+              <div className="grid grid-cols-1 gap-2">
+                <Input
+                  placeholder="Nome do cliente *"
+                  value={newClientData.name}
+                  onChange={(e) => setNewClientData({ ...newClientData, name: e.target.value })}
+                />
+                <Input
+                  placeholder="Email"
+                  value={newClientData.email}
+                  onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+                />
+                <Input
+                  placeholder="Telefone"
+                  value={newClientData.phone}
+                  onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
+                />
+                <Input
+                  placeholder="Empresa"
+                  value={newClientData.company_name}
+                  onChange={(e) => setNewClientData({ ...newClientData, company_name: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={createNewClient}
+                  disabled={creatingCategory || !newClientData.name.trim()}
+                  size="sm"
+                >
+                  {creatingCategory ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Criar'
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateClient(false)}
+                  size="sm"
+                >
+                  Cancelar
+                </Button>
+              </div>
             </div>
           )}
 
