@@ -185,7 +185,7 @@ export const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps
                   onCheckedChange={setIsPrivate}
                 />
                 <Label htmlFor="private-comment" className="text-sm">
-                  Comentário privado (não visível para o cliente)
+                  Comentário privado
                 </Label>
               </div>
               
