@@ -28,6 +28,7 @@ import TicketForm from '@/components/TicketForm';
 import TicketHistory from '@/components/TicketHistory';
 import TicketShare from '@/components/TicketShare';
 import TechnicalNotesForTicket from '@/components/TechnicalNotesForTicket';
+import { TicketComments } from '@/components/TicketComments';
 import { exportTicketToPDF } from '@/utils/pdfExport';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -640,6 +641,14 @@ const Tickets = () => {
                   </div>
                 </div>
               )}
+              
+              {/* Comments Section */}
+              <div className="border-t pt-4">
+                <TicketComments 
+                  ticketId={selectedTicket.id} 
+                  canAddComments={canEditTickets}
+                />
+              </div>
               
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 pt-4 border-t">

@@ -50,6 +50,8 @@ export default function TicketHistory({ ticketId }: TicketHistoryProps) {
       assignment_change: { variant: "outline", label: "Atribuição" },
       resolved: { variant: "default", label: "Resolvido" },
       created: { variant: "secondary", label: "Criado" },
+      comment_added: { variant: "default", label: "Comentário" },
+      comment_updated: { variant: "outline", label: "Comentário Editado" },
     };
 
     const config = variants[action] || { variant: "outline" as const, label: action };
