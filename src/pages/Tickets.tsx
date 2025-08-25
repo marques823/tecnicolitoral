@@ -119,11 +119,9 @@ const Tickets = () => {
           clients (id, name, email, phone, address, company_name, document)
         `);
 
-      // Para clientes, mostrar apenas os tickets que eles criaram
-      if (profile?.role === 'client_user') {
-        query = query.eq('created_by', user?.id);
-      } else {
-        // Para masters e technicians, mostrar todos os tickets da empresa
+      // Para masters e technicians, mostrar todos os tickets da empresa
+      // Para client_users, as políticas RLS já controlam o acesso (tickets criados por eles ou atribuídos ao seu cliente)
+      if (profile?.role !== 'client_user') {
         query = query.eq('company_id', company?.id);
       }
 
