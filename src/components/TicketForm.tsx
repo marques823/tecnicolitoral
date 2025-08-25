@@ -404,9 +404,14 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         category_id: formData.category_id,
         company_id: company.id,
         created_by: user.id,
-        assigned_to: formData.assigned_to === 'unassigned' ? null : formData.assigned_to,
-        client_id: formData.client_id === 'none' ? null : formData.client_id
+        assigned_to: formData.assigned_to === 'unassigned' || formData.assigned_to === '' ? null : formData.assigned_to,
+        client_id: formData.client_id === 'none' || formData.client_id === '' ? null : formData.client_id
       };
+
+      console.log('🔍 TICKET DATA BEING SENT:', {
+        ...ticketData,
+        formData: formData
+      });
 
       if (isEditing) {
         console.log('🔄 DEBUGGING UPDATE - Current user profile:', {
