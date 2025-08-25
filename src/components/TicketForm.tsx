@@ -526,8 +526,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           </DialogTitle>
           <DialogDescription>
             {isEditing 
-              ? 'Atualize as informações do chamado'
-              : 'Preencha as informações para criar um novo chamado'
+              ? 'Atualize as informações do chamado. Campos obrigatórios estão marcados com *'
+              : 'Preencha as informações abaixo para abrir um novo chamado de suporte. Seja específico na descrição para um atendimento mais rápido.'
             }
           </DialogDescription>
         </DialogHeader>
@@ -539,7 +539,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Digite o título do chamado"
+              placeholder="Ex: Problema no computador, Instalação de software, Dúvida sobre sistema"
               required
             />
           </div>
@@ -653,8 +653,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Descreva o problema ou solicitação"
-              rows={3}
+              placeholder="Detalhe o problema ou solicitação:&#10;• O que aconteceu?&#10;• Quando ocorreu?&#10;• Passos para reproduzir o problema&#10;• Mensagens de erro (se houver)"
+              rows={4}
               required
             />
           </div>
@@ -729,7 +729,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                     id="newCategory"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="Nome da categoria"
+                    placeholder="Ex: Suporte Técnico, Hardware, Software"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -775,13 +775,13 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
               onValueChange={(value: any) => setFormData({ ...formData, priority: value })}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecione a urgência do chamado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Baixa</SelectItem>
-                <SelectItem value="medium">Média</SelectItem>
-                <SelectItem value="high">Alta</SelectItem>
-                <SelectItem value="urgent">Urgente</SelectItem>
+                <SelectItem value="low">🟢 Baixa - Não urgente</SelectItem>
+                <SelectItem value="medium">🟡 Média - Prazo normal</SelectItem>
+                <SelectItem value="high">🟠 Alta - Precisa de atenção</SelectItem>
+                <SelectItem value="urgent">🔴 Urgente - Resolver rapidamente</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -814,7 +814,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
                 onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um técnico" />
+                  <SelectValue placeholder="Escolha quem resolverá este chamado" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Não atribuído</SelectItem>
