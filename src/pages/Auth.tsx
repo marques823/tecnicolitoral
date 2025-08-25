@@ -41,48 +41,28 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 mx-auto">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-xl mb-4">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo e Título */}
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-xl">
             <Ticket className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold">TicketFlow</h1>
-          <p className="text-muted-foreground">Sistema de chamados multiempresa</p>
+          <div>
+            <h1 className="text-2xl font-bold">TicketFlow</h1>
+            <p className="text-muted-foreground text-sm">Acesse sua conta</p>
+          </div>
         </div>
 
-
-        {/* Features Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <Card className="text-center p-4 hover:shadow-md transition-shadow">
-            <Building2 className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <p className="text-sm font-medium">Multiempresa</p>
-          </Card>
-          <Card className="text-center p-4 hover:shadow-md transition-shadow">
-            <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <p className="text-sm font-medium">Gestão de Usuários</p>
-          </Card>
-          <Card className="text-center p-4 hover:shadow-md transition-shadow">
-            <Ticket className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <p className="text-sm font-medium">Controle Total</p>
-          </Card>
-        </div>
-
+        {/* Formulário de Login/Cadastro */}
         <Card>
-          <CardHeader>
-            <CardTitle>Acesse sua conta</CardTitle>
-            <CardDescription>
-              Faça login ou cadastre-se para começar
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Entrar</TabsTrigger>
                 <TabsTrigger value="signup">Cadastrar</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="signin">
+              <TabsContent value="signin" className="space-y-4">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
@@ -113,7 +93,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
               
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="space-y-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Nome completo</Label>
@@ -157,10 +137,6 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Ao continuar, você concorda com nossos termos de serviço
-        </p>
       </div>
     </div>
   );
