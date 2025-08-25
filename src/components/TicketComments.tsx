@@ -140,16 +140,10 @@ export const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{comment.user_name}</span>
-                    {comment.is_private && (
+                    {comment.is_private && canAddComments && (
                       <Badge variant="outline" className="text-xs">
                         <Lock className="h-3 w-3 mr-1" />
                         Privado
-                      </Badge>
-                    )}
-                    {!comment.is_private && (
-                      <Badge variant="outline" className="text-xs">
-                        <Eye className="h-3 w-3 mr-1" />
-                        Público
                       </Badge>
                     )}
                   </div>

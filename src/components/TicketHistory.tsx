@@ -151,13 +151,6 @@ export default function TicketHistory({ ticketId }: TicketHistoryProps) {
                     </Badge>
                   )}
                   
-                  {entry.type === 'comment' && !(entry as TicketComment).is_private && (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      Público
-                    </Badge>
-                  )}
-                  
                   <span className="text-sm text-muted-foreground">
                     {new Date(entry.created_at).toLocaleDateString('pt-BR', {
                       day: '2-digit',
