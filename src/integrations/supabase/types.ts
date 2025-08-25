@@ -614,6 +614,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: string
       }
+      get_user_email: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
       promote_to_super_admin: {
         Args: { user_email: string }
         Returns: boolean
