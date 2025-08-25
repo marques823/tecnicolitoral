@@ -409,16 +409,26 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       };
 
       if (isEditing) {
+        console.log('Updating ticket:', ticket!.id, 'with data:', ticketData);
         const { error } = await supabase
           .from('tickets')
           .update(ticketData)
           .eq('id', ticket!.id);
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
+        console.log('Ticket updated successfully');
       } else {
+        console.log('Creating new ticket with data:', ticketData);
         const { error } = await supabase
           .from('tickets')
           .insert([ticketData]);
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
+        console.log('Ticket created successfully');
       }
 
       toast({
