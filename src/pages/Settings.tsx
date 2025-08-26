@@ -732,34 +732,36 @@ export default function Settings() {
 
           <Separator />
 
-          {/* Zona de Perigo */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-4 h-4 text-destructive" />
-              <h3 className="font-semibold text-destructive">Zona de Perigo</h3>
-            </div>
+          {/* Zona de Perigo - apenas para não-clientes */}
+          {profile?.role !== 'client_user' && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+                <h3 className="font-semibold text-destructive">Zona de Perigo</h3>
+              </div>
 
-            <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-medium text-destructive">Deletar Conta</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Esta ação é irreversível. Todos os seus dados, incluindo perfil, configurações e histórico serão permanentemente deletados. Você precisará digitar "DELETE" para confirmar.
-                  </p>
+              <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-destructive">Deletar Conta</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Esta ação é irreversível. Todos os seus dados, incluindo perfil, configurações e histórico serão permanentemente deletados. Você precisará digitar "DELETE" para confirmar.
+                    </p>
+                  </div>
+
+                  <Button 
+                    variant="destructive" 
+                    onClick={deleteAccount}
+                    disabled={deleting}
+                    className="w-full sm:w-auto"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {deleting ? 'Deletando...' : 'Deletar Minha Conta'}
+                  </Button>
                 </div>
-
-                <Button 
-                  variant="destructive" 
-                  onClick={deleteAccount}
-                  disabled={deleting}
-                  className="w-full sm:w-auto"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  {deleting ? 'Deletando...' : 'Deletar Minha Conta'}
-                </Button>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
       </div>
