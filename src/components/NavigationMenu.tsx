@@ -24,9 +24,13 @@ export default function NavigationMenu() {
   const getMenuItems = () => {
     const commonItems = [
       { icon: Home, label: 'Dashboard', path: '/dashboard' },
-      { icon: Ticket, label: 'Chamados', path: '/tickets' },
-      { icon: UserCheck, label: 'Clientes', path: '/clients' }
+      { icon: Ticket, label: 'Chamados', path: '/tickets' }
     ];
+
+    // Apenas administradores da empresa podem acessar clientes
+    if (profile?.role === 'company_admin') {
+      commonItems.push({ icon: UserCheck, label: 'Clientes', path: '/clients' });
+    }
 
     const roleSpecificItems = [];
     
