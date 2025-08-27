@@ -334,27 +334,22 @@ export default function Settings() {
 
     setDeleting(true);
     try {
-      // Deletar o perfil primeiro
-      if (profile?.id) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', profile.id);
-
-        if (profileError) {
-          console.error('Erro ao deletar perfil:', profileError);
-        }
-      }
-
-      // Deletar o usuário através da edge function manage-user
-      const { error: userError } = await supabase.functions.invoke('manage-user', {
+      // Usar apenas a edge function manage-user para deletar tudo
+      const { data, error } = await supabase.functions.invoke('manage-user', {
         body: {
           action: 'delete_user',
           user_id: user.id
         }
       });
 
-      if (userError) throw userError;
+      if (error) {
+        console.error('Erro na edge function:', error);
+        throw new Error(error.message || 'Erro ao deletar conta');
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao deletar conta');
+      }
 
       toast({
         title: "Conta deletada",
@@ -363,11 +358,11 @@ export default function Settings() {
 
       // Fazer logout e redirecionar
       await signOut();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao deletar conta:', error);
       toast({
         title: "Erro",
-        description: "Erro ao deletar conta. Tente novamente.",
+        description: error.message || "Erro ao deletar conta. Tente novamente.",
         variant: "destructive",
       });
     } finally {

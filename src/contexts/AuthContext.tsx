@@ -163,7 +163,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        toast.error(error.message);
+        // Tratar mensagens de erro específicas
+        let errorMessage = error.message;
+        if (error.message.includes('already registered')) {
+          errorMessage = 'Este email já está cadastrado. Tente fazer login.';
+        } else if (error.message.includes('password')) {
+          errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+        } else if (error.message.includes('email')) {
+          errorMessage = 'Por favor, digite um email válido.';
+        }
+        toast.error(errorMessage);
       } else if (data.user && !data.session) {
         toast.success("Verifique seu email para confirmar a conta");
       } else if (data.session) {
@@ -173,7 +182,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { error };
     } catch (error: any) {
-      toast.error("Ocorreu um erro inesperado");
+      console.error('Erro no signup:', error);
+      toast.error("Ocorreu um erro inesperado durante o cadastro");
       return { error };
     }
   };
