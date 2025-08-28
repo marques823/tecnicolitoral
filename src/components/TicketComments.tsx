@@ -34,7 +34,7 @@ export const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, company } = useAuth();
 
   const loadComments = async () => {
     try {
@@ -46,11 +46,10 @@ export const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps
 
       if (error) throw error;
 
-      // Buscar nomes dos usuários separadamente
+      // Buscar nomes dos usuários separadamente (usando função segura)
       const userIds = [...new Set(commentsData?.map(c => c.user_id) || [])];
       const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, name')
+        .rpc('get_basic_profiles', { target_company_id: company?.id })
         .in('user_id', userIds);
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p.name]) || []);

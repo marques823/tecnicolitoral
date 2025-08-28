@@ -629,47 +629,7 @@ export type Database = {
       }
     }
     Views: {
-      profiles_basic: {
-        Row: {
-          active: boolean | null
-          company_id: string | null
-          created_at: string | null
-          id: string | null
-          name: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          company_id?: string | null
-          created_at?: string | null
-          id?: string | null
-          name?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          company_id?: string | null
-          created_at?: string | null
-          id?: string | null
-          name?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       create_company_and_profile: {
@@ -679,6 +639,19 @@ export type Database = {
       generate_share_token: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_basic_profiles: {
+        Args: { target_company_id: string }
+        Returns: {
+          active: boolean
+          company_id: string
+          created_at: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }[]
       }
       get_user_company_id: {
         Args: { user_uuid: string }

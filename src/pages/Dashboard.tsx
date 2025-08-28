@@ -124,9 +124,7 @@ const Dashboard = () => {
 
     const [{ data: activeUsers }, { data: plans }] = await Promise.all([
       supabase
-        .from('profiles')
-        .select('id')
-        .eq('company_id', profile.company_id)
+        .rpc('get_basic_profiles', { target_company_id: profile.company_id })
         .eq('active', true),
       supabase
         .from('companies')
@@ -163,11 +161,10 @@ const Dashboard = () => {
       return;
     }
 
-    // Buscar nomes dos usuários que criaram os tickets
+    // Buscar nomes dos usuários que criaram os tickets (usando função segura)
     const userIds = [...new Set(tickets.map(t => t.created_by))];
     const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, name')
+      .rpc('get_basic_profiles', { target_company_id: profile.company_id })
       .in('user_id', userIds);
 
     const profileMap = new Map(profiles?.map(p => [p.user_id, p.name]) || []);

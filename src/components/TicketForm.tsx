@@ -125,14 +125,31 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           .eq('active', true)
           .order('name');
 
-        // Carregar clientes com login (da tabela profiles com role client_user)
-        const { data: clientUsersData } = await supabase
-          .from('profiles')
-          .select('id, name, user_id, email_contato, telefone, razao_social')
-          .eq('company_id', company.id)
-          .eq('role', 'client_user')
-          .eq('active', true)
-          .order('name');
+        // Carregar clientes com login (apenas para admins que podem ver dados sensíveis)
+        let clientUsersToProcess: any[] = [];
+        if (profile?.role === 'company_admin') {
+          const { data: clientUsersData } = await supabase
+            .from('profiles')
+            .select('id, name, user_id, email_contato, telefone, razao_social')
+            .eq('company_id', company.id)
+            .eq('role', 'client_user')
+            .eq('active', true)
+            .order('name');
+          clientUsersToProcess = clientUsersData || [];
+        } else {
+          // Técnicos só podem ver nomes básicos
+          const { data: basicClientUsersData } = await supabase
+            .rpc('get_basic_profiles', { target_company_id: company.id })
+            .eq('role', 'client_user')
+            .eq('active', true)
+            .order('name');
+          clientUsersToProcess = (basicClientUsersData || []).map(user => ({
+            ...user,
+            email_contato: null,
+            telefone: null,
+            razao_social: null
+          }));
+        }
 
         // Criar map para evitar duplicatas por nome
         const clientsMap = new Map<string, Client>();
@@ -153,19 +170,19 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
           });
         });
 
-        // Adicionar clientes com login, verificando duplicatas por nome
-        (clientUsersData || []).forEach(clientUser => {
+        // Adicionar clientes com login
+        (clientUsersToProcess || []).forEach(clientUser => {
           const key = clientUser.name.toLowerCase().trim();
           if (!clientsMap.has(key)) {
             clientsMap.set(key, {
-              id: clientUser.id,
+              id: `profile-${clientUser.id}`,
               name: clientUser.name,
+              user_id: clientUser.user_id,
               email: clientUser.email_contato,
               phone: clientUser.telefone,
               company_name: clientUser.razao_social,
               active: true,
               type: 'client_user' as const,
-              user_id: clientUser.user_id,
               address: null,
               document: null
             });
@@ -247,16 +264,27 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
       // Carregar técnicos se necessário
       if (canAssignTickets) {
         console.log('Carregando técnicos para company:', company.id);
-        const { data: techniciansData, error: techError } = await supabase
-          .from('profiles')
-          .select('id, name, role, user_id, cpf_cnpj, razao_social, endereco, telefone, email_contato')
-          .eq('company_id', company.id)
-          .in('role', ['company_admin', 'technician'])
-          .eq('active', true)
-          .order('name');
-        
-        console.log('Resultado técnicos:', { techniciansData, techError });
-        setTechnicians(techniciansData || []);
+        // Apenas admins podem ver dados sensíveis dos técnicos
+        if (profile?.role === 'company_admin') {
+          const { data: techniciansData, error: techError } = await supabase
+            .from('profiles')
+            .select('id, name, role, user_id, cpf_cnpj, razao_social, endereco, telefone, email_contato')
+            .eq('company_id', company.id)
+            .in('role', ['company_admin', 'technician'])
+            .eq('active', true)
+            .order('name');
+          console.log('Resultado técnicos (admin):', { techniciansData, techError });
+          setTechnicians(techniciansData || []);
+        } else {
+          // Técnicos só veem informações básicas de outros técnicos
+          const { data: basicTechniciansData, error: techError } = await supabase
+            .rpc('get_basic_profiles', { target_company_id: company.id })
+            .in('role', ['company_admin', 'technician'])
+            .eq('active', true)
+            .order('name');
+          console.log('Resultado técnicos (básico):', { basicTechniciansData, techError });
+          setTechnicians(basicTechniciansData || []);
+        }
       }
     } catch (error) {
       console.error('Error loading basic data:', error);
