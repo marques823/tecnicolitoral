@@ -33,6 +33,7 @@ const Clients = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   const canManageClients = profile?.role === 'company_admin';
+  const canViewClients = profile?.role === 'company_admin' || profile?.role === 'technician';
 
   useEffect(() => {
     if (!loading && !user) {
@@ -41,10 +42,10 @@ const Clients = () => {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (company && profile) {
+    if (company && profile && canViewClients) {
       loadClients();
     }
-  }, [company, profile]);
+  }, [company, profile, canViewClients]);
 
   const loadClients = async () => {
     try {
@@ -133,6 +134,27 @@ const Clients = () => {
   }
 
   if (!user) return null;
+
+  // Restrict access to client data based on role
+  if (!canViewClients) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-2">Acesso Restrito</h1>
+          <p className="text-muted-foreground">
+            Você não tem permissão para acessar os dados de clientes.
+          </p>
+          <Button 
+            variant="outline" 
+            className="mt-4" 
+            onClick={() => navigate('/')}
+          >
+            Voltar ao Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
