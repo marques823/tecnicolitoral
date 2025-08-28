@@ -629,7 +629,47 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_basic: {
+        Row: {
+          active: boolean | null
+          company_id: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_company_and_profile: {
