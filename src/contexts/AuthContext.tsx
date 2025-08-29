@@ -100,19 +100,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   console.log('✅ Empresa carregada:', companyData);
                   setCompany(companyData);
                 } else {
-                  console.error('❌ Empresa não encontrada ou inativa:', companyError);
-                  // Se a empresa não existe ou está inativa, limpar o company_id do perfil
-                  await supabase
-                    .from('profiles')
-                    .update({ company_id: null })
-                    .eq('user_id', session.user.id);
-                  
-                  // Atualizar o perfil localmente
-                  setProfile({ ...profileData, company_id: null });
-                  setCompany(null);
-                  
-                  toast.error('A empresa associada ao seu usuário não está mais ativa. Por favor, selecione um novo plano.');
+                  console.error('❌ Empresa não encontrada ou inativa - deslogando usuário');
+                  // Se a empresa não existe ou está inativa, deslogar o usuário
+                  await supabase.auth.signOut();
+                  toast.error('Sua empresa foi desativada. Entre em contato com o administrador.');
+                  return;
                 }
+              }
+
+              // Verificar se o perfil foi desativado
+              if (!profileData?.active) {
+                console.error('❌ Perfil desativado - deslogando usuário');
+                await supabase.auth.signOut();
+                toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
+                return;
               }
               
               setLoading(false);
@@ -232,15 +233,18 @@ const refreshAuthData = async () => {
         if (!companyError && companyData) {
           setCompany(companyData);
         } else {
-          // Se a empresa não existe ou está inativa, limpar o company_id do perfil
-          await supabase
-            .from('profiles')
-            .update({ company_id: null })
-            .eq('user_id', user.id);
-          
-          setProfile({ ...profileData, company_id: null });
-          setCompany(null);
+          // Se a empresa não existe ou está inativa, deslogar o usuário
+          await supabase.auth.signOut();
+          toast.error('Sua empresa foi desativada. Entre em contato com o administrador.');
+          return;
         }
+      }
+
+      // Verificar se o perfil foi desativado
+      if (!profileData?.active) {
+        await supabase.auth.signOut();
+        toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
+        return;
       }
     }
   } catch (error) {
