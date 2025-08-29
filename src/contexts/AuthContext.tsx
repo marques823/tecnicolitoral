@@ -93,13 +93,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   .from('companies')
                   .select('*')
                   .eq('id', profileData.company_id)
+                  .eq('active', true)
                   .single();
 
                 if (!companyError && companyData) {
                   console.log('✅ Empresa carregada:', companyData);
                   setCompany(companyData);
                 } else {
-                  console.error('❌ Erro ao carregar empresa:', companyError);
+                  console.error('❌ Empresa não encontrada ou inativa:', companyError);
+                  // Se a empresa não existe ou está inativa, limpar o company_id do perfil
+                  await supabase
+                    .from('profiles')
+                    .update({ company_id: null })
+                    .eq('user_id', session.user.id);
+                  
+                  // Atualizar o perfil localmente
+                  setProfile({ ...profileData, company_id: null });
+                  setCompany(null);
+                  
+                  toast.error('A empresa associada ao seu usuário não está mais ativa. Por favor, selecione um novo plano.');
                 }
               }
               
@@ -215,9 +227,19 @@ const refreshAuthData = async () => {
           .from('companies')
           .select('*')
           .eq('id', profileData.company_id)
+          .eq('active', true)
           .single();
         if (!companyError && companyData) {
           setCompany(companyData);
+        } else {
+          // Se a empresa não existe ou está inativa, limpar o company_id do perfil
+          await supabase
+            .from('profiles')
+            .update({ company_id: null })
+            .eq('user_id', user.id);
+          
+          setProfile({ ...profileData, company_id: null });
+          setCompany(null);
         }
       }
     }
