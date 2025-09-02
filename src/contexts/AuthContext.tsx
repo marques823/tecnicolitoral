@@ -108,8 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
               }
 
-              // Verificar se o perfil foi desativado
-              if (!profileData?.active) {
+              // Verificar se o perfil foi desativado (apenas se existir perfil)
+              if (profileData && !profileData.active) {
                 console.error('❌ Perfil desativado - deslogando usuário');
                 await supabase.auth.signOut();
                 toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
@@ -240,8 +240,8 @@ const refreshAuthData = async () => {
         }
       }
 
-      // Verificar se o perfil foi desativado
-      if (!profileData?.active) {
+      // Verificar se o perfil foi desativado (apenas se existir perfil)
+      if (profileData && !profileData.active) {
         await supabase.auth.signOut();
         toast.error('Sua conta foi desativada. Entre em contato com o administrador.');
         return;
