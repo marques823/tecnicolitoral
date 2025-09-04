@@ -13,8 +13,11 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/UserManagement";
 import Tickets from "./pages/Tickets";
+import CreateTicket from "./pages/CreateTicket";
 import Clients from "./pages/Clients";
+import CreateClient from "./pages/CreateClient";
 import Categories from "./pages/Categories";
+import CreateCategory from "./pages/CreateCategory";
 import Reports from "./pages/Reports";
 import Plans from "./pages/Plans";
 import Settings from "./pages/Settings";
@@ -49,8 +52,11 @@ const AppContent = () => {
             <Route path="/dashboard" element={<Dashboard />} />
            <Route path="/users" element={<UserManagement />} />
            <Route path="/tickets" element={<Tickets />} />
+           <Route path="/tickets/create" element={<CreateTicket />} />
            <Route path="/clients" element={<Clients />} />
+           <Route path="/clients/create" element={<CreateClient />} />
            <Route path="/categories" element={<Categories />} />
+           <Route path="/categories/create" element={<CreateCategory />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/settings" element={<Settings />} />

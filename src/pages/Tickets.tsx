@@ -143,8 +143,7 @@ const Tickets = () => {
   };
 
   const handleCreateTicket = () => {
-    setEditingTicket(null);
-    setShowTicketForm(true);
+    navigate('/tickets/create');
   };
 
   const handleTicketClick = (ticket: Ticket) => {
@@ -153,8 +152,7 @@ const Tickets = () => {
   };
 
   const handleEditTicket = (ticket: Ticket) => {
-    setEditingTicket(ticket);
-    setShowTicketForm(true);
+    navigate(`/tickets/create?edit=${ticket.id}`);
     setShowTicketDetails(false);
   };
 
@@ -466,14 +464,6 @@ const Tickets = () => {
         )}
       </main>
 
-      {/* Ticket Form Modal */}
-      {showTicketForm && (
-        <TicketForm
-          ticket={editingTicket}
-          onSuccess={handleTicketFormSuccess}
-          onCancel={() => setShowTicketForm(false)}
-        />
-      )}
 
       {/* Ticket Details Dialog */}
       <Dialog open={showTicketDetails} onOpenChange={setShowTicketDetails}>

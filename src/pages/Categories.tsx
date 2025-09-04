@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, Trash2, X } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -22,14 +20,9 @@ interface Category {
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: ''
-  });
   const { toast } = useToast();
   const { profile } = useAuth();
+  const navigate = useNavigate();
 
   const canManageCategories = profile?.role === 'company_admin';
 
@@ -58,72 +51,8 @@ export default function Categories() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name.trim()) {
-      toast({
-        title: "Erro",
-        description: "Nome da categoria é obrigatório",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      if (editingCategory) {
-        const { error } = await supabase
-          .from('categories')
-          .update({
-            name: formData.name,
-            description: formData.description
-          })
-          .eq('id', editingCategory.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Sucesso",
-          description: "Categoria atualizada com sucesso",
-        });
-      } else {
-        const { error } = await supabase
-          .from('categories')
-          .insert({
-            name: formData.name,
-            description: formData.description,
-            company_id: profile?.company_id
-          });
-
-        if (error) throw error;
-
-        toast({
-          title: "Sucesso",
-          description: "Categoria criada com sucesso",
-        });
-      }
-
-      setShowForm(false);
-      setEditingCategory(null);
-      setFormData({ name: '', description: '' });
-      loadCategories();
-    } catch (error) {
-      console.error('Erro ao salvar categoria:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar categoria",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleEdit = (category: Category) => {
-    setEditingCategory(category);
-    setFormData({
-      name: category.name,
-      description: category.description || ''
-    });
-    setShowForm(true);
+    navigate(`/categories/create?edit=${category.id}`);
   };
 
   const handleToggleActive = async (category: Category) => {
@@ -151,18 +80,6 @@ export default function Categories() {
     }
   };
 
-  const openNewCategoryForm = () => {
-    setEditingCategory(null);
-    setFormData({ name: '', description: '' });
-    setShowForm(true);
-  };
-
-  const cancelForm = () => {
-    setShowForm(false);
-    setEditingCategory(null);
-    setFormData({ name: '', description: '' });
-  };
-
   if (loading) {
     return <div className="p-6">Carregando...</div>;
   }
@@ -171,60 +88,13 @@ export default function Categories() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Categorias</h1>
-        {canManageCategories && !showForm && (
-          <Button onClick={openNewCategoryForm}>
+        {canManageCategories && (
+          <Button onClick={() => navigate('/categories/create')}>
             <Plus className="w-4 h-4 mr-2" />
             Nova Categoria
           </Button>
         )}
       </div>
-
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>
-                {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={cancelForm}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nome *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nome da categoria"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Descrição da categoria"
-                  rows={3}
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={cancelForm}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {editingCategory ? 'Atualizar' : 'Criar'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
 
       <Card>
         <CardHeader>

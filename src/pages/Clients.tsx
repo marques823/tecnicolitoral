@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import ClientForm from '@/components/ClientForm';
 
 interface Client {
   id: string;
@@ -29,8 +28,6 @@ const Clients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showClientForm, setShowClientForm] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   const canManageClients = profile?.role === 'company_admin';
   const canViewClients = profile?.role === 'company_admin' || profile?.role === 'technician';
@@ -72,8 +69,7 @@ const Clients = () => {
   };
 
   const handleEditClient = (client: Client) => {
-    setEditingClient(client);
-    setShowClientForm(true);
+    navigate(`/clients/create?edit=${client.id}`);
   };
 
   const handleDeleteClient = async (clientId: string) => {
@@ -103,17 +99,6 @@ const Clients = () => {
         variant: 'destructive'
       });
     }
-  };
-
-  const handleFormSuccess = () => {
-    setShowClientForm(false);
-    setEditingClient(null);
-    loadClients();
-  };
-
-  const handleFormCancel = () => {
-    setShowClientForm(false);
-    setEditingClient(null);
   };
 
   const filteredClients = clients.filter(client =>
@@ -173,7 +158,7 @@ const Clients = () => {
           </div>
           
           {canManageClients && (
-            <Button onClick={() => setShowClientForm(true)}>
+            <Button onClick={() => navigate('/clients/create')}>
               <Plus className="h-4 w-4 mr-2" />
               Novo Cliente
             </Button>
@@ -265,7 +250,7 @@ const Clients = () => {
               {searchTerm ? 'Nenhum cliente encontrado para sua busca.' : 'Nenhum cliente cadastrado ainda.'}
             </p>
             {canManageClients && !searchTerm && (
-              <Button onClick={() => setShowClientForm(true)}>
+              <Button onClick={() => navigate('/clients/create')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Cadastrar Primeiro Cliente
               </Button>
@@ -274,14 +259,6 @@ const Clients = () => {
         )}
       </div>
 
-      {/* Client Form Modal */}
-      {showClientForm && (
-        <ClientForm
-          client={editingClient}
-          onSuccess={handleFormSuccess}
-          onCancel={handleFormCancel}
-        />
-      )}
     </div>
   );
 };
