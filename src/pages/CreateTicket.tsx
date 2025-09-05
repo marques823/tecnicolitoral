@@ -238,8 +238,8 @@ export default function CreateTicket() {
         category_id: categoryId,
         company_id: company.id,
         created_by: user.id,
-        assigned_to: formData.assigned_to === 'unassigned' ? null : formData.assigned_to || null,
-        client_id: formData.client_id === 'none' ? null : clientId || null
+        assigned_to: formData.assigned_to === 'unassigned' || !formData.assigned_to ? null : formData.assigned_to,
+        client_id: formData.client_id === 'none' || !formData.client_id ? null : clientId
       };
 
       if (isEditing && editingTicketId) {
