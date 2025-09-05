@@ -238,8 +238,8 @@ export default function CreateTicket() {
         category_id: categoryId,
         company_id: company.id,
         created_by: user.id,
-        assigned_to: formData.assigned_to || null,
-        client_id: clientId || null
+        assigned_to: formData.assigned_to === 'unassigned' ? null : formData.assigned_to || null,
+        client_id: formData.client_id === 'none' ? null : clientId || null
       };
 
       if (isEditing && editingTicketId) {
@@ -397,7 +397,7 @@ export default function CreateTicket() {
                       <SelectValue placeholder="Selecione um técnico" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Não atribuído</SelectItem>
+                      <SelectItem value="unassigned">Não atribuído</SelectItem>
                       {technicians.map((tech) => (
                         <SelectItem key={tech.id} value={tech.id}>
                           {tech.name}
@@ -418,7 +418,7 @@ export default function CreateTicket() {
                       <SelectValue placeholder="Selecione um cliente" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sem cliente</SelectItem>
+                      <SelectItem value="none">Sem cliente</SelectItem>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
                           {client.name} {client.company_name && `(${client.company_name})`}
