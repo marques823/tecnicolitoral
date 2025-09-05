@@ -44,6 +44,7 @@ export default function CreateTicket() {
   const [technicians, setTechnicians] = useState<Profile[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -230,17 +231,24 @@ export default function CreateTicket() {
         }
       }
 
-      const ticketData = {
+      const ticketData: any = {
         title: formData.title.trim(),
         description: formData.description.trim(),
         priority: formData.priority,
         status: formData.status,
         category_id: categoryId,
         company_id: company.id,
-        created_by: user.id,
-        assigned_to: formData.assigned_to === 'unassigned' || !formData.assigned_to ? null : formData.assigned_to,
-        client_id: formData.client_id === 'none' || !formData.client_id ? null : clientId
+        created_by: user.id
       };
+
+      // Only add optional fields if they have valid values
+      if (formData.assigned_to && formData.assigned_to !== 'unassigned') {
+        ticketData.assigned_to = formData.assigned_to;
+      }
+      
+      if (clientId && formData.client_id !== 'none') {
+        ticketData.client_id = clientId;
+      }
 
       if (isEditing && editingTicketId) {
         const { error } = await supabase
@@ -432,37 +440,74 @@ export default function CreateTicket() {
 
             {profile?.role !== 'client_user' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Novo Cliente (opcional)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new_client_name">Nome do Cliente</Label>
-                    <Input
-                      id="new_client_name"
-                      value={formData.new_client_name}
-                      onChange={(e) => setFormData({ ...formData, new_client_name: e.target.value })}
-                      placeholder="Nome do novo cliente"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new_client_email">Email</Label>
-                    <Input
-                      id="new_client_email"
-                      type="email"
-                      value={formData.new_client_email}
-                      onChange={(e) => setFormData({ ...formData, new_client_email: e.target.value })}
-                      placeholder="email@exemplo.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new_client_phone">Telefone</Label>
-                    <Input
-                      id="new_client_phone"
-                      value={formData.new_client_phone}
-                      onChange={(e) => setFormData({ ...formData, new_client_phone: e.target.value })}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Cliente</h3>
+                  {!showNewClientForm && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowNewClientForm(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Adicionar Novo Cliente
+                    </Button>
+                  )}
                 </div>
+                
+                {showNewClientForm && (
+                  <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Novo Cliente</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowNewClientForm(false);
+                          setFormData({
+                            ...formData,
+                            new_client_name: '',
+                            new_client_email: '',
+                            new_client_phone: ''
+                          });
+                        }}
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="new_client_name">Nome do Cliente</Label>
+                        <Input
+                          id="new_client_name"
+                          value={formData.new_client_name}
+                          onChange={(e) => setFormData({ ...formData, new_client_name: e.target.value })}
+                          placeholder="Nome do novo cliente"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new_client_email">Email</Label>
+                        <Input
+                          id="new_client_email"
+                          type="email"
+                          value={formData.new_client_email}
+                          onChange={(e) => setFormData({ ...formData, new_client_email: e.target.value })}
+                          placeholder="email@exemplo.com"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new_client_phone">Telefone</Label>
+                        <Input
+                          id="new_client_phone"
+                          value={formData.new_client_phone}
+                          onChange={(e) => setFormData({ ...formData, new_client_phone: e.target.value })}
+                          placeholder="(11) 99999-9999"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
