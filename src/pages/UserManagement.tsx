@@ -21,9 +21,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import UserForm from '@/components/UserForm';
-import UserDetailModal from '@/components/UserDetailModal';
-import PasswordResetModal from '@/components/PasswordResetModal';
-import EmailChangeModal from '@/components/EmailChangeModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 

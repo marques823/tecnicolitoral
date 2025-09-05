@@ -26,6 +26,11 @@ import TechnicalNotes from "./pages/TechnicalNotes";
 import PlanSelection from "./pages/PlanSelection";
 import SuperAdmin from "./pages/SuperAdmin";
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
+import ChangeEmail from "./pages/ChangeEmail";
+import ResetPassword from "./pages/ResetPassword";
+import CreateTechnicalNote from "./pages/CreateTechnicalNote";
+import ShareTicket from "./pages/ShareTicket";
+import UserDetails from "./pages/UserDetails";
 
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -53,10 +58,19 @@ const AppContent = () => {
            <Route path="/users" element={<UserManagement />} />
            <Route path="/tickets" element={<Tickets />} />
            <Route path="/tickets/create" element={<CreateTicket />} />
+           <Route path="/tickets/edit/:ticketId" element={<CreateTicket />} />
+           <Route path="/tickets/share/:ticketId" element={<ShareTicket />} />
            <Route path="/clients" element={<Clients />} />
            <Route path="/clients/create" element={<CreateClient />} />
+           <Route path="/clients/edit/:clientId" element={<CreateClient />} />
            <Route path="/categories" element={<Categories />} />
            <Route path="/categories/create" element={<CreateCategory />} />
+           <Route path="/categories/edit/:categoryId" element={<CreateCategory />} />
+           <Route path="/technical-notes/create" element={<CreateTechnicalNote />} />
+           <Route path="/technical-notes/edit/:noteId" element={<CreateTechnicalNote />} />
+           <Route path="/users/details/:userId" element={<UserDetails />} />
+           <Route path="/change-email" element={<ChangeEmail />} />
+           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/settings" element={<Settings />} />
