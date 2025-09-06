@@ -89,8 +89,8 @@ const Dashboard = () => {
     let ticketsQuery = supabase.from('tickets').select('status, resolved_at');
 
     if (profile?.role === 'client_user') {
-      // Cliente só vê seus próprios tickets
-      ticketsQuery = ticketsQuery.eq('created_by', user?.id);
+      // Cliente vê tickets que criou e tickets atribuídos a ele
+      ticketsQuery = ticketsQuery.or(`created_by.eq.${user?.id},assigned_to.eq.${user?.id}`);
     } else if (profile?.role === 'technician') {
       // Técnico vê tickets atribuídos a ele e tickets não atribuídos
       ticketsQuery = ticketsQuery.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
@@ -149,7 +149,7 @@ const Dashboard = () => {
       .limit(5);
 
     if (profile?.role === 'client_user') {
-      ticketQuery = ticketQuery.eq('created_by', user?.id);
+      ticketQuery = ticketQuery.or(`created_by.eq.${user?.id},assigned_to.eq.${user?.id}`);
     } else if (profile?.role === 'technician') {
       ticketQuery = ticketQuery.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
     }

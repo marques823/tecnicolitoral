@@ -59,7 +59,7 @@ interface Ticket {
   } | null;
 }
 
-export default function Tickets() {
+function Tickets() {
   const navigate = useNavigate();
   const { user, profile, company, loading } = useAuth();
   const { toast } = useToast();
@@ -301,7 +301,7 @@ export default function Tickets() {
           </Card>
         ) : (
           filteredTickets.map((ticket) => (
-            <Card key={ticket.id} className="hover:shadow-md transition-shadow">
+            <Card key={ticket.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/tickets/${ticket.id}`)}>
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-2">
@@ -398,3 +398,5 @@ export default function Tickets() {
     </div>
   );
 }
+
+export default Tickets;

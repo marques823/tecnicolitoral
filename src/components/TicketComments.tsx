@@ -197,3 +197,5 @@ export const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps
     </div>
   );
 };
+
+export default TicketComments;

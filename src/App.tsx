@@ -31,6 +31,7 @@ import ResetPassword from "./pages/ResetPassword";
 import CreateTechnicalNote from "./pages/CreateTechnicalNote";
 import ShareTicket from "./pages/ShareTicket";
 import UserDetails from "./pages/UserDetails";
+import TicketDetails from "./pages/TicketDetails";
 
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -56,10 +57,11 @@ const AppContent = () => {
             <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
             <Route path="/dashboard" element={<Dashboard />} />
            <Route path="/users" element={<UserManagement />} />
-           <Route path="/tickets" element={<Tickets />} />
-           <Route path="/tickets/create" element={<CreateTicket />} />
-           <Route path="/tickets/edit/:ticketId" element={<CreateTicket />} />
-           <Route path="/tickets/share/:ticketId" element={<ShareTicket />} />
+            <Route path="/tickets" element={<Tickets />} />
+            <Route path="/tickets/create" element={<CreateTicket />} />
+            <Route path="/tickets/edit/:ticketId" element={<CreateTicket />} />
+            <Route path="/tickets/:ticketId" element={<TicketDetails />} />
+            <Route path="/tickets/share/:ticketId" element={<ShareTicket />} />
            <Route path="/clients" element={<Clients />} />
            <Route path="/clients/create" element={<CreateClient />} />
            <Route path="/clients/edit/:clientId" element={<CreateClient />} />

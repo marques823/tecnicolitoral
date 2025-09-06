@@ -30,7 +30,7 @@ interface TicketHistoryProps {
   ticketId: string;
 }
 
-export default function TicketHistory({ ticketId }: TicketHistoryProps) {
+function TicketHistory({ ticketId }: TicketHistoryProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [comments, setComments] = useState<TicketComment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,3 +205,5 @@ export default function TicketHistory({ ticketId }: TicketHistoryProps) {
     </div>
   );
 }
+
+export default TicketHistory;
