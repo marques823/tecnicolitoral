@@ -341,7 +341,7 @@ function Tickets() {
                         value={ticket.status || 'open'} 
                         onValueChange={(value: TicketStatus) => handleStatusChange(ticket.id, value)}
                       >
-                        <SelectTrigger className="w-40">
+                        <SelectTrigger className="w-40" onClick={(e) => e.stopPropagation()}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -355,7 +355,7 @@ function Tickets() {
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>

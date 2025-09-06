@@ -27,7 +27,7 @@ interface TicketCommentsProps {
   canAddComments: boolean;
 }
 
-export const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps) => {
+const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps) => {
   const [comments, setComments] = useState<TicketComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);

@@ -59,23 +59,19 @@ const TicketDetails = () => {
     try {
       setLoading(true);
       
-      // Base query
-      let query = supabase
+      // Buscar ticket básico primeiro
+      const { data: ticket, error: ticketError } = await supabase
         .from('tickets')
         .select(`
           *,
           categories(name),
-          clients(name),
-          creator_profile:profiles!tickets_created_by_fkey(name),
-          assigned_profile:profiles!tickets_assigned_to_fkey(name)
+          clients(name)
         `)
         .eq('id', ticketId)
-        .single();
+        .maybeSingle();
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error loading ticket:', error);
+      if (ticketError) {
+        console.error('Error loading ticket:', ticketError);
         toast({
           title: "Erro",
           description: "Não foi possível carregar o chamado.",
@@ -85,7 +81,36 @@ const TicketDetails = () => {
         return;
       }
 
-      setTicket(data as any);
+      if (!ticket) {
+        toast({
+          title: "Erro",
+          description: "Chamado não encontrado ou você não tem acesso a ele.",
+          variant: "destructive",
+        });
+        navigate('/tickets');
+        return;
+      }
+
+      // Buscar informações dos usuários usando a função RPC
+      const userIds = [ticket.created_by, ticket.assigned_to].filter(Boolean);
+      let profiles = [];
+      
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .rpc('get_basic_profiles', { target_company_id: profile.company_id })
+          .in('user_id', userIds);
+        
+        profiles = profilesData || [];
+      }
+
+      const creatorProfile = profiles.find(p => p.user_id === ticket.created_by);
+      const assignedProfile = profiles.find(p => p.user_id === ticket.assigned_to);
+
+      setTicket({
+        ...ticket,
+        creator_profile: creatorProfile ? { name: creatorProfile.name } : null,
+        assigned_profile: assignedProfile ? { name: assignedProfile.name } : null
+      });
     } catch (error) {
       console.error('Error loading ticket:', error);
       toast({
