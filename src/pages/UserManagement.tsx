@@ -50,12 +50,6 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [showUserDetail, setShowUserDetail] = useState(false);
-  const [showPasswordReset, setShowPasswordReset] = useState(false);
-  const [showEmailChange, setShowEmailChange] = useState(false);
-  const [passwordResetUser, setPasswordResetUser] = useState<UserProfile | null>(null);
-  const [emailChangeUser, setEmailChangeUser] = useState<UserProfile | null>(null);
 
   // Verificar se o usuário é Company Admin
   useEffect(() => {
@@ -171,20 +165,15 @@ const UserManagement = () => {
   };
 
   const handleUserClick = (user: UserProfile) => {
-    setSelectedUser(user);
-    setShowUserDetail(true);
+    navigate(`/user-details/${user.id}`);
   };
 
   const handleResetPassword = (user: UserProfile) => {
-    setPasswordResetUser(user);
-    setShowPasswordReset(true);
-    setShowUserDetail(false);
+    navigate(`/reset-password/${user.id}`);
   };
 
   const handleChangeEmail = (user: UserProfile) => {
-    setEmailChangeUser(user);
-    setShowEmailChange(true);
-    setShowUserDetail(false);
+    navigate(`/change-email/${user.id}`);
   };
 
   const handleDeleteUser = async (user: UserProfile) => {
@@ -208,8 +197,6 @@ const UserManagement = () => {
         description: "O usuário foi excluído com sucesso.",
       });
 
-      setShowUserDetail(false);
-      setSelectedUser(null);
       loadUsers();
     } catch (error: any) {
       console.error('Error deleting user:', error);
@@ -449,46 +436,6 @@ const UserManagement = () => {
         />
       )}
 
-      {/* User Detail Modal */}
-      {showUserDetail && selectedUser && (
-        <UserDetailModal
-          user={selectedUser}
-          open={showUserDetail}
-          onClose={() => {
-            setShowUserDetail(false);
-            setSelectedUser(null);
-          }}
-          onEdit={handleEditUser}
-          onToggleStatus={handleToggleUserStatus}
-          onResetPassword={handleResetPassword}
-          onChangeEmail={handleChangeEmail}
-          onDelete={handleDeleteUser}
-        />
-      )}
-
-      {/* Password Reset Modal */}
-      {showPasswordReset && passwordResetUser && (
-        <PasswordResetModal
-          user={passwordResetUser}
-          open={showPasswordReset}
-          onClose={() => {
-            setShowPasswordReset(false);
-            setPasswordResetUser(null);
-          }}
-        />
-      )}
-
-      {/* Email Change Modal */}
-      {showEmailChange && emailChangeUser && (
-        <EmailChangeModal
-          user={emailChangeUser}
-          open={showEmailChange}
-          onClose={() => {
-            setShowEmailChange(false);
-            setEmailChangeUser(null);
-          }}
-        />
-      )}
     </div>
   );
 };
