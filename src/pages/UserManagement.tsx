@@ -114,12 +114,12 @@ const UserManagement = () => {
   };
 
   const handleCreateUser = () => {
-    // Verificar limite de usuários
-    const activeUsers = users.filter(u => u.active).length;
-    if (plan && activeUsers >= plan.max_users) {
+    // Verificar limite de usuários (excluindo admins da empresa)
+    const activeNonAdminUsers = users.filter(u => u.active && u.role !== 'company_admin').length;
+    if (plan && activeNonAdminUsers >= plan.max_users) {
       toast({
         title: "Limite de usuários atingido",
-        description: `Seu plano permite no máximo ${plan.max_users} usuários ativos.`,
+        description: `Seu plano permite no máximo ${plan.max_users} usuários ativos (administradores não contam no limite).`,
         variant: "destructive",
       });
       return;

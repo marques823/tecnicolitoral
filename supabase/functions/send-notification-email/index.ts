@@ -46,9 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('tickets')
       .select(`
         *,
-        categories (name),
-        profiles!tickets_created_by_fkey (name, user_id),
-        assigned_profile:profiles!tickets_assigned_to_fkey (name, user_id)
+        categories (name)
       `)
       .eq('id', notification.ticket_id)
       .single();
@@ -88,10 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Buscar configurações de notificação e emails dos usuários
     const { data: usersToNotify, error: usersError } = await supabase
       .from('user_notification_settings')
-      .select(`
-        *,
-        profiles!user_notification_settings_user_id_fkey (name, user_id)
-      `)
+      .select('*')
       .in('user_id', uniqueUserIds);
 
     if (usersError) {

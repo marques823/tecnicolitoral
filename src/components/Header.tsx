@@ -165,6 +165,7 @@ export default function Header() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Menu"
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
@@ -172,6 +173,52 @@ export default function Header() {
         </div>
       </header>
       
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block fixed left-0 top-[73px] h-[calc(100vh-73px)] w-64 bg-background border-r border-border z-40 overflow-y-auto">
+        <div className="p-4">
+          {/* User Info in Sidebar */}
+          <div className="flex items-center space-x-3 mb-6 p-3 bg-muted/50 rounded-lg">
+            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+              <User className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">{profile?.name || user.email}</p>
+              <p className="text-xs text-muted-foreground">
+                 {profile?.role === 'company_admin' ? 'Admin da Empresa' : 
+                  profile?.role === 'technician' ? 'Técnico' : 
+                  profile?.role === 'system_owner' ? 'System Owner' : 'Cliente'}
+              </p>
+            </div>
+          </div>
+          
+          {/* Navigation Menu */}
+          <nav className="space-y-2">
+            {getMenuItems().map((item) => (
+              <Button
+                key={item.path}
+                variant="ghost"
+                className="w-full justify-start h-11"
+                onClick={() => navigate(item.path)}
+              >
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.label}
+              </Button>
+            ))}
+            
+            <div className="pt-4 border-t border-border">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-5 h-5 mr-3" />
+                Sair
+              </Button>
+            </div>
+          </nav>
+        </div>
+      </div>
+
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <>
@@ -179,7 +226,7 @@ export default function Header() {
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="fixed top-[73px] left-0 h-full w-80 max-w-[80vw] bg-background border-r border-border z-50 lg:hidden overflow-y-auto">
+          <div className="fixed top-[73px] left-0 h-[calc(100vh-73px)] w-80 max-w-[80vw] bg-background border-r border-border z-50 lg:hidden overflow-y-auto">
             <div className="p-4">
               {/* User Info in Mobile */}
               <div className="flex items-center space-x-3 mb-6 p-3 bg-muted/50 rounded-lg">

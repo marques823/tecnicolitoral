@@ -44,11 +44,12 @@ const AppContent = () => {
   useNotificationHandler();
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-background">
       <Header />
       <NavigationMenu />
-      <main className="flex-1">
-        <Routes>
+      <div className="lg:pl-64">
+        <main className="min-h-[calc(100vh-73px)]">
+          <Routes>
           <Route path="/" element={<IndexLanding />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/plan-selection" element={<PlanSelection />} />
@@ -84,7 +85,8 @@ const AppContent = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

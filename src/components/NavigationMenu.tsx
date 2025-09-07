@@ -68,9 +68,9 @@ export default function NavigationMenu() {
   if (!profile) return null;
 
   return (
-    <nav className="bg-background border-b border-border sticky top-[73px] z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex space-x-1 overflow-x-auto py-2">
+    <nav className="bg-background border-b border-border sticky top-[73px] z-40 lg:hidden">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
+        <div className="flex space-x-1 overflow-x-auto py-2 scrollbar-none">
           {getMenuItems().map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -79,13 +79,16 @@ export default function NavigationMenu() {
                 variant={isActive ? "default" : "ghost"}
                 size="sm"
                 className={cn(
-                  "flex items-center space-x-2 whitespace-nowrap shrink-0",
+                  "flex flex-col items-center justify-center min-w-[60px] h-14 px-2 py-1 shrink-0",
+                  "text-xs gap-1",
                   isActive && "bg-primary text-primary-foreground"
                 )}
                 onClick={() => navigate(item.path)}
               >
-                <item.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{item.label}</span>
+                <item.icon className="w-5 h-5" />
+                <span className="text-[10px] leading-none text-center max-w-[50px] truncate">
+                  {item.label}
+                </span>
               </Button>
             );
           })}
