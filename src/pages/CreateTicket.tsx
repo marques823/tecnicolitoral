@@ -51,10 +51,9 @@ export default function CreateTicket() {
     description: '',
     priority: 'medium' as TicketPriority,
     status: 'open' as TicketStatus,
-    category_id: '',
+    category: '', // Mudança: campo unificado para categoria
     assigned_to: '',
     client_id: '',
-    new_category_name: '',
     new_client_name: '',
     new_client_email: '',
     new_client_phone: ''
@@ -146,7 +145,7 @@ export default function CreateTicket() {
         description: data.description,
         priority: data.priority || 'medium',
         status: data.status || 'open',
-        category_id: data.category_id,
+        category: data.category_id,
         assigned_to: data.assigned_to || '',
         client_id: data.client_id || ''
       });
@@ -209,12 +208,16 @@ export default function CreateTicket() {
     try {
       setLoading(true);
 
-      let categoryId = formData.category_id;
+      let categoryId = '';
       let clientId = formData.client_id;
 
-      // Create new category if needed
-      if (formData.new_category_name.trim()) {
-        categoryId = await createCategory(formData.new_category_name);
+      // Verifica se a categoria é uma existente ou nova
+      const existingCategory = categories.find(cat => cat.id === formData.category || cat.name === formData.category);
+      if (existingCategory) {
+        categoryId = existingCategory.id;
+      } else if (formData.category.trim()) {
+        // Cria nova categoria se não existe
+        categoryId = await createCategory(formData.category);
       }
 
       // Create new client if needed
@@ -345,13 +348,24 @@ export default function CreateTicket() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="new_category">Nova Categoria (opcional)</Label>
-                <Input
-                  id="new_category"
-                  value={formData.new_category_name}
-                  onChange={(e) => setFormData({ ...formData, new_category_name: e.target.value })}
-                  placeholder="Digite o nome da nova categoria"
-                />
+                <Label htmlFor="category">Categoria *</Label>
+                <div className="relative">
+                  <Input
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="Digite o nome da categoria ou selecione uma existente"
+                    list="categories-list"
+                  />
+                  <datalist id="categories-list">
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.name} />
+                    ))}
+                  </datalist>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Digite uma nova categoria ou selecione uma existente da lista
+                </p>
               </div>
 
               {profile?.role !== 'client_user' && showNewClientForm && (
@@ -451,21 +465,24 @@ export default function CreateTicket() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
-                  <Select value={formData.category_id} onValueChange={(value) => 
-                    setFormData({ ...formData, category_id: value })
-                  }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
+                  <Label htmlFor="category">Categoria *</Label>
+                  <div className="relative">
+                    <Input
+                      id="category"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      placeholder="Digite o nome da categoria ou selecione uma existente"
+                      list="categories-list"
+                    />
+                    <datalist id="categories-list">
                       {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
+                        <option key={category.id} value={category.name} />
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </datalist>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Digite uma nova categoria ou selecione uma existente da lista
+                  </p>
                 </div>
 
                 {profile?.role !== 'client_user' && technicians.length > 0 && (
