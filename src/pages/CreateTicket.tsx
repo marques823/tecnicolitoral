@@ -319,7 +319,8 @@ export default function CreateTicket() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Campos de digitação primeiro */}
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="title">Título *</Label>
                 <Input
@@ -332,57 +333,15 @@ export default function CreateTicket() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="priority">Prioridade</Label>
-                <Select value={formData.priority} onValueChange={(value: TicketPriority) => 
-                  setFormData({ ...formData, priority: value })
-                }>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Baixa</SelectItem>
-                    <SelectItem value="medium">Média</SelectItem>
-                    <SelectItem value="high">Alta</SelectItem>
-                    <SelectItem value="urgent">Urgente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {profile?.role !== 'client_user' && (
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value: TicketStatus) => 
-                    setFormData({ ...formData, status: value })
-                  }>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="open">Aberto</SelectItem>
-                      <SelectItem value="in_progress">Em Andamento</SelectItem>
-                      <SelectItem value="resolved">Resolvido</SelectItem>
-                      <SelectItem value="closed">Fechado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria</Label>
-                <Select value={formData.category_id} onValueChange={(value) => 
-                  setFormData({ ...formData, category_id: value })
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="description">Descrição *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Descreva detalhadamente o problema ou solicitação"
+                  rows={6}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -395,132 +354,176 @@ export default function CreateTicket() {
                 />
               </div>
 
-              {profile?.role !== 'client_user' && technicians.length > 0 && (
-                <div className="space-y-2">
-                  <Label htmlFor="assigned_to">Atribuir para</Label>
-                  <Select value={formData.assigned_to} onValueChange={(value) => 
-                    setFormData({ ...formData, assigned_to: value })
-                  }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um técnico" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Não atribuído</SelectItem>
-                      {technicians.map((tech) => (
-                        <SelectItem key={tech.id} value={tech.id}>
-                          {tech.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {profile?.role !== 'client_user' && clients.length > 0 && (
-                <div className="space-y-2">
-                  <Label htmlFor="client">Cliente</Label>
-                  <Select value={formData.client_id} onValueChange={(value) => 
-                    setFormData({ ...formData, client_id: value })
-                  }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sem cliente</SelectItem>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.name} {client.company_name && `(${client.company_name})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {profile?.role !== 'client_user' && showNewClientForm && (
+                <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Novo Cliente</h4>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowNewClientForm(false);
+                        setFormData({
+                          ...formData,
+                          new_client_name: '',
+                          new_client_email: '',
+                          new_client_phone: ''
+                        });
+                      }}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="new_client_name">Nome do Cliente</Label>
+                      <Input
+                        id="new_client_name"
+                        value={formData.new_client_name}
+                        onChange={(e) => setFormData({ ...formData, new_client_name: e.target.value })}
+                        placeholder="Nome do novo cliente"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new_client_email">Email</Label>
+                      <Input
+                        id="new_client_email"
+                        type="email"
+                        value={formData.new_client_email}
+                        onChange={(e) => setFormData({ ...formData, new_client_email: e.target.value })}
+                        placeholder="email@exemplo.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new_client_phone">Telefone</Label>
+                      <Input
+                        id="new_client_phone"
+                        value={formData.new_client_phone}
+                        onChange={(e) => setFormData({ ...formData, new_client_phone: e.target.value })}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {profile?.role !== 'client_user' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">Cliente</h3>
-                  {!showNewClientForm && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowNewClientForm(true)}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Adicionar Novo Cliente
-                    </Button>
-                  )}
+            {/* Campos de seleção/auto preenchimento por último */}
+            <div className="space-y-6 border-t pt-6">
+              <h3 className="text-lg font-medium text-foreground">Configurações do Chamado</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Prioridade</Label>
+                  <Select value={formData.priority} onValueChange={(value: TicketPriority) => 
+                    setFormData({ ...formData, priority: value })
+                  }>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Baixa</SelectItem>
+                      <SelectItem value="medium">Média</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="urgent">Urgente</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                
-                {showNewClientForm && (
-                  <div className="space-y-4 border rounded-lg p-4 bg-muted/50">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Novo Cliente</h4>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setShowNewClientForm(false);
-                          setFormData({
-                            ...formData,
-                            new_client_name: '',
-                            new_client_email: '',
-                            new_client_phone: ''
-                          });
-                        }}
-                      >
-                        ✕
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="new_client_name">Nome do Cliente</Label>
-                        <Input
-                          id="new_client_name"
-                          value={formData.new_client_name}
-                          onChange={(e) => setFormData({ ...formData, new_client_name: e.target.value })}
-                          placeholder="Nome do novo cliente"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new_client_email">Email</Label>
-                        <Input
-                          id="new_client_email"
-                          type="email"
-                          value={formData.new_client_email}
-                          onChange={(e) => setFormData({ ...formData, new_client_email: e.target.value })}
-                          placeholder="email@exemplo.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new_client_phone">Telefone</Label>
-                        <Input
-                          id="new_client_phone"
-                          value={formData.new_client_phone}
-                          onChange={(e) => setFormData({ ...formData, new_client_phone: e.target.value })}
-                          placeholder="(11) 99999-9999"
-                        />
-                      </div>
-                    </div>
+
+                {profile?.role !== 'client_user' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={formData.status} onValueChange={(value: TicketStatus) => 
+                      setFormData({ ...formData, status: value })
+                    }>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">Aberto</SelectItem>
+                        <SelectItem value="in_progress">Em Andamento</SelectItem>
+                        <SelectItem value="resolved">Resolvido</SelectItem>
+                        <SelectItem value="closed">Fechado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoria</Label>
+                  <Select value={formData.category_id} onValueChange={(value) => 
+                    setFormData({ ...formData, category_id: value })
+                  }>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {profile?.role !== 'client_user' && technicians.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="assigned_to">Atribuir para</Label>
+                    <Select value={formData.assigned_to} onValueChange={(value) => 
+                      setFormData({ ...formData, assigned_to: value })
+                    }>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um técnico" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">Não atribuído</SelectItem>
+                        {technicians.map((tech) => (
+                          <SelectItem key={tech.id} value={tech.id}>
+                            {tech.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {profile?.role !== 'client_user' && clients.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="client">Cliente</Label>
+                    <Select value={formData.client_id} onValueChange={(value) => 
+                      setFormData({ ...formData, client_id: value })
+                    }>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um cliente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sem cliente</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name} {client.company_name && `(${client.company_name})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição *</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descreva detalhadamente o problema ou solicitação"
-                rows={6}
-                required
-              />
+              {profile?.role !== 'client_user' && !showNewClientForm && (
+                <div className="flex justify-start">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowNewClientForm(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Novo Cliente
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-3 pt-6">
