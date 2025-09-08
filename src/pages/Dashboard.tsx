@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   Ticket, 
   Users, 
@@ -14,12 +16,13 @@ import {
   Plus,
   LogOut,
   User,
-  Tags,
-  Crown,
-  Sliders,
-  FileText,
-  Shield
+  Calendar,
+  TrendingUp,
+  Clock,
+  Download
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { exportReportToPDF } from '@/utils/pdfExport';
 
 interface DashboardStats {
   totalTickets: number;
@@ -38,6 +41,35 @@ interface RecentTicket {
   created_at: string;
 }
 
+interface TicketStats {
+  total: number;
+  open: number;
+  in_progress: number;
+  resolved: number;
+  closed: number;
+}
+
+interface CategoryStats {
+  name: string;
+  count: number;
+}
+
+interface PriorityStats {
+  priority: string;
+  count: number;
+}
+
+interface MonthlyStats {
+  month: string;
+  count: number;
+}
+
+interface UserStats {
+  user_name: string;
+  assigned_count: number;
+  resolved_count: number;
+}
+
 const Dashboard = () => {
   const { user, profile, company, signOut, loading } = useAuth();
   const navigate = useNavigate();
@@ -52,6 +84,20 @@ const Dashboard = () => {
   const [recentTickets, setRecentTickets] = useState<RecentTicket[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Reports data
+  const [period, setPeriod] = useState('30');
+  const [ticketStats, setTicketStats] = useState<TicketStats>({
+    total: 0,
+    open: 0,
+    in_progress: 0,
+    resolved: 0,
+    closed: 0
+  });
+  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
+  const [priorityStats, setPriorityStats] = useState<PriorityStats[]>([]);
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
+  const [userStats, setUserStats] = useState<UserStats[]>([]);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -63,6 +109,12 @@ const Dashboard = () => {
       loadDashboardData();
     }
   }, [user, profile, company]);
+
+  useEffect(() => {
+    if (user && profile && company && (profile.role === 'company_admin' || profile.role === 'technician')) {
+      loadReports();
+    }
+  }, [period, user, profile, company]);
 
   const loadDashboardData = async () => {
     if (!profile?.company_id) return;
@@ -83,7 +135,6 @@ const Dashboard = () => {
 
   const loadTicketStats = async () => {
     const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // Total de tickets baseado no role do usuário
     let ticketsQuery = supabase.from('tickets').select('status, resolved_at');
@@ -133,9 +184,12 @@ const Dashboard = () => {
         .single()
     ]);
 
+    // Filtrar usuários excluindo company_admin da contagem
+    const nonAdminUsers = activeUsers?.filter(user => user.role !== 'company_admin') || [];
+
     setStats(prev => ({
       ...prev,
-      activeUsers: activeUsers?.length || 0,
+      activeUsers: nonAdminUsers.length,
       maxUsers: (plans as any)?.plans?.max_users || 0
     }));
   };
@@ -180,6 +234,174 @@ const Dashboard = () => {
     setRecentTickets(formattedTickets);
   };
 
+  // Reports functions
+  const loadReports = async () => {
+    if (!profile?.company_id) return;
+    
+    try {
+      await Promise.all([
+        loadReportTicketStats(),
+        loadCategoryStats(),
+        loadPriorityStats(),
+        loadMonthlyStats(),
+        loadUserReportStats()
+      ]);
+    } catch (error) {
+      console.error('Erro ao carregar relatórios:', error);
+    }
+  };
+
+  const loadReportTicketStats = async () => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(period));
+    
+    const { data } = await supabase
+      .from('tickets')
+      .select('status')
+      .gte('created_at', startDate.toISOString());
+
+    const stats = {
+      total: data?.length || 0,
+      open: data?.filter(t => t.status === 'open').length || 0,
+      in_progress: data?.filter(t => t.status === 'in_progress').length || 0,
+      resolved: data?.filter(t => t.status === 'resolved').length || 0,
+      closed: data?.filter(t => t.status === 'closed').length || 0
+    };
+
+    setTicketStats(stats);
+  };
+
+  const loadCategoryStats = async () => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(period));
+    
+    const { data } = await supabase
+      .from('tickets')
+      .select('category_id, categories(name)')
+      .gte('created_at', startDate.toISOString());
+
+    const categoryMap = new Map();
+    data?.forEach(ticket => {
+      const categoryName = (ticket.categories as any)?.name || 'Sem categoria';
+      categoryMap.set(categoryName, (categoryMap.get(categoryName) || 0) + 1);
+    });
+
+    const stats = Array.from(categoryMap.entries()).map(([name, count]) => ({
+      name,
+      count: count as number
+    }));
+
+    setCategoryStats(stats);
+  };
+
+  const loadPriorityStats = async () => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(period));
+    
+    const { data } = await supabase
+      .from('tickets')
+      .select('priority')
+      .gte('created_at', startDate.toISOString());
+
+    const priorityMap = new Map();
+    data?.forEach(ticket => {
+      const priority = ticket.priority || 'medium';
+      priorityMap.set(priority, (priorityMap.get(priority) || 0) + 1);
+    });
+
+    const stats = Array.from(priorityMap.entries()).map(([priority, count]) => ({
+      priority,
+      count: count as number
+    }));
+
+    setPriorityStats(stats);
+  };
+
+  const loadMonthlyStats = async () => {
+    const { data } = await supabase
+      .from('tickets')
+      .select('created_at')
+      .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: true });
+
+    const monthlyMap = new Map();
+    data?.forEach(ticket => {
+      const date = new Date(ticket.created_at);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + 1);
+    });
+
+    const stats = Array.from(monthlyMap.entries()).map(([month, count]) => ({
+      month,
+      count: count as number
+    }));
+
+    setMonthlyStats(stats);
+  };
+
+  const loadUserReportStats = async () => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(period));
+    
+    const { data } = await supabase
+      .from('tickets')
+      .select('assigned_to, status')
+      .gte('created_at', startDate.toISOString())
+      .not('assigned_to', 'is', null);
+
+    if (!data || data.length === 0) {
+      setUserStats([]);
+      return;
+    }
+
+    const userIds = [...new Set(data.map(t => t.assigned_to))];
+    const { data: profiles } = await supabase
+      .rpc('get_basic_profiles', { target_company_id: profile?.company_id })
+      .in('user_id', userIds);
+
+    const userMap = new Map();
+    data.forEach(ticket => {
+      const userId = ticket.assigned_to;
+      if (!userMap.has(userId)) {
+        userMap.set(userId, { assigned: 0, resolved: 0 });
+      }
+      
+      const userStat = userMap.get(userId);
+      userStat.assigned++;
+      if (ticket.status === 'resolved') {
+        userStat.resolved++;
+      }
+    });
+
+    const profileMap = new Map(profiles?.map(p => [p.user_id, p.name]) || []);
+
+    const stats = Array.from(userMap.entries()).map(([userId, stats]) => ({
+      user_name: profileMap.get(userId) || 'Usuário desconhecido',
+      assigned_count: stats.assigned,
+      resolved_count: stats.resolved
+    }));
+
+    setUserStats(stats);
+  };
+
+  const handleExportPDF = async () => {
+    const reportData = {
+      period,
+      totalTickets: ticketStats.total,
+      openTickets: ticketStats.open,
+      inProgressTickets: ticketStats.in_progress,
+      resolvedTickets: ticketStats.resolved,
+      closedTickets: ticketStats.closed,
+      categoryStats,
+      priorityStats,
+      monthlyStats,
+      userStats,
+      companyName: company?.name || 'Empresa'
+    };
+    
+    await exportReportToPDF(reportData);
+  };
+
   const getStatusLabel = (status: string) => {
     const labels = {
       open: 'Aberto',
@@ -199,6 +421,27 @@ const Dashboard = () => {
     } as const;
     return variants[status as keyof typeof variants] || 'outline';
   };
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      open: 'bg-destructive',
+      in_progress: 'bg-primary',
+      resolved: 'bg-success',
+      closed: 'bg-muted'
+    };
+    return colors[status as keyof typeof colors] || 'bg-muted';
+  };
+
+  const getPriorityColor = (priority: string) => {
+    const colors = {
+      low: 'bg-success',
+      medium: 'bg-warning',
+      high: 'bg-destructive'
+    };
+    return colors[priority as keyof typeof colors] || 'bg-muted';
+  };
+
+  const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'];
 
   if (loading) {
     return (
@@ -363,7 +606,7 @@ const Dashboard = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">
                      {profile.role === 'company_admin' 
-                       ? `de ${stats.maxUsers} disponíveis`
+                       ? `de ${stats.maxUsers} disponíveis (excluindo admins)`
                        : 'Finalizados hoje'
                      }
                   </p>
@@ -371,8 +614,62 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Quick Actions */}
+            {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Recent Tickets */}
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Clock className="h-5 w-5 text-primary" />
+                    </div>
+                    Chamados Recentes
+                  </CardTitle>
+                  <CardDescription>
+                    Últimos 5 chamados criados
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {recentTickets.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">
+                      Nenhum chamado encontrado
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentTickets.map((ticket) => (
+                        <div 
+                          key={ticket.id} 
+                          className="flex items-center justify-between p-3 bg-background/50 rounded-lg hover:bg-background/80 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/ticket-details/${ticket.id}`)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{ticket.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              por {ticket.created_by_name}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={getStatusVariant(ticket.status)}>
+                              {getStatusLabel(ticket.status)}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-4">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => navigate('/tickets')}
+                    >
+                      Ver Todos os Chamados
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
               <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -401,70 +698,6 @@ const Dashboard = () => {
                     <Ticket className="mr-2 h-4 w-4" />
                     Gerenciar Chamados
                   </Button>
-                  {(profile.role === 'company_admin' || profile.role === 'technician') && (
-                    <Button 
-                      className="w-full justify-start" 
-                      variant="outline"
-                      onClick={() => navigate('/reports')}
-                    >
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      Relatórios
-                    </Button>
-                  )}
-                  {profile.role === 'company_admin' && (
-                    <>
-                      <Button 
-                        className="w-full justify-start" 
-                        variant="outline"
-                        onClick={() => navigate('/users')}
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        Usuários
-                      </Button>
-                      <Button 
-                        className="w-full justify-start" 
-                        variant="outline"
-                        onClick={() => navigate('/categories')}
-                      >
-                        <Tags className="mr-2 h-4 w-4" />
-                        Categorias
-                      </Button>
-                      <Button 
-                        className="w-full justify-start" 
-                        variant="outline"
-                        onClick={() => navigate('/plans')}
-                      >
-                        <Crown className="mr-2 h-4 w-4" />
-                        Planos
-                      </Button>
-                      <Button 
-                        className="w-full justify-start" 
-                        variant="outline"
-                        onClick={() => navigate('/custom-fields')}
-                      >
-                        <Sliders className="mr-2 h-4 w-4" />
-                        Campos Personalizados
-                      </Button>
-                      <Button 
-                        className="w-full justify-start" 
-                        variant="outline"
-                        onClick={() => navigate('/technical-notes')}
-                      >
-                        <FileText className="mr-2 h-4 w-4" />
-                        Notas Técnicas
-                      </Button>
-                    </>
-                  )}
-                  {profile.role === 'system_owner' && (
-                    <Button 
-                      className="w-full justify-start" 
-                      variant="outline"
-                      onClick={() => navigate('/super-admin')}
-                    >
-                      <Shield className="mr-2 h-4 w-4" />
-                      Super Admin
-                    </Button>
-                  )}
                   <Button
                     className="w-full justify-start" 
                     variant="outline"
@@ -475,69 +708,206 @@ const Dashboard = () => {
                   </Button>
                 </CardContent>
               </Card>
-
-              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Ticket className="h-5 w-5 text-primary" />
-                    </div>
-                    {profile.role === 'client_user' ? 'Meus Últimos Chamados' : 'Últimos Chamados'}
-                  </CardTitle>
-                  <CardDescription>
-                     {profile.role === 'client_user' 
-                       ? 'Seus chamados mais recentes'
-                       : 'Acompanhe os chamados mais recentes'
-                     }
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {loadingData ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="flex items-center justify-between p-4 bg-background/50 rounded-lg animate-pulse">
-                          <div className="space-y-2">
-                            <div className="h-4 bg-muted rounded w-32"></div>
-                            <div className="h-3 bg-muted rounded w-24"></div>
-                          </div>
-                          <div className="h-6 bg-muted rounded-full w-16"></div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : recentTickets.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Ticket className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
-                      <p className="text-muted-foreground">
-                        Nenhum chamado encontrado
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {recentTickets.map((ticket) => (
-                        <div 
-                          key={ticket.id} 
-                          className="flex items-center justify-between p-4 bg-background/50 rounded-lg hover:bg-background/70 transition-all duration-200 cursor-pointer border border-white/10"
-                          onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        >
-                          <div className="flex-1">
-                            <p className="font-medium text-foreground truncate">{ticket.title}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Criado por {ticket.created_by_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
-                            </p>
-                          </div>
-                          <Badge variant={getStatusVariant(ticket.status)}>
-                            {getStatusLabel(ticket.status)}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </div>
+
+            {/* Reports Section - Only for admins and technicians */}
+            {(profile.role === 'company_admin' || profile.role === 'technician') && (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                      <BarChart3 className="h-6 w-6 text-primary" />
+                      Relatórios
+                    </h2>
+                    <p className="text-muted-foreground">
+                      Análise de performance e estatísticas detalhadas
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 mt-4 sm:mt-0">
+                    <Button
+                      variant="outline"
+                      onClick={handleExportPDF}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Exportar PDF
+                    </Button>
+                    <Select value={period} onValueChange={setPeriod}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7">7 dias</SelectItem>
+                        <SelectItem value="30">30 dias</SelectItem>
+                        <SelectItem value="90">90 dias</SelectItem>
+                        <SelectItem value="365">1 ano</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Report Stats Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total</CardTitle>
+                      <Ticket className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ticketStats.total}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Abertos</CardTitle>
+                      <div className="w-4 h-4 bg-destructive rounded-full"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ticketStats.open}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Em Progresso</CardTitle>
+                      <div className="w-4 h-4 bg-warning rounded-full"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ticketStats.in_progress}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Resolvidos</CardTitle>
+                      <div className="w-4 h-4 bg-success rounded-full"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ticketStats.resolved}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Fechados</CardTitle>
+                      <div className="w-4 h-4 bg-muted rounded-full"></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{ticketStats.closed}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Charts */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                  {/* Category Chart */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Tickets por Categoria</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={categoryStats}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#3b82f6" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  {/* Priority Chart */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Distribuição por Prioridade</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={priorityStats}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ priority, percent }) => `${priority}: ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="count"
+                          >
+                            {priorityStats.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Monthly Trend */}
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Tendência Mensal</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={monthlyStats}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* User Performance */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance dos Usuários</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Usuário</TableHead>
+                          <TableHead className="text-center">Atribuídos</TableHead>
+                          <TableHead className="text-center">Resolvidos</TableHead>
+                          <TableHead className="text-center">Taxa de Resolução</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {userStats.map((user, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{user.user_name}</TableCell>
+                            <TableCell className="text-center">{user.assigned_count}</TableCell>
+                            <TableCell className="text-center">{user.resolved_count}</TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline">
+                                {user.assigned_count > 0 
+                                  ? `${Math.round((user.resolved_count / user.assigned_count) * 100)}%`
+                                  : '0%'
+                                }
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {userStats.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8">
+                        Nenhum dado disponível para o período selecionado
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </>
         )}
       </main>
