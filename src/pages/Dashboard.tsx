@@ -19,7 +19,10 @@ import {
   Calendar,
   TrendingUp,
   Clock,
-  Download
+  Download,
+  Tags,
+  Sliders,
+  FileText
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { exportReportToPDF } from '@/utils/pdfExport';
@@ -614,16 +617,25 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* Recent Tickets */}
-              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              {/* Recent Tickets - Spans 2 columns */}
+              <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Clock className="h-5 w-5 text-primary" />
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Clock className="h-5 w-5 text-primary" />
+                      </div>
+                      Chamados Recentes
                     </div>
-                    Chamados Recentes
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/tickets')}
+                    >
+                      Ver Todos
+                    </Button>
                   </CardTitle>
                   <CardDescription>
                     Últimos 5 chamados criados
@@ -631,9 +643,19 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   {recentTickets.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">
-                      Nenhum chamado encontrado
-                    </p>
+                    <div className="text-center py-8">
+                      <Ticket className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground mb-4">
+                        Nenhum chamado encontrado
+                      </p>
+                      <Button 
+                        onClick={() => navigate('/tickets?action=new')}
+                        className="bg-primary hover:bg-primary-glow"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Criar Primeiro Chamado
+                      </Button>
+                    </div>
                   ) : (
                     <div className="space-y-3">
                       {recentTickets.map((ticket) => (
@@ -655,49 +677,80 @@ const Dashboard = () => {
                           </div>
                         </div>
                       ))}
+                      <div className="pt-4 border-t border-border">
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary-glow" 
+                          onClick={() => navigate('/tickets?action=new')}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Criar Novo Chamado
+                        </Button>
+                      </div>
                     </div>
                   )}
-                  <div className="mt-4">
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => navigate('/tickets')}
-                    >
-                      Ver Todos os Chamados
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* Quick Actions */}
+              {/* Quick Access Menu */}
               <Card className="bg-gradient-card border-white/20 backdrop-blur-sm animate-scale-in">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <div className="p-2 bg-primary/10 rounded-lg">
                       <Settings className="h-5 w-5 text-primary" />
                     </div>
-                    Ações Rápidas
+                    Acesso Rápido
                   </CardTitle>
                   <CardDescription>
-                    Acesse as funcionalidades principais
+                    Principais funcionalidades
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button 
-                    className="w-full justify-start bg-primary hover:bg-primary-glow transition-colors" 
-                    onClick={() => navigate('/tickets?action=new')}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Criar Novo Chamado
-                  </Button>
-                  <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
-                    onClick={() => navigate('/tickets')}
-                  >
-                    <Ticket className="mr-2 h-4 w-4" />
-                    Gerenciar Chamados
-                  </Button>
+                <CardContent className="space-y-2">
+                  {profile.role === 'company_admin' && (
+                    <>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/users')}
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Usuários
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/categories')}
+                      >
+                        <Tags className="mr-2 h-4 w-4" />
+                        Categorias
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/custom-fields')}
+                      >
+                        <Sliders className="mr-2 h-4 w-4" />
+                        Campos Personalizados
+                      </Button>
+                      <Button 
+                        className="w-full justify-start" 
+                        variant="outline"
+                        onClick={() => navigate('/technical-notes')}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Notas Técnicas
+                      </Button>
+                    </>
+                  )}
+                  {profile.role === 'technician' && (
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline"
+                      onClick={() => navigate('/technical-notes')}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Notas Técnicas
+                    </Button>
+                  )}
                   <Button
                     className="w-full justify-start" 
                     variant="outline"
