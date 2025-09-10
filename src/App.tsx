@@ -60,6 +60,7 @@ const AppContent = () => {
             <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
             <Route path="/dashboard" element={<Dashboard />} />
            <Route path="/user-management" element={<UserManagement />} />
+           <Route path="/users" element={<UserManagement />} />
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/tickets/create" element={<CreateTicket />} />
             <Route path="/tickets/edit/:ticketId" element={<CreateTicket />} />

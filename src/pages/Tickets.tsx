@@ -232,10 +232,10 @@ function Tickets() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Chamados</h1>
-        <Button onClick={() => navigate('/tickets/create')}>
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold">Chamados</h1>
+        <Button onClick={() => navigate('/tickets/create')} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Novo Chamado
         </Button>
@@ -250,7 +250,7 @@ function Tickets() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Input
                 placeholder="Buscar chamados..."
@@ -300,14 +300,14 @@ function Tickets() {
             </CardContent>
           </Card>
         ) : (
-          filteredTickets.map((ticket) => (
+           filteredTickets.map((ticket) => (
             <Card key={ticket.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/tickets/${ticket.id}`)}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center space-x-2">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       {getPriorityIcon(ticket.priority)}
-                      <h3 className="font-semibold text-lg">{ticket.title}</h3>
+                      <h3 className="font-semibold text-base sm:text-lg break-words">{ticket.title}</h3>
                       <Badge variant={
                         ticket.status === 'open' ? 'destructive' :
                         ticket.status === 'in_progress' ? 'default' :
@@ -319,29 +319,29 @@ function Tickets() {
                       </Badge>
                     </div>
                     
-                    <p className="text-muted-foreground line-clamp-2">
+                    <p className="text-muted-foreground line-clamp-2 text-sm sm:text-base break-words">
                       {ticket.description}
                     </p>
                     
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>#{ticket.id.slice(0, 8)}</span>
-                      <span>{format(new Date(ticket.created_at), 'dd/MM/yyyy HH:mm')}</span>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                      <span className="bg-muted px-2 py-1 rounded text-xs">#{ticket.id.slice(0, 8)}</span>
+                      <span className="whitespace-nowrap">{format(new Date(ticket.created_at), 'dd/MM/yyyy HH:mm')}</span>
                       {ticket.categories && (
-                        <span>Categoria: {ticket.categories.name}</span>
+                        <span className="break-words">Categoria: {ticket.categories.name}</span>
                       )}
                       {ticket.clients && (
-                        <span>Cliente: {ticket.clients.name}</span>
+                        <span className="break-words">Cliente: {ticket.clients.name}</span>
                       )}
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 lg:min-w-0 lg:flex-shrink-0">
                     {canEditTickets && (
                       <Select 
                         value={ticket.status || 'open'} 
                         onValueChange={(value: TicketStatus) => handleStatusChange(ticket.id, value)}
                       >
-                        <SelectTrigger className="w-40" onClick={(e) => e.stopPropagation()}>
+                        <SelectTrigger className="w-full sm:w-40" onClick={(e) => e.stopPropagation()}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -359,29 +359,41 @@ function Tickets() {
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 z-50">
+                      <DropdownMenuContent align="end" className="w-48 z-50" sideOffset={5}>
                         {canEditTickets && (
                           <DropdownMenuItem
-                            onClick={() => navigate(`/tickets/edit/${ticket.id}`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/tickets/edit/${ticket.id}`);
+                            }}
                           >
                             <Edit className="w-4 h-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem
-                          onClick={() => exportTicketToPDF(ticket)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            exportTicketToPDF(ticket);
+                          }}
                         >
                           <FileText className="w-4 h-4 mr-2" />
                           Exportar PDF
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => navigate(`/technical-notes/create?ticket_id=${ticket.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/technical-notes/create?ticket_id=${ticket.id}`);
+                          }}
                         >
                           <FileText className="w-4 h-4 mr-2" />
                           Notas Técnicas
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => navigate(`/tickets/share/${ticket.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/tickets/share/${ticket.id}`);
+                          }}
                         >
                           <Share2 className="w-4 h-4 mr-2" />
                           Compartilhar
