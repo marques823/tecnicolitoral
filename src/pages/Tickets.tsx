@@ -359,7 +359,7 @@ function Tickets() {
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="mr-2 sm:mr-0">
                         {canEditTickets && (
                           <DropdownMenuItem
                             onClick={() => navigate(`/tickets/edit/${ticket.id}`)}

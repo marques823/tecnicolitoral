@@ -21,7 +21,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user && !loading) {
+    if (!loading && user) {
       navigate('/dashboard');
     }
   }, [user, loading, navigate]);

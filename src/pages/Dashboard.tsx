@@ -662,7 +662,7 @@ const Dashboard = () => {
                         <div 
                           key={ticket.id} 
                           className="flex items-center justify-between p-3 bg-background/50 rounded-lg hover:bg-background/80 transition-colors cursor-pointer"
-                          onClick={() => navigate(`/ticket-details/${ticket.id}`)}
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
                         >
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{ticket.title}</p>
@@ -710,7 +710,7 @@ const Dashboard = () => {
                       <Button 
                         className="w-full justify-start" 
                         variant="outline"
-                        onClick={() => navigate('/users')}
+                        onClick={() => navigate('/user-management')}
                       >
                         <Users className="mr-2 h-4 w-4" />
                         Usuários
