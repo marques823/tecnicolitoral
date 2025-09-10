@@ -232,116 +232,168 @@ function Tickets() {
   }
 
   return (
-    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold">Chamados</h1>
+    <div className="p-2 sm:p-6 space-y-3 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl sm:text-3xl font-bold">Chamados</h1>
         <Button onClick={() => navigate('/tickets/create')} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Novo Chamado
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Filter className="w-5 h-5" />
-            <span>Filtros</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <Input
-                placeholder="Buscar chamados..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="open">Aberto</SelectItem>
-                  <SelectItem value="in_progress">Em Andamento</SelectItem>
-                  <SelectItem value="resolved">Resolvido</SelectItem>
-                  <SelectItem value="closed">Fechado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Prioridade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as Prioridades</SelectItem>
-                  <SelectItem value="urgent">Urgente</SelectItem>
-                  <SelectItem value="high">Alta</SelectItem>
-                  <SelectItem value="medium">Média</SelectItem>
-                  <SelectItem value="low">Baixa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Filters - Compacto no mobile */}
+      <div className="bg-background border rounded-lg">
+        <div className="p-3 sm:p-4 border-b">
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4" />
+            <span className="text-sm font-medium">Filtros</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Input
+              placeholder="Buscar chamados..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-9"
+            />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="open">Aberto</SelectItem>
+                <SelectItem value="in_progress">Em Andamento</SelectItem>
+                <SelectItem value="resolved">Resolvido</SelectItem>
+                <SelectItem value="closed">Fechado</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Prioridades</SelectItem>
+                <SelectItem value="urgent">Urgente</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+                <SelectItem value="medium">Média</SelectItem>
+                <SelectItem value="low">Baixa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
-      {/* Tickets List */}
-      <div className="grid grid-cols-1 gap-4">
+      {/* Tickets List - Compacto */}
+      <div className="space-y-2 sm:space-y-4">
         {filteredTickets.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <p className="text-muted-foreground">Nenhum chamado encontrado</p>
-            </CardContent>
-          </Card>
+          <div className="bg-background border rounded-lg p-6 text-center">
+            <p className="text-muted-foreground">Nenhum chamado encontrado</p>
+          </div>
         ) : (
            filteredTickets.map((ticket) => (
-            <Card key={ticket.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/tickets/${ticket.id}`)}>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                  <div className="flex-1 space-y-2 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
+            <div 
+              key={ticket.id} 
+              className="bg-background border rounded-lg hover:shadow-md transition-shadow cursor-pointer" 
+              onClick={() => navigate(`/tickets/${ticket.id}`)}
+            >
+              <div className="p-3 sm:p-6">
+                <div className="space-y-3">
+                  {/* Header compacto */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       {getPriorityIcon(ticket.priority)}
-                      <h3 className="font-semibold text-base sm:text-lg break-words">{ticket.title}</h3>
-                      <Badge variant={
-                        ticket.status === 'open' ? 'destructive' :
-                        ticket.status === 'in_progress' ? 'default' :
-                        ticket.status === 'resolved' ? 'secondary' : 'outline'
-                      }>
+                      <h3 className="font-semibold text-sm sm:text-base break-words line-clamp-1">{ticket.title}</h3>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Badge 
+                        variant={
+                          ticket.status === 'open' ? 'destructive' :
+                          ticket.status === 'in_progress' ? 'default' :
+                          ticket.status === 'resolved' ? 'secondary' : 'outline'
+                        }
+                        className="text-xs"
+                      >
                         {ticket.status === 'open' ? 'Aberto' :
                          ticket.status === 'in_progress' ? 'Em Andamento' :
                          ticket.status === 'resolved' ? 'Resolvido' : 'Fechado'}
                       </Badge>
-                    </div>
-                    
-                    <p className="text-muted-foreground line-clamp-2 text-sm sm:text-base break-words">
-                      {ticket.description}
-                    </p>
-                    
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                      <span className="bg-muted px-2 py-1 rounded text-xs">#{ticket.id.slice(0, 8)}</span>
-                      <span className="whitespace-nowrap">{format(new Date(ticket.created_at), 'dd/MM/yyyy HH:mm')}</span>
-                      {ticket.categories && (
-                        <span className="break-words">Categoria: {ticket.categories.name}</span>
-                      )}
-                      {ticket.clients && (
-                        <span className="break-words">Cliente: {ticket.clients.name}</span>
-                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 z-50" sideOffset={5}>
+                          {canEditTickets && (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/tickets/edit/${ticket.id}`);
+                              }}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              exportTicketToPDF(ticket);
+                            }}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Exportar PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/technical-notes/create?ticket_id=${ticket.id}`);
+                            }}
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            Notas Técnicas
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/tickets/share/${ticket.id}`);
+                            }}
+                          >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Compartilhar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 lg:min-w-0 lg:flex-shrink-0">
-                    {canEditTickets && (
+                  {/* Descrição compacta */}
+                  <p className="text-muted-foreground text-xs sm:text-sm line-clamp-2 break-words">
+                    {ticket.description}
+                  </p>
+                  
+                  {/* Metadata compacta */}
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
+                    <span className="bg-muted px-1.5 py-0.5 rounded text-xs">#{ticket.id.slice(0, 8)}</span>
+                    <span className="whitespace-nowrap">{format(new Date(ticket.created_at), 'dd/MM/yy')}</span>
+                    {ticket.categories && (
+                      <span className="break-words">• {ticket.categories.name}</span>
+                    )}
+                    {ticket.clients && (
+                      <span className="break-words">• {ticket.clients.name}</span>
+                    )}
+                  </div>
+                  
+                  {/* Status selector compacto para admin/tech */}
+                  {canEditTickets && (
+                    <div className="pt-2 border-t">
                       <Select 
                         value={ticket.status || 'open'} 
                         onValueChange={(value: TicketStatus) => handleStatusChange(ticket.id, value)}
                       >
-                        <SelectTrigger className="w-full sm:w-40" onClick={(e) => e.stopPropagation()}>
+                        <SelectTrigger className="w-full h-8 text-xs" onClick={(e) => e.stopPropagation()}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -351,59 +403,11 @@ function Tickets() {
                           <SelectItem value="closed">Fechado</SelectItem>
                         </SelectContent>
                       </Select>
-                    )}
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 z-50" sideOffset={5}>
-                        {canEditTickets && (
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/tickets/edit/${ticket.id}`);
-                            }}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            exportTicketToPDF(ticket);
-                          }}
-                        >
-                          <FileText className="w-4 h-4 mr-2" />
-                          Exportar PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/technical-notes/create?ticket_id=${ticket.id}`);
-                          }}
-                        >
-                          <FileText className="w-4 h-4 mr-2" />
-                          Notas Técnicas
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/tickets/share/${ticket.id}`);
-                          }}
-                        >
-                          <Share2 className="w-4 h-4 mr-2" />
-                          Compartilhar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))
         )}
       </div>
