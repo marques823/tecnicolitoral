@@ -8,6 +8,7 @@ import { useCompanyTheme } from "@/hooks/useCompanyTheme";
 import { useNotificationHandler } from "@/hooks/useNotificationHandler";
 import Header from "@/components/Header";
 import NavigationMenu from "@/components/NavigationMenu";
+import Index from "./pages/Index";
 import IndexLanding from "./pages/IndexLanding";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -50,14 +51,15 @@ const AppContent = () => {
       <div className="lg:pl-64">
         <main className="min-h-[calc(100vh-73px)]">
           <Routes>
-          <Route path="/" element={<IndexLanding />} />
-          <Route path="/auth" element={<Auth />} />
+           <Route path="/" element={<Index />} />
+           <Route path="/landing" element={<IndexLanding />} />
+           <Route path="/auth" element={<Auth />} />
           <Route path="/plan-selection" element={<PlanSelection />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
             <Route path="/dashboard" element={<Dashboard />} />
-           <Route path="/users" element={<UserManagement />} />
+           <Route path="/user-management" element={<UserManagement />} />
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/tickets/create" element={<CreateTicket />} />
             <Route path="/tickets/edit/:ticketId" element={<CreateTicket />} />
@@ -71,7 +73,7 @@ const AppContent = () => {
            <Route path="/categories/edit/:categoryId" element={<CreateCategory />} />
            <Route path="/technical-notes/create" element={<CreateTechnicalNote />} />
            <Route path="/technical-notes/edit/:noteId" element={<CreateTechnicalNote />} />
-           <Route path="/users/details/:userId" element={<UserDetails />} />
+           <Route path="/user-details/:userId" element={<UserDetails />} />
            <Route path="/change-email" element={<ChangeEmail />} />
            <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/reports" element={<Reports />} />
