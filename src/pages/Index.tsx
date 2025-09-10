@@ -3,11 +3,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import IndexLanding from './IndexLanding';
-import Dashboard from './Dashboard';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // If authenticated, redirect to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (
@@ -17,12 +23,7 @@ const Index = () => {
     );
   }
 
-  // Se o usuário está logado, mostrar dashboard
-  if (user) {
-    return <Dashboard />;
-  }
-
-  // Se não está logado, mostrar landing page
+  // If not authenticated, show landing page
   return <IndexLanding />;
 };
 
