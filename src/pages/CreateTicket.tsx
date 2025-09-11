@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,7 @@ interface Client {
 
 export default function CreateTicket() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { ticketId } = useParams();
   const { user, profile, company } = useAuth();
   const { toast } = useToast();
   
@@ -59,8 +59,7 @@ export default function CreateTicket() {
     new_client_phone: ''
   });
 
-  const editingTicketId = searchParams.get('edit');
-  const isEditing = !!editingTicketId;
+  const isEditing = !!ticketId;
 
   useEffect(() => {
     if (user && profile && company) {
@@ -76,8 +75,8 @@ export default function CreateTicket() {
         loadClients()
       ]);
 
-      if (isEditing && editingTicketId) {
-        await loadTicketData(editingTicketId);
+      if (isEditing && ticketId) {
+        await loadTicketData(ticketId);
       }
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -132,7 +131,10 @@ export default function CreateTicket() {
   const loadTicketData = async (ticketId: string) => {
     const { data, error } = await supabase
       .from('tickets')
-      .select('*')
+      .select(`
+        *,
+        categories(name)
+      `)
       .eq('id', ticketId)
       .single();
 
@@ -145,7 +147,7 @@ export default function CreateTicket() {
         description: data.description,
         priority: data.priority || 'medium',
         status: data.status || 'open',
-        category: data.category_id,
+        category: data.categories?.name || '',
         assigned_to: data.assigned_to || '',
         client_id: data.client_id || ''
       });
@@ -253,11 +255,11 @@ export default function CreateTicket() {
         ticketData.client_id = clientId;
       }
 
-      if (isEditing && editingTicketId) {
+      if (isEditing && ticketId) {
         const { error } = await supabase
           .from('tickets')
           .update(ticketData)
-          .eq('id', editingTicketId);
+          .eq('id', ticketId);
 
         if (error) throw error;
 
@@ -464,26 +466,6 @@ export default function CreateTicket() {
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoria *</Label>
-                  <div className="relative">
-                    <Input
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      placeholder="Digite o nome da categoria ou selecione uma existente"
-                      list="categories-list"
-                    />
-                    <datalist id="categories-list">
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.name} />
-                      ))}
-                    </datalist>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Digite uma nova categoria ou selecione uma existente da lista
-                  </p>
-                </div>
 
                 {profile?.role !== 'client_user' && technicians.length > 0 && (
                   <div className="space-y-2">
