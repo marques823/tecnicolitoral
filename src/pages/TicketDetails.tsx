@@ -217,21 +217,26 @@ const TicketDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-subtle p-2 sm:p-4">
+      <div className="max-w-4xl mx-auto space-y-3 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
           <Button 
             variant="outline" 
             onClick={() => navigate('/tickets')}
-            className="mb-4"
+            size="sm"
+            className="w-full sm:w-auto"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
           
           {canEdit() && (
-            <Button onClick={() => navigate(`/tickets/edit/${ticket.id}`)}>
+            <Button 
+              onClick={() => navigate(`/tickets/edit/${ticket.id}`)}
+              size="sm"
+              className="w-full sm:w-auto"
+            >
               Editar Chamado
             </Button>
           )}
@@ -239,78 +244,96 @@ const TicketDetails = () => {
 
         {/* Ticket Details */}
         <Card className="bg-gradient-card border-white/20 backdrop-blur-sm">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <CardTitle className="text-2xl">{ticket.title}</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant={getStatusVariant(ticket.status)}>
-                    {getStatusIcon(ticket.status)}
-                    <span className="ml-1">{getStatusLabel(ticket.status)}</span>
-                  </Badge>
-                  <Badge variant={getPriorityVariant(ticket.priority)}>
-                    {getPriorityLabel(ticket.priority)}
-                  </Badge>
-                </div>
+          <CardHeader className="p-3 sm:p-6">
+            <div className="space-y-2">
+              <CardTitle className="text-lg sm:text-2xl leading-tight">{ticket.title}</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={getStatusVariant(ticket.status)} className="text-xs">
+                  {getStatusIcon(ticket.status)}
+                  <span className="ml-1">{getStatusLabel(ticket.status)}</span>
+                </Badge>
+                <Badge variant={getPriorityVariant(ticket.priority)} className="text-xs">
+                  {getPriorityLabel(ticket.priority)}
+                </Badge>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="p-3 sm:p-6 space-y-4 sm:space-y-6">
             <div>
-              <h3 className="font-semibold mb-2">Descrição</h3>
-              <p className="text-muted-foreground whitespace-pre-wrap">
+              <h3 className="font-semibold mb-2 text-sm sm:text-base">Descrição</h3>
+              <p className="text-muted-foreground whitespace-pre-wrap text-sm sm:text-base">
                 {ticket.description}
               </p>
             </div>
 
             <Separator />
 
-            {/* Ticket Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Criado por:</span>
-                  <span className="text-sm">{ticket.creator_profile?.name || 'Usuário desconhecido'}</span>
+            {/* Ticket Information - Mobile optimized */}
+            <div className="space-y-3 sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0">
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-start gap-2">
+                  <User className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs sm:text-sm font-medium block">Criado por:</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground break-words">
+                      {ticket.creator_profile?.name || 'Usuário desconhecido'}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Cliente:</span>
-                  <span className="text-sm">{ticket.clients?.name || 'N/A'}</span>
+                <div className="flex items-start gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs sm:text-sm font-medium block">Cliente:</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground break-words">
+                      {ticket.clients?.name || 'N/A'}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Categoria:</span>
-                  <span className="text-sm">{ticket.categories?.name || 'N/A'}</span>
+                <div className="flex items-start gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs sm:text-sm font-medium block">Categoria:</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground break-words">
+                      {ticket.categories?.name || 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Criado em:</span>
-                  <span className="text-sm">
-                    {new Date(ticket.created_at).toLocaleString('pt-BR')}
-                  </span>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-start gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs sm:text-sm font-medium block">Criado em:</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">
+                      {new Date(ticket.created_at).toLocaleString('pt-BR')}
+                    </span>
+                  </div>
                 </div>
                 
                 {ticket.assigned_to && (
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Atribuído a:</span>
-                    <span className="text-sm">{ticket.assigned_profile?.name || 'Usuário desconhecido'}</span>
+                  <div className="flex items-start gap-2">
+                    <User className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs sm:text-sm font-medium block">Atribuído a:</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground break-words">
+                        {ticket.assigned_profile?.name || 'Usuário desconhecido'}
+                      </span>
+                    </div>
                   </div>
                 )}
                 
                 {ticket.resolved_at && (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Resolvido em:</span>
-                    <span className="text-sm">
-                      {new Date(ticket.resolved_at).toLocaleString('pt-BR')}
-                    </span>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs sm:text-sm font-medium block">Resolvido em:</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        {new Date(ticket.resolved_at).toLocaleString('pt-BR')}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -320,13 +343,13 @@ const TicketDetails = () => {
 
         {/* Comments Section */}
         <Card className="bg-gradient-card border-white/20 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Comentários</CardTitle>
-            <CardDescription>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Comentários</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Histórico de comentários e atualizações do chamado
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             <TicketComments 
               ticketId={ticket.id} 
               canAddComments={canAddComments()} 
@@ -336,13 +359,13 @@ const TicketDetails = () => {
 
         {/* History Section */}
         <Card className="bg-gradient-card border-white/20 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Histórico</CardTitle>
-            <CardDescription>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Histórico</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Registro de todas as alterações realizadas no chamado
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             <TicketHistory ticketId={ticket.id} />
           </CardContent>
         </Card>
