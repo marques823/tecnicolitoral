@@ -185,34 +185,40 @@ const handler = async (req: Request): Promise<Response> => {
       const isClient = profile?.role === 'client_user';
       const isTicketOwner = user.user_id === ticketData.created_by;
       
-      // Verificar se é um ticket associado ao cliente específico
+      // Verificar se é um ticket associado ao cliente específico através do email
       const isClientTicket = ticketData.client_id && 
+        profile?.email_contato && 
         userProfiles?.some(p => 
           p.user_id === user.user_id && 
-          p.role === 'client_user'
+          p.role === 'client_user' &&
+          p.email_contato
         );
+      
+      // Se for um ticket com client_id, verificar se o email do perfil do cliente bate com o email do client
+      const isRelatedClientUser = isClient && ticketData.client_id && 
+        profile?.email_contato === user.email;
       
       switch (notification.type) {
         case 'new_ticket':
           // Apenas admins e técnicos recebem notificação de novos tickets
           return !isClient && user.email_on_new_ticket;
         case 'status_change':
-          // Clientes recebem se for criador do ticket OU se for ticket associado ao cliente
-          if (isClient && (isTicketOwner || isClientTicket)) {
+          // Clientes recebem se for criador do ticket OU se for relacionado ao ticket via email
+          if (isClient && (isTicketOwner || isRelatedClientUser)) {
             return user.email_on_my_ticket_status_change;
           }
           // Outros usuários recebem conforme configuração geral
           return !isClient && user.email_on_status_change;
         case 'assignment':
-          // Clientes recebem se for ticket associado ao cliente
-          if (isClient && isClientTicket) {
+          // Clientes recebem se for relacionado ao ticket via email
+          if (isClient && isRelatedClientUser) {
             return user.email_on_assignment;
           }
           // Outros usuários recebem conforme configuração geral
           return !isClient && user.email_on_assignment;
         case 'new_comment':
-          // Clientes recebem se for criador do ticket OU se for ticket associado ao cliente (apenas comentários públicos)
-          if (isClient && (isTicketOwner || isClientTicket) && !notification.is_private) {
+          // Clientes recebem se for criador do ticket OU se for relacionado ao ticket via email (apenas comentários públicos)
+          if (isClient && (isTicketOwner || isRelatedClientUser) && !notification.is_private) {
             return user.email_on_my_ticket_comments;
           }
           // Outros usuários recebem comentários públicos conforme configuração
