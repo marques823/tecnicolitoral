@@ -181,9 +181,9 @@ const TicketDetails = () => {
   const canAddComments = () => {
     if (!profile || !ticket) return false;
     
-    // Cliente só pode comentar se for o criador do ticket
+    // Clientes nunca podem adicionar comentários
     if (profile.role === 'client_user') {
-      return ticket.created_by === user?.id;
+      return false;
     }
     
     // Técnicos e admins podem comentar

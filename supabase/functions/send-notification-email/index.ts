@@ -183,7 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
     const filteredUsers = usersWithEmails.filter(user => {
       const profile = userProfiles?.find(p => p.user_id === user.user_id);
       const isClient = profile?.role === 'client_user';
-      const isTicketOwner = user.user_id === notification.created_by;
+      const isTicketOwner = user.user_id === ticketData.created_by;
       
       switch (notification.type) {
         case 'new_ticket':
