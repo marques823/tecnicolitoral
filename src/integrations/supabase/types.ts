@@ -640,19 +640,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_basic_profile_data: {
-        Args: { profile_user_id: string }
-        Returns: {
-          active: boolean
-          company_id: string
-          created_at: string
-          id: string
-          name: string
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
-          user_id: string
-        }[]
-      }
       get_basic_profiles: {
         Args: { target_company_id: string }
         Returns: {
