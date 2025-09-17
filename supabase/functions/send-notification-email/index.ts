@@ -185,23 +185,34 @@ const handler = async (req: Request): Promise<Response> => {
       const isClient = profile?.role === 'client_user';
       const isTicketOwner = user.user_id === ticketData.created_by;
       
+      // Verificar se é um ticket associado ao cliente específico
+      const isClientTicket = ticketData.client_id && 
+        userProfiles?.some(p => 
+          p.user_id === user.user_id && 
+          p.role === 'client_user'
+        );
+      
       switch (notification.type) {
         case 'new_ticket':
-          // Clientes não recebem notificação de novos tickets
+          // Apenas admins e técnicos recebem notificação de novos tickets
           return !isClient && user.email_on_new_ticket;
         case 'status_change':
-          // Clientes recebem apenas se for do próprio ticket
-          if (isClient && isTicketOwner) {
+          // Clientes recebem se for criador do ticket OU se for ticket associado ao cliente
+          if (isClient && (isTicketOwner || isClientTicket)) {
             return user.email_on_my_ticket_status_change;
           }
           // Outros usuários recebem conforme configuração geral
           return !isClient && user.email_on_status_change;
         case 'assignment':
-          // Clientes não recebem notificações de atribuição
+          // Clientes recebem se for ticket associado ao cliente
+          if (isClient && isClientTicket) {
+            return user.email_on_assignment;
+          }
+          // Outros usuários recebem conforme configuração geral
           return !isClient && user.email_on_assignment;
         case 'new_comment':
-          // Clientes recebem apenas se for comentário no próprio ticket e não for privado
-          if (isClient && isTicketOwner && !notification.is_private) {
+          // Clientes recebem se for criador do ticket OU se for ticket associado ao cliente (apenas comentários públicos)
+          if (isClient && (isTicketOwner || isClientTicket) && !notification.is_private) {
             return user.email_on_my_ticket_comments;
           }
           // Outros usuários recebem comentários públicos conforme configuração
