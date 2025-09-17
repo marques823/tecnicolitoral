@@ -666,6 +666,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: string
       }
+      get_user_count_excluding_admin: {
+        Args: { target_company_id: string }
+        Returns: number
+      }
       get_user_email: {
         Args: { user_uuid: string }
         Returns: string

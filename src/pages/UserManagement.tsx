@@ -271,7 +271,7 @@ const UserManagement = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               {plan && (
                 <div className="text-sm text-muted-foreground">
-                  {users.filter(u => u.active).length}/{plan.max_users} usuários
+                  {users.filter(u => u.active && u.role !== 'company_admin').length}/{plan.max_users} usuários (admins não contam)
                 </div>
               )}
               <Button onClick={handleCreateUser} size="sm" className="w-full sm:w-auto">

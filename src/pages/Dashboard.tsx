@@ -151,7 +151,8 @@ const Dashboard = () => {
     const [{ data: activeUsers }, { data: plans }] = await Promise.all([
       supabase
         .rpc('get_basic_profiles', { target_company_id: profile.company_id })
-        .eq('active', true),
+        .eq('active', true)
+        .neq('role', 'company_admin'),
       supabase
         .from('companies')
         .select('plans(max_users)')
@@ -159,12 +160,9 @@ const Dashboard = () => {
         .single()
     ]);
 
-    // Filtrar usuários excluindo company_admin da contagem
-    const nonAdminUsers = activeUsers?.filter(user => user.role !== 'company_admin') || [];
-
     setStats(prev => ({
       ...prev,
-      activeUsers: nonAdminUsers.length,
+      activeUsers: activeUsers?.length || 0,
       maxUsers: (plans as any)?.plans?.max_users || 0
     }));
   };
