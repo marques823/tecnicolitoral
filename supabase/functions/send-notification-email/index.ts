@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from "npm:resend@4.0.0";
+import React from 'npm:react@18.3.1';
+import { renderAsync } from 'npm:@react-email/components@0.0.22';
+import { TicketNotificationEmail } from './_templates/ticket-notification.tsx';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -41,15 +44,44 @@ const handler = async (req: Request): Promise<Response> => {
     const notification: NotificationRequest = await req.json();
     console.log('📨 Dados da notificação:', notification);
 
-    // Buscar informações do ticket e usuários relevantes
+    // Buscar informações do ticket
     const { data: ticketData, error: ticketError } = await supabase
       .from('tickets')
       .select(`
         *,
-        categories (name)
+        categories (name),
+        clients (name)
       `)
       .eq('id', notification.ticket_id)
       .single();
+
+    // Buscar informações dos usuários separadamente para evitar problemas de RLS
+    let createdByName = 'Usuário desconhecido';
+    let assignedToName = null;
+
+    if (ticketData && ticketData.created_by) {
+      const { data: createdByUser } = await supabase.auth.admin.getUserById(ticketData.created_by);
+      if (createdByUser.user?.email) {
+        const { data: createdByProfile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('user_id', ticketData.created_by)
+          .single();
+        createdByName = createdByProfile?.name || createdByUser.user.email;
+      }
+    }
+
+    if (ticketData && ticketData.assigned_to) {
+      const { data: assignedToUser } = await supabase.auth.admin.getUserById(ticketData.assigned_to);
+      if (assignedToUser.user?.email) {
+        const { data: assignedToProfile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('user_id', ticketData.assigned_to)
+          .single();
+        assignedToName = assignedToProfile?.name || assignedToUser.user.email;
+      }
+    }
 
     if (ticketError || !ticketData) {
       console.error('❌ Erro ao buscar dados do ticket:', ticketError);
@@ -147,11 +179,38 @@ const handler = async (req: Request): Promise<Response> => {
 
     const companyName = companyData?.name || 'Sistema de Tickets';
 
-    // Enviar emails
+    // Enviar emails usando React Email
     const emailPromisesToSend = filteredUsers.map(async (user) => {
       try {
         const subject = getEmailSubject(notification, companyName);
-        const htmlContent = getEmailContent(notification, ticketData, companyName);
+        
+        // Generate URLs
+        const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovableproject.com') || '';
+        const ticketUrl = `${baseUrl}/tickets/${notification.ticket_id}`;
+        const dashboardUrl = `${baseUrl}/dashboard`;
+
+        // Render React Email template
+        const htmlContent = await renderAsync(
+          React.createElement(TicketNotificationEmail, {
+            type: notification.type,
+            companyName: companyName,
+            ticketId: notification.ticket_id,
+            ticketTitle: notification.ticket_title,
+            ticketDescription: notification.ticket_description,
+            category: ticketData.categories?.name || 'Sem categoria',
+            priority: ticketData.priority,
+            status: ticketData.status,
+            createdBy: createdByName,
+            assignedTo: assignedToName,
+            oldStatus: notification.old_status,
+            newStatus: notification.new_status,
+            oldAssignedTo: notification.old_assigned_to,
+            newAssignedTo: notification.new_assigned_to,
+            ticketUrl: ticketUrl,
+            dashboardUrl: dashboardUrl,
+            createdAt: ticketData.created_at,
+          })
+        );
 
         const emailResponse = await resend.emails.send({
           from: `${companyName} <noreply@resend.dev>`,
@@ -198,75 +257,14 @@ const handler = async (req: Request): Promise<Response> => {
 function getEmailSubject(notification: NotificationRequest, companyName: string): string {
   switch (notification.type) {
     case 'new_ticket':
-      return `${companyName} - Novo Ticket: ${notification.ticket_title}`;
+      return `🎫 ${companyName} - Novo Ticket: ${notification.ticket_title}`;
     case 'status_change':
-      return `${companyName} - Status Alterado: ${notification.ticket_title}`;
+      return `🔄 ${companyName} - Status Alterado: ${notification.ticket_title}`;
     case 'assignment':
-      return `${companyName} - Ticket Atribuído: ${notification.ticket_title}`;
+      return `👤 ${companyName} - Ticket Atribuído: ${notification.ticket_title}`;
     default:
-      return `${companyName} - Atualização do Ticket: ${notification.ticket_title}`;
+      return `📋 ${companyName} - Atualização do Ticket: ${notification.ticket_title}`;
   }
-}
-
-function getEmailContent(notification: NotificationRequest, ticketData: any, companyName: string): string {
-  const ticketUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com')}/tickets`;
-  
-  let content = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #2563eb;">${companyName}</h2>
-      <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <h3 style="margin-top: 0; color: #1e293b;">Ticket #${ticketData.id.substring(0, 8)}</h3>
-        <p><strong>Título:</strong> ${notification.ticket_title}</p>
-        <p><strong>Categoria:</strong> ${ticketData.categories?.name || 'N/A'}</p>
-        <p><strong>Prioridade:</strong> ${ticketData.priority}</p>
-        <p><strong>Status:</strong> ${ticketData.status}</p>
-        <p><strong>Criado por:</strong> ${ticketData.profiles?.name || 'N/A'}</p>
-        ${ticketData.assigned_profile ? `<p><strong>Responsável:</strong> ${ticketData.assigned_profile.name}</p>` : ''}
-      </div>
-  `;
-
-  switch (notification.type) {
-    case 'new_ticket':
-      content += `
-        <div style="background-color: #ecfdf5; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
-          <h4 style="margin-top: 0; color: #047857;">📝 Novo Ticket Criado</h4>
-          <p>Um novo ticket foi criado no sistema.</p>
-          ${notification.ticket_description ? `<p><strong>Descrição:</strong> ${notification.ticket_description}</p>` : ''}
-        </div>
-      `;
-      break;
-    case 'status_change':
-      content += `
-        <div style="background-color: #eff6ff; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
-          <h4 style="margin-top: 0; color: #1d4ed8;">🔄 Status Alterado</h4>
-          <p>O status do ticket foi alterado:</p>
-          <p><strong>De:</strong> ${notification.old_status} <strong>Para:</strong> ${notification.new_status}</p>
-        </div>
-      `;
-      break;
-    case 'assignment':
-      content += `
-        <div style="background-color: #fef3c7; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
-          <h4 style="margin-top: 0; color: #92400e;">👤 Ticket Atribuído</h4>
-          <p>O responsável pelo ticket foi alterado.</p>
-        </div>
-      `;
-      break;
-  }
-
-  content += `
-      <div style="margin-top: 30px; text-align: center;">
-        <a href="${ticketUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-          Ver Ticket
-        </a>
-      </div>
-      <div style="margin-top: 30px; font-size: 12px; color: #6b7280; text-align: center;">
-        <p>Este é um email automático do sistema de tickets do ${companyName}.</p>
-      </div>
-    </div>
-  `;
-
-  return content;
 }
 
 serve(handler);
