@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface NotificationData {
-  type: 'new_ticket' | 'status_change' | 'assignment';
+  type: 'new_ticket' | 'status_change' | 'assignment' | 'new_comment';
   ticket_id: string;
   ticket_title: string;
   ticket_description?: string;
@@ -14,6 +14,8 @@ interface NotificationData {
   assigned_to?: string;
   updated_by?: string;
   company_id: string;
+  comment_user?: string;
+  is_private?: boolean;
 }
 
 export const useNotificationHandler = () => {
@@ -88,6 +90,56 @@ export const useNotificationHandler = () => {
             } catch (error) {
               console.error('❌ Erro ao chamar função de notificação:', error);
             }
+          }
+        }
+      )
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'ticket_comments' 
+        }, 
+        async (payload) => {
+          console.log('💬 Novo comentário detectado:', payload);
+          
+          const commentData = payload.new as any;
+          
+          // Buscar dados do ticket para enviar notificação
+          const { data: ticketData, error: ticketError } = await supabase
+            .from('tickets')
+            .select('id, title, company_id, created_by')
+            .eq('id', commentData.ticket_id)
+            .single();
+
+          if (ticketError || !ticketData) {
+            console.error('❌ Erro ao buscar dados do ticket:', ticketError);
+            return;
+          }
+          
+          const notificationData: Partial<NotificationData> = {
+            type: 'new_comment',
+            ticket_id: ticketData.id,
+            ticket_title: ticketData.title,
+            company_id: ticketData.company_id,
+            created_by: ticketData.created_by,
+            comment_user: commentData.user_id,
+            is_private: commentData.is_private
+          };
+
+          try {
+            console.log('📧 Enviando notificação de comentário:', notificationData);
+            
+            const { data, error } = await supabase.functions.invoke('send-notification-email', {
+              body: notificationData
+            });
+
+            if (error) {
+              console.error('❌ Erro ao enviar notificação de comentário:', error);
+            } else {
+              console.log('✅ Notificação de comentário enviada:', data);
+            }
+          } catch (error) {
+            console.error('❌ Erro ao chamar função de notificação de comentário:', error);
           }
         }
       )

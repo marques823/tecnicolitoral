@@ -41,6 +41,9 @@ interface NotificationSettings {
   email_on_new_ticket: boolean;
   email_on_status_change: boolean;
   email_on_assignment: boolean;
+  email_on_my_ticket_status_change: boolean;
+  email_on_my_ticket_comments: boolean;
+  email_on_my_ticket_resolved: boolean;
 }
 
 export default function Settings() {
@@ -58,7 +61,10 @@ export default function Settings() {
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
     email_on_new_ticket: false,
     email_on_status_change: false,
-    email_on_assignment: false
+    email_on_assignment: false,
+    email_on_my_ticket_status_change: true,
+    email_on_my_ticket_comments: true,
+    email_on_my_ticket_resolved: true
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -119,16 +125,22 @@ export default function Settings() {
           console.error('Erro ao carregar configurações de notificação:', notificationError);
         } else if (notificationData) {
           setNotificationSettings({
-            email_on_new_ticket: notificationData.email_on_new_ticket,
-            email_on_status_change: notificationData.email_on_status_change,
-            email_on_assignment: notificationData.email_on_assignment
+            email_on_new_ticket: notificationData.email_on_new_ticket || false,
+            email_on_status_change: notificationData.email_on_status_change || false,
+            email_on_assignment: notificationData.email_on_assignment || false,
+            email_on_my_ticket_status_change: notificationData.email_on_my_ticket_status_change ?? true,
+            email_on_my_ticket_comments: notificationData.email_on_my_ticket_comments ?? true,
+            email_on_my_ticket_resolved: notificationData.email_on_my_ticket_resolved ?? true
           });
         } else {
           // Se não existe configuração, manter valores padrão
           setNotificationSettings({
             email_on_new_ticket: false,
             email_on_status_change: false,
-            email_on_assignment: false
+            email_on_assignment: false,
+            email_on_my_ticket_status_change: true,
+            email_on_my_ticket_comments: true,
+            email_on_my_ticket_resolved: true
           });
         }
       }
@@ -288,7 +300,10 @@ export default function Settings() {
           user_id: user.id,
           email_on_new_ticket: notificationSettings.email_on_new_ticket,
           email_on_status_change: notificationSettings.email_on_status_change,
-          email_on_assignment: notificationSettings.email_on_assignment
+          email_on_assignment: notificationSettings.email_on_assignment,
+          email_on_my_ticket_status_change: notificationSettings.email_on_my_ticket_status_change,
+          email_on_my_ticket_comments: notificationSettings.email_on_my_ticket_comments,
+          email_on_my_ticket_resolved: notificationSettings.email_on_my_ticket_resolved
         }, {
           onConflict: 'user_id'
         });
@@ -634,54 +649,124 @@ export default function Settings() {
           </p>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Novos Chamados</p>
-                <p className="text-sm text-muted-foreground">
-                  Receber email quando um novo chamado for criado
-                </p>
-              </div>
-              <Switch
-                checked={notificationSettings.email_on_new_ticket}
-                onCheckedChange={(checked) => 
-                  setNotificationSettings(prev => ({ ...prev, email_on_new_ticket: checked }))
-                }
-              />
-            </div>
+            {/* Notificações gerais - apenas para admins e técnicos */}
+            {profile?.role !== 'client_user' && (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Novos Chamados</p>
+                    <p className="text-sm text-muted-foreground">
+                      Receber email quando um novo chamado for criado
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_on_new_ticket}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, email_on_new_ticket: checked }))
+                    }
+                  />
+                </div>
 
-            <Separator />
+                <Separator />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Mudanças de Status</p>
-                <p className="text-sm text-muted-foreground">
-                  Receber email quando o status de um chamado mudar
-                </p>
-              </div>
-              <Switch
-                checked={notificationSettings.email_on_status_change}
-                onCheckedChange={(checked) => 
-                  setNotificationSettings(prev => ({ ...prev, email_on_status_change: checked }))
-                }
-              />
-            </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Mudanças de Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      Receber email quando o status de um chamado mudar
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_on_status_change}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, email_on_status_change: checked }))
+                    }
+                  />
+                </div>
 
-            <Separator />
+                <Separator />
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Atribuições</p>
-                <p className="text-sm text-muted-foreground">
-                  Receber email quando um chamado for atribuído a você
-                </p>
-              </div>
-              <Switch
-                checked={notificationSettings.email_on_assignment}
-                onCheckedChange={(checked) => 
-                  setNotificationSettings(prev => ({ ...prev, email_on_assignment: checked }))
-                }
-              />
-            </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Atribuições</p>
+                    <p className="text-sm text-muted-foreground">
+                      Receber email quando um chamado for atribuído a você
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_on_assignment}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, email_on_assignment: checked }))
+                    }
+                  />
+                </div>
+
+                <Separator />
+              </>
+            )}
+
+            {/* Notificações específicas para clientes */}
+            {profile?.role === 'client_user' && (
+              <>
+                <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                    Notificações dos Seus Chamados
+                  </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    Configure as notificações que você deseja receber sobre os seus chamados
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Mudanças de Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      Receber email quando o status dos seus chamados mudar
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_on_my_ticket_status_change}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, email_on_my_ticket_status_change: checked }))
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Comentários</p>
+                    <p className="text-sm text-muted-foreground">
+                      Receber email quando alguém comentar nos seus chamados
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_on_my_ticket_comments}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, email_on_my_ticket_comments: checked }))
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Resolução</p>
+                    <p className="text-sm text-muted-foreground">
+                      Receber email quando seus chamados forem resolvidos
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_on_my_ticket_resolved}
+                    onCheckedChange={(checked) => 
+                      setNotificationSettings(prev => ({ ...prev, email_on_my_ticket_resolved: checked }))
+                    }
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="pt-4">

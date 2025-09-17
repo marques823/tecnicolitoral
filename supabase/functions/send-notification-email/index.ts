@@ -4,6 +4,7 @@ import { Resend } from "npm:resend@4.0.0";
 import React from 'npm:react@18.3.1';
 import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import { TicketNotificationEmail } from './_templates/ticket-notification.tsx';
+import { ClientNotificationEmail } from './_templates/client-notification.tsx';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -13,7 +14,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: 'new_ticket' | 'status_change' | 'assignment';
+  type: 'new_ticket' | 'status_change' | 'assignment' | 'new_comment';
   ticket_id: string;
   ticket_title: string;
   ticket_description?: string;
@@ -25,6 +26,8 @@ interface NotificationRequest {
   assigned_to?: string;
   updated_by?: string;
   company_id: string;
+  comment_user?: string;
+  is_private?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -104,19 +107,29 @@ const handler = async (req: Request): Promise<Response> => {
       userIds.push(notification.old_assigned_to);
     }
 
-    // Para novos tickets, adicionar todos os administradores e técnicos da empresa
-    if (notification.type === 'new_ticket') {
-      const { data: companyUsers, error: companyUsersError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('company_id', notification.company_id)
-        .in('role', ['company_admin', 'technician'])
-        .eq('active', true);
+  // Para novos tickets, adicionar todos os administradores e técnicos da empresa
+  if (notification.type === 'new_ticket') {
+    const { data: companyUsers, error: companyUsersError } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('company_id', notification.company_id)
+      .in('role', ['company_admin', 'technician'])
+      .eq('active', true);
 
-      if (companyUsers) {
-        companyUsers.forEach(user => userIds.push(user.user_id));
-      }
+    if (companyUsers) {
+      companyUsers.forEach(user => userIds.push(user.user_id));
     }
+  }
+
+  // Para mudanças de status, adicionar o criador do ticket (cliente)
+  if (notification.type === 'status_change' && notification.created_by) {
+    userIds.push(notification.created_by);
+  }
+
+  // Para comentários, adicionar o criador do ticket (se não for comentário privado)
+  if (notification.type === 'new_comment' && !notification.is_private && notification.created_by) {
+    userIds.push(notification.created_by);
+  }
 
     // Remover duplicatas
     const uniqueUserIds = [...new Set(userIds)];
@@ -132,7 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Buscar configurações de notificação e emails dos usuários
     const { data: usersToNotify, error: usersError } = await supabase
       .from('user_notification_settings')
-      .select('*')
+      .select('user_id, email_on_new_ticket, email_on_status_change, email_on_assignment, email_on_my_ticket_status_change, email_on_my_ticket_comments, email_on_my_ticket_resolved')
       .in('user_id', uniqueUserIds);
 
     if (usersError) {
@@ -160,15 +173,44 @@ const handler = async (req: Request): Promise<Response> => {
     const usersWithEmails = (await Promise.all(emailPromises)).filter(Boolean);
     console.log('📧 Usuários com emails:', usersWithEmails);
 
-    // Filtrar usuários que devem receber a notificação baseado no tipo
+    // Buscar perfis dos usuários para verificar roles
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('user_id, role')
+      .in('user_id', uniqueUserIds);
+
+    if (profilesError) {
+      console.error('❌ Erro ao buscar perfis:', profilesError);
+      throw new Error('Erro ao buscar perfis dos usuários');
+    }
+
+    // Filtrar usuários que devem receber a notificação baseado no tipo e role
     const filteredUsers = usersWithEmails.filter(user => {
+      const profile = userProfiles?.find(p => p.user_id === user.user_id);
+      const isClient = profile?.role === 'client_user';
+      const isTicketOwner = user.user_id === notification.created_by;
+      
       switch (notification.type) {
         case 'new_ticket':
-          return user.email_on_new_ticket;
+          // Clientes não recebem notificação de novos tickets
+          return !isClient && user.email_on_new_ticket;
         case 'status_change':
-          return user.email_on_status_change;
+          // Clientes recebem apenas se for do próprio ticket
+          if (isClient && isTicketOwner) {
+            return user.email_on_my_ticket_status_change;
+          }
+          // Outros usuários recebem conforme configuração geral
+          return !isClient && user.email_on_status_change;
         case 'assignment':
-          return user.email_on_assignment;
+          // Clientes não recebem notificações de atribuição
+          return !isClient && user.email_on_assignment;
+        case 'new_comment':
+          // Clientes recebem apenas se for comentário no próprio ticket e não for privado
+          if (isClient && isTicketOwner && !notification.is_private) {
+            return user.email_on_my_ticket_comments;
+          }
+          // Outros usuários recebem comentários públicos conforme configuração
+          return !isClient && !notification.is_private && user.email_on_status_change;
         default:
           return false;
       }
@@ -203,23 +245,39 @@ const handler = async (req: Request): Promise<Response> => {
         const ticketUrl = `${baseUrl}/tickets/${notification.ticket_id}`;
         const dashboardUrl = `${baseUrl}/dashboard`;
 
-        // Render React Email template
-        const htmlContent = await renderAsync(
-          React.createElement(TicketNotificationEmail, {
-            type: notification.type,
-            companyName: companyName,
-            ticketId: notification.ticket_id,
-            ticketTitle: notification.ticket_title,
-            ticketDescription: notification.ticket_description,
-            category: ticketData.categories?.name || 'Sem categoria',
-            priority: ticketData.priority,
-            status: ticketData.status,
-            createdBy: createdByName,
-            assignedTo: assignedToName,
-            oldStatus: notification.old_status,
-            newStatus: notification.new_status,
-            oldAssignedTo: notification.old_assigned_to,
-            newAssignedTo: notification.new_assigned_to,
+        // Verificar se é cliente
+        const userProfile = userProfiles?.find(p => p.user_id === user.user_id);
+        const isClient = userProfile?.role === 'client_user';
+        
+        // Render React Email template baseado no tipo de usuário
+        const htmlContent = isClient 
+          ? await renderAsync(
+              React.createElement(ClientNotificationEmail, {
+                notificationType: notification.type,
+                ticketTitle: notification.ticket_title,
+                ticketId: notification.ticket_id,
+                companyName: companyName,
+                oldStatus: notification.old_status,
+                newStatus: notification.new_status,
+                ticketUrl: ticketUrl,
+              })
+            )
+          : await renderAsync(
+              React.createElement(TicketNotificationEmail, {
+                type: notification.type,
+                companyName: companyName,
+                ticketId: notification.ticket_id,
+                ticketTitle: notification.ticket_title,
+                ticketDescription: notification.ticket_description,
+                category: ticketData.categories?.name || 'Sem categoria',
+                priority: ticketData.priority,
+                status: ticketData.status,
+                createdBy: createdByName,
+                assignedTo: assignedToName,
+                oldStatus: notification.old_status,
+                newStatus: notification.new_status,
+                oldAssignedTo: notification.old_assigned_to,
+                newAssignedTo: notification.new_assigned_to,
             ticketUrl: ticketUrl,
             dashboardUrl: dashboardUrl,
             createdAt: ticketData.created_at,

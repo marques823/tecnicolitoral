@@ -601,6 +601,9 @@ export type Database = {
         Row: {
           created_at: string
           email_on_assignment: boolean
+          email_on_my_ticket_comments: boolean
+          email_on_my_ticket_resolved: boolean
+          email_on_my_ticket_status_change: boolean
           email_on_new_ticket: boolean
           email_on_status_change: boolean
           id: string
@@ -610,6 +613,9 @@ export type Database = {
         Insert: {
           created_at?: string
           email_on_assignment?: boolean
+          email_on_my_ticket_comments?: boolean
+          email_on_my_ticket_resolved?: boolean
+          email_on_my_ticket_status_change?: boolean
           email_on_new_ticket?: boolean
           email_on_status_change?: boolean
           id?: string
@@ -619,6 +625,9 @@ export type Database = {
         Update: {
           created_at?: string
           email_on_assignment?: boolean
+          email_on_my_ticket_comments?: boolean
+          email_on_my_ticket_resolved?: boolean
+          email_on_my_ticket_status_change?: boolean
           email_on_new_ticket?: boolean
           email_on_status_change?: boolean
           id?: string
