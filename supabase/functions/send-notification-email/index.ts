@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
       userIds.push(notification.old_assigned_to);
     }
 
-  // Para novos tickets, adicionar todos os administradores e técnicos da empresa
+   // Para novos tickets, adicionar todos os administradores e técnicos da empresa
   if (notification.type === 'new_ticket') {
     const { data: companyUsers, error: companyUsersError } = await supabase
       .from('profiles')
@@ -121,14 +121,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
   }
 
-  // Para mudanças de status, adicionar o criador do ticket (cliente)
-  if (notification.type === 'status_change' && notification.created_by) {
-    userIds.push(notification.created_by);
-  }
-
-  // Para comentários, adicionar o criador do ticket (se não for comentário privado)
-  if (notification.type === 'new_comment' && !notification.is_private && notification.created_by) {
-    userIds.push(notification.created_by);
+  // Para mudanças de status, comentários e atribuições, sempre incluir o criador do ticket
+  if (['status_change', 'new_comment', 'assignment'].includes(notification.type) && ticketData.created_by) {
+    userIds.push(ticketData.created_by);
   }
 
     // Remover duplicatas
