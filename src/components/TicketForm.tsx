@@ -443,7 +443,7 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             .select('id')
             .eq('company_id', company.id)
             .eq('email', selectedClient.email || user?.email)
-            .single();
+            .maybeSingle();
 
           if (existingClient) {
             finalClientId = existingClient.id;

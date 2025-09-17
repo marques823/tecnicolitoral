@@ -31,6 +31,7 @@ interface Client {
   id: string;
   name: string;
   company_name?: string;
+  type?: 'client' | 'client_user';
 }
 
 export default function CreateTicket() {
@@ -117,15 +118,53 @@ export default function CreateTicket() {
   const loadClients = async () => {
     if (!company || profile?.role === 'client_user') return;
     
-    const { data, error } = await supabase
+    console.log('🏢 Carregando clientes para company_id:', company.id);
+    
+    // Carregar clientes sem login (da tabela clients)
+    const { data: clientsData, error: clientsError } = await supabase
       .from('clients')
-      .select('id, name, company_name')
+      .select('id, name, company_name, email, phone, active')
       .eq('company_id', company.id)
       .eq('active', true)
       .order('name');
 
-    if (error) throw error;
-    setClients(data || []);
+    console.log('👥 Clientes sem login encontrados:', clientsData?.length || 0, clientsError);
+
+    // Carregar clientes com login (da tabela profiles)
+    const { data: clientUsersData, error: clientUsersError } = await supabase
+      .from('profiles')
+      .select('id, name, user_id, email_contato, telefone, razao_social')
+      .eq('company_id', company.id)
+      .eq('role', 'client_user')
+      .eq('active', true)
+      .order('name');
+
+    console.log('👤 Clientes com login encontrados:', clientUsersData?.length || 0, clientUsersError);
+
+    // Combinar ambos os tipos de clientes
+    const allClients = [
+      ...(clientsData || []).map(client => ({
+        id: client.id,
+        name: client.name,
+        company_name: client.company_name,
+        type: 'client' as const
+      })),
+      ...(clientUsersData || []).map(client => ({
+        id: `profile-${client.id}`,
+        name: client.name,
+        company_name: client.razao_social,
+        type: 'client_user' as const
+      }))
+    ];
+
+    console.log('📋 Total de clientes carregados:', allClients.length);
+
+    if (clientsError || clientUsersError) {
+      console.error('Erro ao carregar clientes:', { clientsError, clientUsersError });
+      throw clientsError || clientUsersError;
+    }
+    
+    setClients(allClients);
   };
 
   const loadTicketData = async (ticketId: string) => {
@@ -220,6 +259,54 @@ export default function CreateTicket() {
       } else if (formData.category.trim()) {
         // Cria nova categoria se não existe
         categoryId = await createCategory(formData.category);
+      }
+
+      // Processar cliente selecionado
+      if (formData.client_id && formData.client_id !== 'none') {
+        const selectedClient = clients.find(c => c.id === formData.client_id);
+        
+        if (selectedClient && selectedClient.type === 'client_user') {
+          // É um client_user, precisa criar/encontrar registro na tabela clients
+          const profileId = selectedClient.id.replace('profile-', '');
+          
+          // Buscar dados do perfil para criar o cliente
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('name, email_contato, telefone, razao_social')
+            .eq('id', profileId)
+            .single();
+
+          if (profileData) {
+            // Verificar se já existe um cliente com o mesmo email
+            const { data: existingClient } = await supabase
+              .from('clients')
+              .select('id')
+              .eq('company_id', company.id)
+              .eq('email', profileData.email_contato)
+              .maybeSingle();
+
+            if (existingClient) {
+              clientId = existingClient.id;
+            } else {
+              // Criar novo registro na tabela clients
+              const { data: newClient, error: createError } = await supabase
+                .from('clients')
+                .insert({
+                  name: profileData.name,
+                  email: profileData.email_contato,
+                  phone: profileData.telefone,
+                  company_name: profileData.razao_social,
+                  company_id: company.id,
+                  active: true
+                })
+                .select('id')
+                .single();
+
+              if (createError) throw createError;
+              clientId = newClient.id;
+            }
+          }
+        }
       }
 
       // Create new client if needed
@@ -502,6 +589,7 @@ export default function CreateTicket() {
                         {clients.map((client) => (
                           <SelectItem key={client.id} value={client.id}>
                             {client.name} {client.company_name && `(${client.company_name})`}
+                            {client.type === 'client_user' && ' [Com Login]'}
                           </SelectItem>
                         ))}
                       </SelectContent>
