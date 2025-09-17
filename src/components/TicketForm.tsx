@@ -117,22 +117,28 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
 
         // Carregar clientes (para técnicos e admins)
         if (!isClientUser) {
+          console.log('🏢 Carregando clientes para company_id:', company.id);
+          
           // Carregar clientes sem login (da tabela clients)
-          const { data: clientsData } = await supabase
+          const { data: clientsData, error: clientsError } = await supabase
             .from('clients')
             .select('id, name, email, phone, company_name, active')
             .eq('company_id', company.id)
             .eq('active', true)
             .order('name');
 
+          console.log('👥 Clientes sem login encontrados:', clientsData?.length || 0, clientsError);
+
           // Carregar clientes com login (ambos admin e técnico podem ver todos os clientes)
-          const { data: clientUsersData } = await supabase
+          const { data: clientUsersData, error: clientUsersError } = await supabase
             .from('profiles')
             .select('id, name, user_id, email_contato, telefone, razao_social')
             .eq('company_id', company.id)
             .eq('role', 'client_user')
             .eq('active', true)
             .order('name');
+
+          console.log('👤 Clientes com login encontrados:', clientUsersData?.length || 0, clientUsersError);
           
           const clientUsersToProcess = clientUsersData || [];
 
