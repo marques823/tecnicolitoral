@@ -143,8 +143,13 @@ const Dashboard = () => {
     let ticketsQuery = supabase.from('tickets').select('status, resolved_at');
 
     if (profile?.role === 'client_user') {
-      // Cliente vê tickets que criou e tickets atribuídos a ele
-      ticketsQuery = ticketsQuery.or(`created_by.eq.${user?.id},assigned_to.eq.${user?.id}`);
+      // Cliente vê tickets que criou, tickets atribuídos a clientes com o mesmo email
+      const userClientIds = await getUserClientIds();
+      if (userClientIds) {
+        ticketsQuery = ticketsQuery.or(`created_by.eq.${user?.id},client_id.in.(${userClientIds})`);
+      } else {
+        ticketsQuery = ticketsQuery.eq('created_by', user?.id);
+      }
     } else if (profile?.role === 'technician') {
       // Técnico vê tickets atribuídos a ele e tickets não atribuídos
       ticketsQuery = ticketsQuery.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
@@ -197,6 +202,18 @@ const Dashboard = () => {
     }));
   };
 
+  const getUserClientIds = async () => {
+    if (!user?.email) return '';
+    
+    const { data } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('company_id', profile?.company_id)
+      .eq('email', user.email);
+    
+    return data?.map(c => c.id).join(',') || '';
+  };
+
   const loadRecentTickets = async () => {
     // Primeiro buscar os tickets
     let ticketQuery = supabase
@@ -206,7 +223,12 @@ const Dashboard = () => {
       .limit(5);
 
     if (profile?.role === 'client_user') {
-      ticketQuery = ticketQuery.or(`created_by.eq.${user?.id},assigned_to.eq.${user?.id}`);
+      const userClientIds = await getUserClientIds();
+      if (userClientIds) {
+        ticketQuery = ticketQuery.or(`created_by.eq.${user?.id},client_id.in.(${userClientIds})`);
+      } else {
+        ticketQuery = ticketQuery.eq('created_by', user?.id);
+      }
     } else if (profile?.role === 'technician') {
       ticketQuery = ticketQuery.or(`assigned_to.eq.${user?.id},assigned_to.is.null`);
     }

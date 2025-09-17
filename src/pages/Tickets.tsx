@@ -346,15 +346,17 @@ function Tickets() {
                             <FileText className="w-4 h-4 mr-2" />
                             Exportar PDF
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/technical-notes/create?ticket_id=${ticket.id}`);
-                            }}
-                          >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Notas Técnicas
-                          </DropdownMenuItem>
+                          {(profile?.role === 'company_admin' || profile?.role === 'technician') && (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/tickets/${ticket.id}/technical-notes`);
+                              }}
+                            >
+                              <FileText className="w-4 h-4 mr-2" />
+                              Notas Técnicas
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();

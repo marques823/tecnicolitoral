@@ -90,8 +90,7 @@ export default function Header() {
         { icon: Users, label: 'Usuários', path: '/users' },
         { icon: Tags, label: 'Categorias', path: '/categories' },
         { icon: Crown, label: 'Planos', path: '/plans' },
-        { icon: Sliders, label: 'Campos Custom', path: '/custom-fields' },
-        { icon: FileText, label: 'Notas Técnicas', path: '/technical-notes' }
+        { icon: Sliders, label: 'Campos Custom', path: '/custom-fields' }
       );
     }
     

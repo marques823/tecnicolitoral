@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { Plus, FileText, Edit, Trash2, Download, Camera, X, Monitor, Settings, Wrench, Eye } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import jsPDF from "jspdf";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { Plus, FileText, Edit, Trash2, Download, Camera, X, Monitor, Settings, Wrench, Eye } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import jsPDF from 'jspdf';
 
 interface TechnicalNote {
   id: string;
@@ -34,6 +34,16 @@ interface TechnicalNote {
   problem_description?: string;
   solution_description?: string;
   observations?: string;
+}
+
+interface TicketInfo {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  categories?: { name: string };
+  clients?: { name: string };
 }
 
 const noteSchema = z.object({
@@ -59,6 +69,7 @@ interface TechnicalNotesForTicketProps {
 export default function TechnicalNotesForTicket({ ticketId, onClose }: TechnicalNotesForTicketProps) {
   const { profile, company } = useAuth();
   const [notes, setNotes] = useState<TechnicalNote[]>([]);
+  const [ticketInfo, setTicketInfo] = useState<TicketInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<TechnicalNote | null>(null);
@@ -83,10 +94,31 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
   });
 
   useEffect(() => {
-    if (profile && company && ticketId) {
+    if (profile && company) {
+      loadTicketInfo();
       loadNotes();
     }
-  }, [profile, company, ticketId]);
+  }, [ticketId, profile, company]);
+
+  const loadTicketInfo = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select(`
+          id, title, description, status, priority,
+          categories(name),
+          clients(name)
+        `)
+        .eq('id', ticketId)
+        .single();
+
+      if (error) throw error;
+      setTicketInfo(data);
+    } catch (error) {
+      console.error('Erro ao carregar informações do ticket:', error);
+      toast.error('Erro ao carregar informações do ticket');
+    }
+  };
 
   const loadNotes = async () => {
     try {
@@ -137,9 +169,21 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
       const servicesPerformed = data.services_performed ? data.services_performed.split(",").map(service => service.trim()) : [];
       const servicesNeeded = data.services_needed ? data.services_needed.split(",").map(service => service.trim()) : [];
       
+      // Pré-popular título e conteúdo com informações do ticket se não fornecido
+      let noteTitle = data.title;
+      let noteContent = data.content;
+      
+      if (!noteTitle && ticketInfo) {
+        noteTitle = `Nota Técnica - ${ticketInfo.title}`;
+      }
+      
+      if (!noteContent && ticketInfo) {
+        noteContent = `Nota técnica relacionada ao chamado: ${ticketInfo.title}\n\nDescrição do chamado: ${ticketInfo.description}`;
+      }
+      
       let noteData = {
-        title: data.title,
-        content: data.content,
+        title: noteTitle,
+        content: noteContent,
         tags,
         is_public: data.is_public,
         ticket_id: ticketId,
@@ -210,53 +254,29 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
     if (!confirm("Tem certeza que deseja excluir esta nota?")) return;
 
     try {
-      console.log("Iniciando exclusão da nota:", noteId);
-      
-      // Primeiro buscar a nota para obter as fotos
-      const { data: noteData, error: fetchError } = await supabase
+      // Buscar fotos associadas para deletar do storage
+      const { data: note } = await supabase
         .from("technical_notes")
         .select("photos")
         .eq("id", noteId)
         .single();
 
-      if (fetchError) {
-        console.error("Erro ao buscar dados da nota:", fetchError);
-        throw fetchError;
-      }
-
-      console.log("Dados da nota encontrados:", noteData);
-
-      // Deletar fotos do storage se existirem
-      if (noteData?.photos && noteData.photos.length > 0) {
-        console.log("Deletando fotos:", noteData.photos);
-        const { error: storageError } = await supabase.storage
+      if (note?.photos && note.photos.length > 0) {
+        await supabase.storage
           .from('technical-notes')
-          .remove(noteData.photos);
-        
-        if (storageError) {
-          console.error("Erro ao deletar fotos:", storageError);
-        } else {
-          console.log("Fotos deletadas com sucesso");
-        }
+          .remove(note.photos);
       }
 
-      // Deletar a nota
-      console.log("Deletando nota do banco...");
       const { error } = await supabase
         .from("technical_notes")
         .delete()
         .eq("id", noteId);
 
-      if (error) {
-        console.error("Erro ao deletar nota:", error);
-        throw error;
-      }
-      
-      console.log("Nota deletada com sucesso");
+      if (error) throw error;
       toast.success("Nota técnica excluída com sucesso!");
-      await loadNotes(); // Usar await para garantir que recarregue
+      loadNotes();
     } catch (error) {
-      console.error("Erro completo ao excluir nota:", error);
+      console.error("Erro ao excluir nota:", error);
       toast.error("Erro ao excluir nota técnica");
     }
   };
@@ -298,21 +318,36 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
     const doc = new jsPDF();
     let y = 30;
     
-    // Título
-    doc.setFontSize(20);
+    // Cabeçalho com informações do ticket
+    doc.setFontSize(16);
+    doc.text(`Nota Técnica - ${ticketInfo?.title || 'Ticket'}`, 20, y);
+    y += 15;
+    
+    if (ticketInfo) {
+      doc.setFontSize(10);
+      doc.text(`Ticket ID: ${ticketInfo.id}`, 20, y);
+      y += 8;
+      doc.text(`Cliente: ${ticketInfo.clients?.name || 'N/A'}`, 20, y);
+      y += 8;
+      doc.text(`Categoria: ${ticketInfo.categories?.name || 'N/A'}`, 20, y);
+      y += 15;
+    }
+    
+    // Título da nota
+    doc.setFontSize(14);
     doc.text(note.title, 20, y);
-    y += 20;
+    y += 15;
     
     // Data
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.text(`Data: ${new Date(note.created_at).toLocaleDateString('pt-BR')}`, 20, y);
     y += 15;
     
     // Problema
     if (note.problem_description) {
-      doc.setFontSize(14);
+      doc.setFontSize(12);
       doc.text("Problema:", 20, y);
-      y += 10;
+      y += 8;
       doc.setFontSize(10);
       const problemLines = doc.splitTextToSize(note.problem_description, 170);
       doc.text(problemLines, 20, y);
@@ -321,9 +356,9 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
     
     // Solução
     if (note.solution_description) {
-      doc.setFontSize(14);
+      doc.setFontSize(12);
       doc.text("Solução:", 20, y);
-      y += 10;
+      y += 8;
       doc.setFontSize(10);
       const solutionLines = doc.splitTextToSize(note.solution_description, 170);
       doc.text(solutionLines, 20, y);
@@ -332,23 +367,23 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
     
     // Equipamentos
     if (note.equipment_models?.length) {
-      doc.setFontSize(14);
+      doc.setFontSize(12);
       doc.text("Equipamentos:", 20, y);
-      y += 10;
+      y += 8;
       doc.setFontSize(10);
       doc.text(note.equipment_models.join(', '), 20, y);
       y += 15;
     }
     
     // Conteúdo
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.text("Detalhes:", 20, y);
-    y += 10;
+    y += 8;
     doc.setFontSize(10);
     const contentLines = doc.splitTextToSize(note.content, 170);
     doc.text(contentLines, 20, y);
     
-    doc.save(`nota-tecnica-${note.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+    doc.save(`nota-tecnica-${ticketInfo?.title?.replace(/[^a-zA-Z0-9]/g, '-') || 'nota'}-${note.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
   };
 
   const getPhotoUrl = (photoPath: string) => {
@@ -371,468 +406,484 @@ export default function TechnicalNotesForTicket({ ticketId, onClose }: Technical
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      {/* Header simplificado */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 border-b bg-card">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Input
-              placeholder="Buscar notas..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-          <span className="text-sm text-muted-foreground">
-            {filteredNotes.length} {filteredNotes.length === 1 ? 'nota' : 'notas'}
-          </span>
+    <div className="container mx-auto p-4 lg:p-6 space-y-6">
+      {/* Header com informações do ticket */}
+      {ticketInfo && (
+        <Card className="bg-gradient-card border-white/20 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">{ticketInfo.title}</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {ticketInfo.clients?.name && `Cliente: ${ticketInfo.clients.name} • `}
+                  {ticketInfo.categories?.name && `Categoria: ${ticketInfo.categories.name}`}
+                </p>
+              </div>
+              {onClose && (
+                <Button variant="outline" size="sm" onClick={onClose}>
+                  Voltar
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold">Notas Técnicas</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">
+            Notas técnicas vinculadas a este chamado
+          </p>
         </div>
-        
-        <Button onClick={() => {
-          setEditingNote(null);
-          setUploadedFiles([]);
-          form.reset();
-          setIsDialogOpen(true);
-        }} size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Nota
-        </Button>
-      </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => {
+              setEditingNote(null);
+              setUploadedFiles([]);
+              form.reset();
+            }} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Nota
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingNote ? "Editar Nota Técnica" : "Nova Nota Técnica"}
+              </DialogTitle>
+              <DialogDescription>
+                Crie ou edite uma nota técnica vinculada ao chamado: {ticketInfo?.title}
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSaveNote)} className="space-y-6">
+                <Tabs defaultValue="basic" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="basic" className="text-xs lg:text-sm">Básico</TabsTrigger>
+                    <TabsTrigger value="technical" className="text-xs lg:text-sm">Técnico</TabsTrigger>
+                    <TabsTrigger value="services" className="text-xs lg:text-sm">Serviços</TabsTrigger>
+                    <TabsTrigger value="photos" className="text-xs lg:text-sm">Fotos</TabsTrigger>
+                  </TabsList>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {filteredNotes.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
-              {notes.length === 0 ? 'Nenhuma nota técnica' : 'Nenhuma nota encontrada'}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              {notes.length === 0 
-                ? 'Crie a primeira nota técnica para este chamado'
-                : 'Tente ajustar os termos de busca'
-              }
-            </p>
-            {notes.length === 0 && (
-              <Button onClick={() => {
-                setEditingNote(null);
-                setUploadedFiles([]);
-                form.reset();
-                setIsDialogOpen(true);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Primeira Nota
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-            {filteredNotes.map((note) => (
-              <Card key={note.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start gap-2">
-                    <CardTitle className="text-lg truncate">{note.title}</CardTitle>
-                    <div className="flex gap-1 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditNote(note)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => exportToPDF(note)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteNote(note.id)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {note.is_public && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Eye className="h-3 w-3 mr-1" />
-                        Pública
-                      </Badge>
-                    )}
-                    {note.tags?.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-3">
-                  {note.problem_description && (
-                    <div>
-                      <h4 className="font-medium text-sm flex items-center gap-1 mb-1">
-                        <Settings className="h-3 w-3" />
-                        Problema
-                      </h4>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {note.problem_description}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {note.solution_description && (
-                    <div>
-                      <h4 className="font-medium text-sm flex items-center gap-1 mb-1">
-                        <Wrench className="h-3 w-3" />
-                        Solução
-                      </h4>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {note.solution_description}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {note.equipment_models && note.equipment_models.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-sm flex items-center gap-1 mb-1">
-                        <Monitor className="h-3 w-3" />
-                        Equipamentos
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {note.equipment_models.slice(0, 3).map((model, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {model}
-                          </Badge>
-                        ))}
-                        {note.equipment_models.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{note.equipment_models.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {note.content}
-                  </p>
-                  
-                  {note.photos && note.photos.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-sm flex items-center gap-1 mb-2">
-                        <Camera className="h-3 w-3" />
-                        Fotos ({note.photos.length})
-                      </h4>
-                      <div className="flex gap-2 overflow-x-auto">
-                        {note.photos.slice(0, 3).map((photo, index) => (
-                          <img
-                            key={index}
-                            src={getPhotoUrl(photo)}
-                            alt={`Foto ${index + 1}`}
-                            className="h-16 w-16 object-cover rounded border flex-shrink-0"
-                          />
-                        ))}
-                        {note.photos.length > 3 && (
-                          <div className="h-16 w-16 bg-muted rounded border flex items-center justify-center text-xs font-medium flex-shrink-0">
-                            +{note.photos.length - 3}
+                  <TabsContent value="basic" className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Título</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder={`Nota técnica - ${ticketInfo?.title || 'Título da nota'}`}
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Descrição Geral</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Descrição geral do serviço realizado" 
+                              className="min-h-[100px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="tags"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tags (separadas por vírgula)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: hardware, software, rede" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="is_public"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Nota Pública</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Tornar esta nota visível para todos da empresa
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="text-xs text-muted-foreground pt-2 border-t">
-                    {new Date(note.created_at).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
 
-      {/* Form Modal */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingNote ? "Editar Nota Técnica" : "Nova Nota Técnica"}
-            </DialogTitle>
-            <DialogDescription>
-              Crie ou edite uma nota técnica com informações detalhadas do serviço
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSaveNote)} className="space-y-6">
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="basic" className="text-xs lg:text-sm">Básico</TabsTrigger>
-                  <TabsTrigger value="technical" className="text-xs lg:text-sm">Técnico</TabsTrigger>
-                  <TabsTrigger value="services" className="text-xs lg:text-sm">Serviços</TabsTrigger>
-                  <TabsTrigger value="photos" className="text-xs lg:text-sm">Fotos</TabsTrigger>
-                </TabsList>
+                  <TabsContent value="technical" className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="problem_description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Settings className="h-4 w-4" />
+                            Descrição do Problema
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Descreva o problema encontrado" 
+                              className="min-h-[80px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="solution_description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Wrench className="h-4 w-4" />
+                            Descrição da Solução
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Descreva a solução aplicada" 
+                              className="min-h-[80px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="equipment_models"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Monitor className="h-4 w-4" />
+                            Modelos de Equipamentos (separados por vírgula)
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: Dell OptiPlex 7070, HP LaserJet Pro" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="observations"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Observações Adicionais</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Observações importantes ou notas adicionais" 
+                              className="min-h-[60px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
 
-                <TabsContent value="basic" className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Título</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Título da nota" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descrição Geral</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Descrição geral do serviço realizado" 
-                            className="min-h-[100px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tags (separadas por vírgula)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: hardware, software, rede" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="is_public"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Nota Pública</FormLabel>
-                          <div className="text-sm text-muted-foreground">
-                            Tornar esta nota visível para todos da empresa
-                          </div>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
+                  <TabsContent value="services" className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="services_performed"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Serviços Realizados (separados por vírgula)</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Ex: Troca de HD, Limpeza interna, Atualização de drivers" 
+                              className="min-h-[80px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="services_needed"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Serviços Necessários (separados por vírgula)</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Ex: Upgrade de memória, Substituição de fonte" 
+                              className="min-h-[80px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
 
-                <TabsContent value="technical" className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="problem_description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Settings className="h-4 w-4" />
-                          Descrição do Problema
-                        </FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Descreva o problema encontrado" 
-                            className="min-h-[80px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="solution_description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Wrench className="h-4 w-4" />
-                          Descrição da Solução
-                        </FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Descreva como o problema foi solucionado" 
-                            className="min-h-[80px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="equipment_models"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Monitor className="h-4 w-4" />
-                          Modelos de Equipamentos (separados por vírgula)
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: Dell OptiPlex 7090, HP LaserJet Pro" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="observations"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações Adicionais</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Observações gerais sobre o atendimento" 
-                            className="min-h-[60px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-
-                <TabsContent value="services" className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="services_performed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Serviços Realizados (separados por vírgula)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Ex: Instalação de software, Configuração de rede, Manutenção preventiva" 
-                            className="min-h-[80px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="services_needed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Serviços Necessários (separados por vírgula)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Ex: Upgrade de memória RAM, Backup dos dados, Troca de HD" 
-                            className="min-h-[80px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-
-                <TabsContent value="photos" className="space-y-4">
-                  <div className="space-y-4">
+                  <TabsContent value="photos" className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">
-                        <Camera className="h-4 w-4 inline mr-2" />
-                        Fotos do Atendimento
-                      </label>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                      />
+                      <FormLabel>Fotos do Serviço</FormLabel>
+                      <div className="mt-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="photo-upload"
+                        />
+                        <label htmlFor="photo-upload">
+                          <Button type="button" variant="outline" asChild>
+                            <span>
+                              <Camera className="h-4 w-4 mr-2" />
+                              Adicionar Fotos
+                            </span>
+                          </Button>
+                        </label>
+                      </div>
                     </div>
                     
                     {uploadedFiles.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Fotos selecionadas:</p>
+                      <div>
+                        <p className="text-sm font-medium mb-2">Fotos selecionadas:</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                           {uploadedFiles.map((file, index) => (
                             <div key={index} className="relative">
                               <img
                                 src={URL.createObjectURL(file)}
                                 alt={`Preview ${index + 1}`}
-                                className="w-full h-24 object-cover rounded border"
+                                className="w-full h-24 object-cover rounded-lg"
                               />
-                              <Button
+                              <button
                                 type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
                                 onClick={() => removeFile(index)}
+                                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80"
                               >
                                 <X className="h-3 w-3" />
-                              </Button>
+                              </button>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  </TabsContent>
+                </Tabs>
 
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={uploading}>
-                  {uploading ? "Salvando..." : (editingNote ? "Atualizar" : "Criar")}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsDialogOpen(false)}
+                    disabled={uploading}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={uploading}>
+                    {uploading ? "Salvando..." : editingNote ? "Atualizar" : "Salvar"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search */}
+      <div className="w-full max-w-md">
+        <Input
+          placeholder="Buscar notas..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Notes Grid */}
+      <div className="grid gap-4 sm:gap-6">
+        {filteredNotes.length === 0 ? (
+          <div className="bg-background border rounded-lg p-8 text-center">
+            <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">
+              {searchTerm ? "Nenhuma nota encontrada" : "Nenhuma nota técnica"}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm 
+                ? "Tente ajustar sua busca ou limpar os filtros"
+                : "Crie sua primeira nota técnica para este chamado"
+              }
+            </p>
+          </div>
+        ) : (
+          filteredNotes.map((note) => (
+            <Card key={note.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">{note.title}</CardTitle>
+                      {note.is_public && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Eye className="h-3 w-3 mr-1" />
+                          Pública
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(note.created_at).toLocaleDateString('pt-BR')} às {' '}
+                      {new Date(note.created_at).toLocaleTimeString('pt-BR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportToPDF(note)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditNote(note)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteNote(note.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {note.problem_description && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Problema
+                    </h4>
+                    <p className="text-sm text-muted-foreground">{note.problem_description}</p>
+                  </div>
+                )}
+                
+                {note.solution_description && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 flex items-center gap-2">
+                      <Wrench className="h-4 w-4" />
+                      Solução
+                    </h4>
+                    <p className="text-sm text-muted-foreground">{note.solution_description}</p>
+                  </div>
+                )}
+
+                <div>
+                  <h4 className="font-medium text-sm mb-1">Detalhes</h4>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{note.content}</p>
+                </div>
+
+                {note.equipment_models && note.equipment_models.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1 flex items-center gap-2">
+                      <Monitor className="h-4 w-4" />
+                      Equipamentos
+                    </h4>
+                    <div className="flex flex-wrap gap-1">
+                      {note.equipment_models.map((model, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {model}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {note.services_performed && note.services_performed.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Serviços Realizados</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {note.services_performed.map((service, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {service}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {note.tags && note.tags.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-1">Tags</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {note.tags.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {note.photos && note.photos.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">Fotos</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {note.photos.map((photo, index) => (
+                        <img
+                          key={index}
+                          src={getPhotoUrl(photo)}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80"
+                          onClick={() => window.open(getPhotoUrl(photo), '_blank')}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 }
