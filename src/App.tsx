@@ -34,6 +34,7 @@ import ShareTicket from "./pages/ShareTicket";
 import UserDetails from "./pages/UserDetails";
 import TicketDetails from "./pages/TicketDetails";
 import TicketTechnicalNotes from "./pages/TicketTechnicalNotes";
+import TransferPlan from "./pages/TransferPlan";
 
 import NotFound from "./pages/NotFound";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -84,11 +85,12 @@ const AppContent = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/custom-fields" element={<CustomFields />} />
           <Route path="/technical-notes" element={<TechnicalNotes />} />
-          <Route path="/super-admin" element={<SuperAdmin />} />
-          
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+           <Route path="/super-admin" element={<SuperAdmin />} />
+           <Route path="/transfer-plan" element={<TransferPlan />} />
+           
+           
+           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+           <Route path="*" element={<NotFound />} />
         </Routes>
         </main>
       </div>
