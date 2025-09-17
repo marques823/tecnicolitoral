@@ -503,7 +503,7 @@ const Dashboard = () => {
                   <Button 
                     variant="outline" 
                     className="h-auto p-4 flex-col gap-2"
-                    onClick={() => navigate('/create-ticket')}
+                    onClick={() => navigate('/tickets/create')}
                   >
                     <Plus className="h-5 w-5" />
                     <span className="text-xs text-center">Novo Chamado</span>
