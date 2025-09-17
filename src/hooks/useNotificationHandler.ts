@@ -22,9 +22,9 @@ export const useNotificationHandler = () => {
   useEffect(() => {
     console.log('🔔 Iniciando listener de notificações...');
 
-    // Escutar notificações do banco
+    // Escutar notificações do banco via pg_notify
     const channel = supabase
-      .channel('ticket_notifications')
+      .channel('notifications')
       .on('postgres_changes', 
         { 
           event: '*', 

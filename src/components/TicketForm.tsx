@@ -115,19 +115,17 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
         .order('name');
       setCategories(categoriesData || []);
 
-      // Carregar clientes (para técnicos e admins)
-      if (!isClientUser) {
-        // Carregar clientes sem login (da tabela clients)
-        const { data: clientsData } = await supabase
-          .from('clients')
-          .select('id, name, email, phone, company_name, active')
-          .eq('company_id', company.id)
-          .eq('active', true)
-          .order('name');
+        // Carregar clientes (para técnicos e admins)
+        if (!isClientUser) {
+          // Carregar clientes sem login (da tabela clients)
+          const { data: clientsData } = await supabase
+            .from('clients')
+            .select('id, name, email, phone, company_name, active')
+            .eq('company_id', company.id)
+            .eq('active', true)
+            .order('name');
 
-        // Carregar clientes com login (apenas para admins que podem ver dados sensíveis)
-        let clientUsersToProcess: any[] = [];
-        if (profile?.role === 'company_admin') {
+          // Carregar clientes com login (ambos admin e técnico podem ver todos os clientes)
           const { data: clientUsersData } = await supabase
             .from('profiles')
             .select('id, name, user_id, email_contato, telefone, razao_social')
@@ -135,21 +133,8 @@ const TicketForm: React.FC<TicketFormProps> = ({ ticket, onSuccess, onCancel }) 
             .eq('role', 'client_user')
             .eq('active', true)
             .order('name');
-          clientUsersToProcess = clientUsersData || [];
-        } else {
-          // Técnicos só podem ver nomes básicos
-          const { data: basicClientUsersData } = await supabase
-            .rpc('get_basic_profiles', { target_company_id: company.id })
-            .eq('role', 'client_user')
-            .eq('active', true)
-            .order('name');
-          clientUsersToProcess = (basicClientUsersData || []).map(user => ({
-            ...user,
-            email_contato: null,
-            telefone: null,
-            razao_social: null
-          }));
-        }
+          
+          const clientUsersToProcess = clientUsersData || [];
 
         // Criar map para evitar duplicatas por nome
         const clientsMap = new Map<string, Client>();
