@@ -185,45 +185,66 @@ const handler = async (req: Request): Promise<Response> => {
       const isClient = profile?.role === 'client_user';
       const isTicketOwner = user.user_id === ticketData.created_by;
       
-      // Verificar se é um ticket associado ao cliente específico através do email
-      const isClientTicket = ticketData.client_id && 
-        profile?.email_contato && 
-        userProfiles?.some(p => 
-          p.user_id === user.user_id && 
-          p.role === 'client_user' &&
-          p.email_contato
-        );
+      console.log(`🔍 Analisando usuário ${user.email}:`, {
+        user_id: user.user_id,
+        role: profile?.role,
+        isClient,
+        isTicketOwner,
+        email_contato: profile?.email_contato,
+        ticket_client_id: ticketData.client_id,
+        ticket_created_by: ticketData.created_by,
+        notification_type: notification.type
+      });
       
-      // Se for um ticket com client_id, verificar se o email do perfil do cliente bate com o email do client
-      const isRelatedClientUser = isClient && ticketData.client_id && 
-        profile?.email_contato === user.email;
+      // Para clientes: verificar se é o criador do ticket OU se está associado via client_id
+      const isRelatedClient = isClient && (
+        isTicketOwner || // Criou o ticket
+        (ticketData.client_id && profile?.email_contato === user.email) // Associado via client_id e email
+      );
+      
+      console.log(`📧 Cliente deve receber? ${isRelatedClient}`);
       
       switch (notification.type) {
         case 'new_ticket':
           // Apenas admins e técnicos recebem notificação de novos tickets
-          return !isClient && user.email_on_new_ticket;
+          const shouldReceiveNewTicket = !isClient && user.email_on_new_ticket;
+          console.log(`📮 new_ticket - Deve receber: ${shouldReceiveNewTicket}`);
+          return shouldReceiveNewTicket;
         case 'status_change':
-          // Clientes recebem se for criador do ticket OU se for relacionado ao ticket via email
-          if (isClient && (isTicketOwner || isRelatedClientUser)) {
-            return user.email_on_my_ticket_status_change;
+          // Clientes recebem se estão relacionados ao ticket
+          if (isRelatedClient) {
+            const shouldReceive = user.email_on_my_ticket_status_change;
+            console.log(`📊 status_change (cliente relacionado) - Deve receber: ${shouldReceive}`);
+            return shouldReceive;
           }
           // Outros usuários recebem conforme configuração geral
-          return !isClient && user.email_on_status_change;
+          const shouldReceiveStatus = !isClient && user.email_on_status_change;
+          console.log(`📊 status_change (não-cliente) - Deve receber: ${shouldReceiveStatus}`);
+          return shouldReceiveStatus;
         case 'assignment':
-          // Clientes recebem se for relacionado ao ticket via email
-          if (isClient && isRelatedClientUser) {
-            return user.email_on_assignment;
+          // Clientes recebem se estão relacionados ao ticket
+          if (isRelatedClient) {
+            const shouldReceive = user.email_on_assignment;
+            console.log(`👤 assignment (cliente relacionado) - Deve receber: ${shouldReceive}`);
+            return shouldReceive;
           }
           // Outros usuários recebem conforme configuração geral
-          return !isClient && user.email_on_assignment;
+          const shouldReceiveAssignment = !isClient && user.email_on_assignment;
+          console.log(`👤 assignment (não-cliente) - Deve receber: ${shouldReceiveAssignment}`);
+          return shouldReceiveAssignment;
         case 'new_comment':
-          // Clientes recebem se for criador do ticket OU se for relacionado ao ticket via email (apenas comentários públicos)
-          if (isClient && (isTicketOwner || isRelatedClientUser) && !notification.is_private) {
-            return user.email_on_my_ticket_comments;
+          // Clientes recebem se estão relacionados ao ticket (apenas comentários públicos)
+          if (isRelatedClient && !notification.is_private) {
+            const shouldReceive = user.email_on_my_ticket_comments;
+            console.log(`💬 new_comment (cliente relacionado) - Deve receber: ${shouldReceive}`);
+            return shouldReceive;
           }
           // Outros usuários recebem comentários públicos conforme configuração
-          return !isClient && !notification.is_private && user.email_on_status_change;
+          const shouldReceiveComment = !isClient && !notification.is_private && user.email_on_status_change;
+          console.log(`💬 new_comment (não-cliente) - Deve receber: ${shouldReceiveComment}`);
+          return shouldReceiveComment;
         default:
+          console.log(`❓ Tipo desconhecido: ${notification.type}`);
           return false;
       }
     });
