@@ -104,6 +104,20 @@ const handler = async (req: Request): Promise<Response> => {
       userIds.push(notification.old_assigned_to);
     }
 
+    // Para novos tickets, adicionar todos os administradores e técnicos da empresa
+    if (notification.type === 'new_ticket') {
+      const { data: companyUsers, error: companyUsersError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('company_id', notification.company_id)
+        .in('role', ['company_admin', 'technician'])
+        .eq('active', true);
+
+      if (companyUsers) {
+        companyUsers.forEach(user => userIds.push(user.user_id));
+      }
+    }
+
     // Remover duplicatas
     const uniqueUserIds = [...new Set(userIds)];
 
