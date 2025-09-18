@@ -206,26 +206,18 @@ function Tickets() {
     }
 
     try {
-      // Usar update direto em vez da função RPC
-      const { error } = await supabase
-        .from('tickets')
-        .update({ 
-          deleted_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', ticketId);
+      console.log('Tentando excluir ticket:', ticketId);
+      
+      const { data, error } = await supabase.rpc('soft_delete_ticket', {
+        ticket_uuid: ticketId
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na função RPC:', error);
+        throw error;
+      }
 
-      // Adicionar entrada no histórico manualmente
-      await supabase
-        .from('ticket_history')
-        .insert({
-          ticket_id: ticketId,
-          user_id: user!.id,
-          action: 'deleted',
-          description: 'Ticket excluído'
-        });
+      console.log('Ticket excluído com sucesso:', data);
 
       toast({
         title: "Sucesso",
@@ -237,7 +229,7 @@ function Tickets() {
       console.error('Erro ao excluir chamado:', error);
       toast({
         title: "Erro",
-        description: "Erro ao excluir chamado",
+        description: `Erro ao excluir chamado: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
