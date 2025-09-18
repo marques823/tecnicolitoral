@@ -324,7 +324,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
 
         const emailResponse = await resend.emails.send({
-          from: `${companyName} <onboarding@resend.dev>`,
+          from: `${companyName} <noreply@tecnicolitoral.com>`,
           to: [user.email],
           subject: subject,
           html: htmlContent,
