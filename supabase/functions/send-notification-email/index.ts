@@ -206,9 +206,15 @@ const handler = async (req: Request): Promise<Response> => {
       
       switch (notification.type) {
         case 'new_ticket':
-          // Apenas admins e técnicos recebem notificação de novos tickets
+          // Admins e técnicos sempre recebem, clientes recebem se criaram o ticket
+          if (isRelatedClient) {
+            const shouldReceive = user.email_on_new_ticket;
+            console.log(`📮 new_ticket (cliente criador) - Deve receber: ${shouldReceive}`);
+            return shouldReceive;
+          }
+          // Admins e técnicos recebem notificação de novos tickets
           const shouldReceiveNewTicket = !isClient && user.email_on_new_ticket;
-          console.log(`📮 new_ticket - Deve receber: ${shouldReceiveNewTicket}`);
+          console.log(`📮 new_ticket (admin/técnico) - Deve receber: ${shouldReceiveNewTicket}`);
           return shouldReceiveNewTicket;
         case 'status_change':
           // Clientes recebem se estão relacionados ao ticket
