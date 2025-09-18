@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Calendar, User, Building2, Tag, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Building2, Tag, AlertCircle, Clock, CheckCircle, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import TicketComments from '@/components/TicketComments';
 import TicketHistory from '@/components/TicketHistory';
@@ -194,6 +194,34 @@ const TicketDetails = () => {
     return profile?.role === 'company_admin' || profile?.role === 'technician';
   };
 
+  const handleDeleteTicket = async () => {
+    if (!window.confirm('Tem certeza que deseja excluir este chamado? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.rpc('soft_delete_ticket', {
+        ticket_uuid: ticket.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Chamado excluído com sucesso",
+      });
+
+      navigate('/tickets');
+    } catch (error) {
+      console.error('Erro ao excluir chamado:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir chamado",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -232,13 +260,24 @@ const TicketDetails = () => {
           </Button>
           
           {canEdit() && (
-            <Button 
-              onClick={() => navigate(`/tickets/edit/${ticket.id}`)}
-              size="sm"
-              className="w-full sm:w-auto"
-            >
-              Editar Chamado
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button 
+                onClick={() => navigate(`/tickets/edit/${ticket.id}`)}
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                Editar Chamado
+              </Button>
+              <Button 
+                onClick={handleDeleteTicket}
+                variant="destructive"
+                size="sm"
+                className="w-full sm:w-auto"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Excluir
+              </Button>
+            </div>
           )}
         </div>
 
