@@ -535,6 +535,7 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string
+          deleted_at: string | null
           description: string
           id: string
           priority: Database["public"]["Enums"]["ticket_priority"] | null
@@ -550,6 +551,7 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           description: string
           id?: string
           priority?: Database["public"]["Enums"]["ticket_priority"] | null
@@ -565,6 +567,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           description?: string
           id?: string
           priority?: Database["public"]["Enums"]["ticket_priority"] | null
@@ -676,6 +679,10 @@ export type Database = {
       }
       promote_to_super_admin: {
         Args: { user_email: string }
+        Returns: boolean
+      }
+      soft_delete_ticket: {
+        Args: { ticket_uuid: string }
         Returns: boolean
       }
       user_has_master_role: {
