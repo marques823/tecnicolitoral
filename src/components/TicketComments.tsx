@@ -77,16 +77,30 @@ const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps) => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      console.log('Tentando adicionar comentário:', {
+        ticket_id: ticketId,
+        user_id: profile.user_id,
+        comment: newComment.trim(),
+        is_private: isPrivate,
+        profile_role: profile.role
+      });
+
+      const { data, error } = await supabase
         .from('ticket_comments')
         .insert({
           ticket_id: ticketId,
           user_id: profile.user_id,
           comment: newComment.trim(),
           is_private: isPrivate
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado ao inserir comentário:', error);
+        throw error;
+      }
+
+      console.log('Comentário inserido com sucesso:', data);
 
       toast({
         title: "Sucesso",
@@ -100,7 +114,7 @@ const TicketComments = ({ ticketId, canAddComments }: TicketCommentsProps) => {
       console.error('Erro ao adicionar comentário:', error);
       toast({
         title: "Erro",
-        description: "Erro ao adicionar comentário",
+        description: `Erro ao adicionar comentário: ${error?.message || 'Erro desconhecido'}`,
         variant: "destructive",
       });
     } finally {
