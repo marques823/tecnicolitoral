@@ -33,6 +33,8 @@ export const ClientNotificationEmail = ({
 }: ClientNotificationEmailProps) => {
   const getSubject = () => {
     switch (notificationType) {
+      case 'new_ticket':
+        return `Seu chamado foi criado - #${ticketId}`;
       case 'status_change':
         return `Atualização do seu chamado #${ticketId}`;
       default:
@@ -42,6 +44,8 @@ export const ClientNotificationEmail = ({
 
   const getMainMessage = () => {
     switch (notificationType) {
+      case 'new_ticket':
+        return `Seu chamado foi criado com sucesso e está sendo analisado pela nossa equipe.`;
       case 'status_change':
         return `O status do seu chamado foi atualizado de "${oldStatus}" para "${newStatus}".`;
       default:
