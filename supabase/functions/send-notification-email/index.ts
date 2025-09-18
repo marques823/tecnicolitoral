@@ -323,6 +323,8 @@ const handler = async (req: Request): Promise<Response> => {
           })
         );
 
+        console.log(`📧 Enviando email de ${companyName} <noreply@tecnicolitoral.com> para ${user.email}`);
+        
         const emailResponse = await resend.emails.send({
           from: `${companyName} <noreply@tecnicolitoral.com>`,
           to: [user.email],
