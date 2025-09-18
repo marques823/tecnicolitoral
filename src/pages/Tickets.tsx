@@ -22,8 +22,7 @@ import {
   FileText,
   Share2,
   MoreVertical,
-  User,
-  Trash2
+  User
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportTicketToPDF } from '@/utils/pdfExport';
@@ -187,50 +186,6 @@ function Tickets() {
         title: 'Erro',
         description: 'Erro ao atualizar status do chamado',
         variant: 'destructive'
-      });
-    }
-  };
-
-  const handleDeleteTicket = async (ticketId: string, ticketTitle: string) => {
-    if (!ticketId || ticketId.trim() === '') {
-      toast({
-        title: "Erro",
-        description: "ID do ticket inválido",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!window.confirm(`Tem certeza que deseja excluir o chamado "${ticketTitle}"? Esta ação não pode ser desfeita.`)) {
-      return;
-    }
-
-    try {
-      console.log('Tentando excluir ticket:', ticketId);
-      
-      const { data, error } = await supabase.rpc('soft_delete_ticket', {
-        ticket_uuid: ticketId
-      });
-
-      if (error) {
-        console.error('Erro na função RPC:', error);
-        throw error;
-      }
-
-      console.log('Ticket excluído com sucesso:', data);
-
-      toast({
-        title: "Sucesso",
-        description: "Chamado excluído com sucesso",
-      });
-
-      loadTickets();
-    } catch (error) {
-      console.error('Erro ao excluir chamado:', error);
-      toast({
-        title: "Erro",
-        description: `Erro ao excluir chamado: ${error.message || 'Erro desconhecido'}`,
-        variant: "destructive",
       });
     }
   };
@@ -411,18 +366,6 @@ function Tickets() {
                             <Share2 className="w-4 h-4 mr-2" />
                             Compartilhar
                           </DropdownMenuItem>
-                          {canEditTickets && (
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteTicket(ticket.id, ticket.title);
-                              }}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
-                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
