@@ -192,16 +192,40 @@ function Tickets() {
   };
 
   const handleDeleteTicket = async (ticketId: string, ticketTitle: string) => {
+    if (!ticketId || ticketId.trim() === '') {
+      toast({
+        title: "Erro",
+        description: "ID do ticket inválido",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!window.confirm(`Tem certeza que deseja excluir o chamado "${ticketTitle}"? Esta ação não pode ser desfeita.`)) {
       return;
     }
 
     try {
-      const { error } = await supabase.rpc('soft_delete_ticket', {
-        ticket_uuid: ticketId
-      });
+      // Usar update direto em vez da função RPC
+      const { error } = await supabase
+        .from('tickets')
+        .update({ 
+          deleted_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
 
       if (error) throw error;
+
+      // Adicionar entrada no histórico manualmente
+      await supabase
+        .from('ticket_history')
+        .insert({
+          ticket_id: ticketId,
+          user_id: user!.id,
+          action: 'deleted',
+          description: 'Ticket excluído'
+        });
 
       toast({
         title: "Sucesso",
